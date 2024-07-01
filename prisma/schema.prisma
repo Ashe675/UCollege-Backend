@@ -9,8 +9,122 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // o el proveedor de base de datos que estés usando
   url      = env("DATABASE_URL")
 }
 
+
 // Aqui van los modelos:
+model Person {
+  id             Int           @id @default(autoincrement())
+  dni            String        @unique @db.VarChar(10)
+  firstName      String        @db.VarChar(45)
+  middleName     String?       @db.VarChar(45)
+  lastName       String        @db.VarChar(45)
+  secondLastName String?       @db.VarChar(45)
+  phoneNumber    String        @db.VarChar(9)
+  email          String        @db.VarChar(100)
+  inscriptions   Inscription[]
+}
+
+// Modelo Career
+model Career {
+  id              Int                    @id @default(autoincrement())
+  name            String                 @db.VarChar(50)
+  active          Boolean                @default(true)
+  createdAt       DateTime               @default(now()) @db.Date
+  description     String?                @db.VarChar(100)
+  code            String                 @unique @db.VarChar(45)
+  admissionsTests AdmissionTest_Career[]
+  inscriptionsPrincipals    Inscription[] @relation("principalCareer")
+  inscriptionsSecondaries    Inscription[] @relation("secondaryCareer")
+
+  @@index([id], name: "pk_Career_idx")
+}
+
+// Modelo Inscription
+model Inscription {
+  id                Int      @id @default(autoincrement())
+  principalCareerId Int
+  secondaryCareerId Int
+  photoCertificate  String   @db.VarChar(300)
+  date              DateTime @default(now()) @db.Date
+  personId          Int
+  principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
+  secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
+  person            Person   @relation(fields: [personId], references: [id])
+  results           Result[]
+
+  @@index([principalCareerId], name: "fk_Inscription_Career1_idx")
+  @@index([secondaryCareerId], name: "fk_Inscription_Career2_idx")
+  @@index([personId], name: "fk_Inscription_Person1_idx")
+}
+
+// Modelo AdmissionTest
+model AdmissionTest {
+  id                  Int                    @id @default(autoincrement())
+  score               Float
+  name                String                 @db.VarChar(75)
+  active              Boolean                @default(true)
+  admissionTestCareers AdmissionTest_Career[]
+  results             Result[]
+}
+
+// Modelo AdmissionTest_Career
+model AdmissionTest_Career {
+  id              Int           @id @default(autoincrement())
+  admissionTestId Int
+  careerId        Int
+  active          Boolean @default(true)
+  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
+  career          Career        @relation(fields: [careerId], references: [id])
+
+  @@index([careerId], name: "fk_AdmissionTest_has_Career_Career1_idx")
+  @@index([admissionTestId], name: "fk_AdmissionTest_has_Career_AdmissionTest1_idx")
+}
+
+// Modelo Result
+model Result {
+  id              Int           @id @default(autoincrement())
+  inscriptionId   Int
+  admissionTestId Int
+  score           Float
+  message         String        @db.VarChar(45)
+  date            DateTime      @db.Date @default(now())
+  inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
+  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
+
+  @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
+  @@index([inscriptionId], name: "fk_Inscription_has_AdmissionTest_Inscription1_idx")
+}
+
+// Modelo CountryDepartment
+model CountryDepartment {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(85)
+  Towns Town[]
+}
+
+// Modelo Town
+model Town {
+  id                  Int               @id @default(autoincrement())
+  name                String            @db.VarChar(100)
+  countryDepartmentId Int
+  CountryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
+  RegionalCenters     RegionalCenter[]
+
+  @@index([countryDepartmentId], name: "fk_Town_CountryDepartment1_idx")
+}
+
+// Modelo RegionalCenter
+model RegionalCenter {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(100)
+  date              DateTime  @db.Date
+  RegionalCentercol String    @db.VarChar(45)
+  finalDate         DateTime? @db.Date
+  townId            Int
+  Town              Town      @relation(fields: [townId], references: [id])
+
+  @@index([townId], name: "fk_RegionalCenter_Town1_idx")
+}
