@@ -1,3 +1,4 @@
+/*
 import express from 'express';
 import resultRoutes from './routes/resultRoutes';
 import personRoutes from './routes/personRoutes';
@@ -17,3 +18,4 @@ app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
 
+*/
