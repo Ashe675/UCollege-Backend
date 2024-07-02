@@ -51,8 +51,10 @@ model Inscription {
   photoCertificate  String   @db.VarChar(300)
   date              DateTime @default(now()) @db.Date
   personId          Int
+  opinionId         Int?
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
+  opinion         Opinion?       @relation(fields: [opinionId], references: [id])
   person            Person   @relation(fields: [personId], references: [id])
   results           Result[]
 
@@ -91,7 +93,7 @@ model AdmissionTest_Career {
 model Opinion {
   id              Int            @id @default(autoincrement())
   message         String         @db.VarChar(90)
-  results         Result[]
+  inscriptions    Inscription[]
 }
 
 // Modelo Result
@@ -101,10 +103,8 @@ model Result {
   score           Float?
   message         String?        @db.VarChar(18)
   date            DateTime?      @db.Date
-  opinionId       Int?
   inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
-  opinion         Opinion?       @relation(fields: [opinionId], references: [id])
 
   @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
   @@index([inscriptionId], name: "fk_Inscription_has_AdmissionTest_Inscription1_idx")
