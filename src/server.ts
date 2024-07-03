@@ -4,8 +4,9 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 
-dotenv.config()
+import inscriptionRoutes from './routes/inscriptionRoutes';
 
+dotenv.config()
 connectDB()
 
 const app = express()
@@ -19,8 +20,14 @@ app.use(morgan('dev'))
 // leer datos de formularios
 app.use(express.json())
 
+
 app.get('/', (req, res) => {
     res.send('Hello World')
 })
+
+app.use(express.json());
+
+app.use('/api/inscriptions', inscriptionRoutes);
+
 
 export default app
