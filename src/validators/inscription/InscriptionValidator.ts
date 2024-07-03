@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../../config/db';
 
 class InscriptionValidator {
     async counterInscription(personId: number) {
@@ -59,7 +59,7 @@ class InscriptionValidator {
         
             // Verificar si alguna de las pruebas es "PAM" o "PCCNS"
             for (const test of allTests) {
-              if (test.admissionTest.name === 'PAM' || test.admissionTest.name === 'PCCNS') {
+              if (test.admissionTest.code === 'PAM' || test.admissionTest.code === 'PCCNS') {
                 return true;
               }
             }

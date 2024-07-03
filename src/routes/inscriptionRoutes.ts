@@ -1,8 +1,9 @@
 import express from 'express';
 import InscriptionController from '../controllers/inscriptionController';
-import upload from '../middleware/upload'; 
-import { validateInscription } from '../middleware/validateInscription';
-import { validatePerson } from '../middleware/validatePerson';
+import upload from '../middleware/inscription/upload'; 
+import { validateInscription } from '../middleware/inscription/validateInscription';
+import { validatePerson } from '../middleware/inscription/validatePerson';
+import { validateUniquePerson } from '../middleware/inscription/validateUniquePerson';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -16,7 +17,8 @@ router.post('/register',
     next();
   },
   validatePerson,
-  inscriptionController.register
+  validateUniquePerson,
+  (req, res) => inscriptionController.register(req, res)
 );
 
 export default router;
