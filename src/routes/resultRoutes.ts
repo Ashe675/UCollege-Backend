@@ -3,6 +3,6 @@ import { generateCsv } from '../controllers/resultController';
 
 const router = Router();
 
-router.post('/generate-csv', generateCsv);
+router.get('/generate-csv', generateCsv);
 
 export default router;

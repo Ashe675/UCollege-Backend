@@ -25,7 +25,7 @@ app.use(morgan('dev'))
 
 // leer datos de formularios
 app.use(express.json())
-app.use('/results', resultRoutes);
+app.use('/api', resultRoutes);
 app.use('/api', personRoutes);
 app.use('/api', admissionRoutes);
 app.use('/api', careerRoutes);

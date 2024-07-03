@@ -1,50 +1,92 @@
 import { Request, Response } from 'express';
-import { getResultsByDate } from '../services/resultService';
+import { PrismaClient } from '@prisma/client';
 import { createObjectCsvWriter } from 'csv-writer';
 
+const prisma = new PrismaClient();
+
+const generateRandomScore = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
 export const generateCsv = async (req: Request, res: Response) => {
-  const { date } = req.body;
+  const { date } = req.query;
+
+  if (!date) {
+    return res.status(400).send('Date query parameter is required');
+  }
 
   try {
-    const results = await getResultsByDate(date);
+    // Buscar todas las inscripciones de la fecha proporcionada
+    const inscriptions = await prisma.inscription.findMany({
+      where: {
+        date: new Date(date as string),
+      },
+      include: {
+        person: true,
+        principalCareer: {
+          include: {
+            admissionsTests: {
+              include: {
+                admissionTest: true,
+              },
+            },
+          },
+        },
+        secondaryCareer: {
+          include: {
+            admissionsTests: {
+              include: {
+                admissionTest: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    if (!results.length) {
-      return res.status(404).send('No results found for the given date.');
+    if (!inscriptions.length) {
+      return res.status(404).send('No inscriptions found for the given date.');
+    }
+
+    const records = [];
+
+    // Generar las notas aleatorias y preparar los registros para el CSV
+    for (const inscription of inscriptions) {
+      const careers = [
+        ...inscription.principalCareer.admissionsTests,
+        ...inscription.secondaryCareer.admissionsTests,
+      ];
+
+      for (const admissionTestCareer of careers) {
+        const score = generateRandomScore(
+          0,
+          Math.ceil(admissionTestCareer.admissionTest.score)
+        );
+
+        records.push({
+          dni: inscription.person.dni,
+          exam: admissionTestCareer.admissionTest.code,
+          score,
+        });
+      }
     }
 
     const csvWriter = createObjectCsvWriter({
       path: 'results.csv',
       header: [
-        { id: 'firstName', title: 'First Name' },
-        { id: 'lastName', title: 'Last Name' },
+        { id: 'score', title: 'Nota' },
+        { id: 'exam', title: 'Examen' },
         { id: 'dni', title: 'DNI' },
-        { id: 'principalCareer', title: 'Principal Career' },
-        { id: 'secondaryCareer', title: 'Secondary Career' },
-        { id: 'admissionTest', title: 'Admission Test' },
-        { id: 'score', title: 'Score' },
-        { id: 'message', title: 'Message' },
-        { id: 'date', title: 'Date' },
       ],
     });
-
-    const records = results.map(result => ({
-      firstName: result.inscription.person.firstName,
-      lastName: result.inscription.person.lastName,
-      dni: result.inscription.person.dni,
-      principalCareer: result.inscription.principalCareer.name,
-      secondaryCareer: result.inscription.secondaryCareer.name,
-      admissionTest: result.admissionTest.name,
-      score: result.score,
-      message: result.message,
-      date: result.date.toISOString().split('T')[0],
-    }));
 
     await csvWriter.writeRecords(records);
 
     res.download('results.csv');
   } catch (error) {
-    console.error(error);
+    console.error('Error generating CSV:', error);
     res.status(500).send('Internal Server Error');
   }
 };
+
 

@@ -1,6 +1,19 @@
-First Name,Last Name,DNI,Principal Career,Secondary Career,Admission Test,Score,Message,Date
-Delma,Valenzuela,0301200100215,Ingeniería Informática,Ingeniería en Sistemas,Prueba de Admision Academica,72.21409177038116,Failed,2024-07-02
-Delma,Valenzuela,0301200100213,Ingeniería Informática,Ingeniería en Sistemas,Prueba de Admision Academica,1478,Reprobado,2024-07-02
-Haswe,aklskal,0312102010201,Ingeniería Informática,Ingeniería en Sistemas,Prueba de Admision Academica,1638,Reprobado,2024-07-02
-Delma,Valenzuela,0301200100223,Ingeniería Informática,Ingeniería en Sistemas,Prueba de Admision Academica,1245,Passed,2024-07-02
-Lucas,Martínez,0801200100214,Ingeniería Informática,Ingeniería en Sistemas,Prueba de Admision Academica,1568,Aprobado,2024-07-02
+Nota,Examen,DNI
+1500,PAM,12345678A
+481,PAA,12345678A
+999,PAM,0301200100216
+449,PAA,0301200100216
+420,PAM,12345678A
+397,PAA,12345678A
+937,PAM,0301200100216
+902,PAA,0301200100216
+32,PAM,0301200100215
+963,PAA,0301200100215
+1531,PAM,0301200100213
+423,PAA,0301200100213
+1205,PAM,0312102010201
+613,PAA,0312102010201
+1296,PAM,0301200100223
+394,PAA,0301200100223
+880,PAM,0801200100214
+227,PAA,0801200100214
