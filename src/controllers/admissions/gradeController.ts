@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CSVService } from "../../services/admissions/CSVService";
 import { GradeService } from "../../services/admissions/gradeService";
-import { sendEmailResults } from "../../services/admissions/emailService";
+import { sendEmailResults } from "../../services/mail/emailService";
 
 
 export class GradeController {

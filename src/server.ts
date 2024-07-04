@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
-import uploadRouter from './routes/uploadRoutes'
+import uploadRouter from './routes/admissions/uploadRoutes'
 
 dotenv.config()
 
