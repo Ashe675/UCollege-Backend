@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
+import uploadRouter from './routes/admissions/uploadRoutes'
 
 import resultRoutes from './routes/admission/resultRoutes';
 
@@ -24,8 +25,8 @@ app.use(express.json())
 app.use('/api', resultRoutes);
 
 
-app.get('/', (req, res) => {
-    res.send('Hello World')
-})
+
+
+app.use('/api/upload',uploadRouter)
 
 export default app
