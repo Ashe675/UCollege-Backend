@@ -3,7 +3,10 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
-import uploadRouter from './routes/admissions/uploadRoutes'
+import uploadRouter from './routes/admission/uploadRoutes'
+
+import resultRoutes from './routes/admission/resultRoutes';
+
 
 dotenv.config()
 
@@ -19,6 +22,8 @@ app.use(morgan('dev'))
 
 // leer datos de formularios
 app.use(express.json())
+app.use('/api', resultRoutes);
+
 
 
 

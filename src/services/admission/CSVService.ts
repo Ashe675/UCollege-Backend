@@ -21,7 +21,7 @@ export class CSVService {
         let count = 0
 
         // creando un stream a partir de una cadena 
-        const readableStream = Readable.from(csvText.split('\n'));
+        const readableStream = Readable.from(csvText);
 
         // limpiando los encabezados y valores de espacios en blanco inicio y final
         const parser = csv({

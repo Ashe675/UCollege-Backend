@@ -9,12 +9,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // o el proveedor de base de datos que estés usando
   url      = env("DATABASE_URL")
 }
 
-// Aqui van los modelos
 
+// Aqui van los modelos:
 // Modelo Person
 model Person {
   id             Int           @id @default(autoincrement())
@@ -142,4 +142,3 @@ model RegionalCenter {
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
 }
-
