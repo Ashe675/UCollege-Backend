@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { CSVService } from "../../services/admissions/CSVService";
-import { GradeService } from "../../services/admissions/GradeService";
+import { GradeService } from "../../services/admissions/gradeService";
 import { sendEmailResults } from "../../services/admissions/emailService";
 
 
