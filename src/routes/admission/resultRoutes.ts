@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateCsv } from '../controllers/resultController';
+import { generateCsv } from '../../controllers/admission/resultController';
 
 const router = Router();
 

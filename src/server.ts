@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 
-import resultRoutes from './routes/resultRoutes';
+import resultRoutes from './routes/admission/resultRoutes';
 
 
 dotenv.config()

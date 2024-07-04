@@ -1,4 +1,4 @@
-import { createObjectCsvWriter } from 'csv-writer';
+import { createObjectCsvStringifier } from 'csv-writer';
 
 const generateRandomScore = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -43,9 +43,8 @@ export const prepareCsvRecords = (inscriptions: any[]) => {
   return records;
 };
 
-export const writeCsvFile = async (records: any[]) => {
-  const csvWriter = createObjectCsvWriter({
-    path: 'results.csv',
+export const getCsvString = (records: any[]) => {
+  const csvStringifier = createObjectCsvStringifier({
     header: [
       { id: 'score', title: 'Nota' },
       { id: 'exam', title: 'Examen' },
@@ -53,5 +52,9 @@ export const writeCsvFile = async (records: any[]) => {
     ],
   });
 
-  await csvWriter.writeRecords(records);
+  const header = csvStringifier.getHeaderString();
+  const recordsString = csvStringifier.stringifyRecords(records);
+  
+  return header + recordsString;
 };
+

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { getAllInscriptions } from '../services/inscriptionService';
-import { prepareCsvRecords, writeCsvFile } from '../services/CSVGenerateService';
+import { getAllInscriptions } from '../../services/admission/inscriptionService';
+import { prepareCsvRecords, getCsvString } from '../../services/admission/CSVGenerateService';
 
 export const generateCsv = async (req: Request, res: Response) => {
   try {
@@ -11,14 +11,17 @@ export const generateCsv = async (req: Request, res: Response) => {
     }
 
     const records = prepareCsvRecords(inscriptions);
-    await writeCsvFile(records);
+    const csvString = getCsvString(records);
 
-    res.download('results.csv');
+    res.setHeader('Content-disposition', 'attachment; filename=results.csv');
+    res.setHeader('Content-Type', 'text/csv');
+    res.status(200).send(csvString);
   } catch (error) {
     console.error('Error al generar el CSV:', error);
     res.status(500).send('Error interno en el servidor');
   }
 };
+
 
 
 
