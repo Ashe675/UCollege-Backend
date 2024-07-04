@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { GradeController } from '../../controllers/admissions/gradeController'
+import { GradeController } from '../../controllers/admission/gradeController'
 import multer from "multer";
 
 const upload = multer()
