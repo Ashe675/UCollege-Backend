@@ -1,12 +1,20 @@
 import { Request, Response } from "express";
-import { CSVService } from "../../services/CSVService";
-import { GradeService } from "../../services/GradeService";
+import { CSVService } from "../../services/admissions/CSVService";
+import { GradeService } from "../../services/admissions/GradeService";
+import { sendEmailResults } from "../../services/admissions/emailService";
 
 
 export class GradeController {
     static readGrades = async (req: Request, res: Response) => {
-        if (!req.file) {
+         // Verificar que se subió el archivo
+         if (!req.file) {
             return res.status(400).send('No se subió ningún archivo.');
+        }
+
+        // Verificar que el archivo es un CSV
+        const fileType = req.file.mimetype;
+        if (fileType !== 'text/csv') {
+            return res.status(400).send('El archivo subido no es un archivo CSV.');
         }
 
         try {
@@ -24,8 +32,9 @@ export class GradeController {
 
             await GradeService.updateInscriptions();
 
-            res.status(200).send('CSV data has been processed.');
-            console.log('jajajja')
+            res.status(200).send('¡NOTAS SUBIDAS CORRECTAMENTE!');
+            sendEmailResults('jcerratoj@unah.hn')
+            sendEmailResults('josecerrato675@gmail.com')
         } catch (error) {
             res.status(400).send({ error: error.message });
         }
