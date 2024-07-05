@@ -36,19 +36,19 @@ export default class InscriptionController {
 
       
       
-      let isEspecialTest = await InscriptionValidator.isEspecialTest(principalCareerId, secondaryCareerId);
+      //let isEspecialTest = await InscriptionValidator.isEspecialTest(principalCareerId, secondaryCareerId);
       
-      if(isEspecialTest){
-        const validation = await InscriptionValidator.counterInscription(person.id);
-        if (!validation.valid) {
-          throw new Error(validation.message);
-        }
+      
+      const validation = await InscriptionValidator.counterInscription(person.id);
+      if (!validation.valid) {
+        throw new Error(validation.message);
       }
+      
       const inscription = await this.inscriptionService.createInscription(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10), photoCertificate);
 
       await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
 
-      res.status(201).json("inscription");
+      res.status(201).json(inscription);
     } catch (error) {
       console.error(error);
       if (error.message) {

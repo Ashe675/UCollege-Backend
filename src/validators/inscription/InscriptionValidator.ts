@@ -15,8 +15,11 @@ class InscriptionValidator {
         });
 
         
+
+        
         let pccnsCount = 0;
         let pamCount = 0;
+        let paaCount = 0;
         
         for (const inscription of inscriptions) {
             for (const result of inscription.results) {
@@ -25,19 +28,26 @@ class InscriptionValidator {
                     pccnsCount++;
                 } else if (result.admissionTest.code === 'PAM') {
                     pamCount++;
+                } else if (result.admissionTest.code === 'PAA') {
+                    paaCount++;
                 }
             }
         }
         console.log(pccnsCount);
 
         // Verificar si la persona ha excedido los límites permitidos
-        if (pccnsCount > 1) {
-            return { valid: false, message: 'La prueba PCCNS solo se puede realizar una vez.' };
+        if (paaCount > 3) {
+            return { valid: false, message: 'La prueba PAA solo se puede realizar tre veces.' };
         }
 
         if (pamCount > 2) {
             return { valid: false, message: 'La prueba PAM solo se puede realizar dos veces.' };
         }
+
+        if (pccnsCount > 1) {
+            return { valid: false, message: 'La prueba PCCNS solo se puede realizar una vez.' };
+        }
+
 
         return { valid: true };
     }
