@@ -132,7 +132,7 @@ class InscriptionValidator {
             return false
           
         }
-      }
+    }
 
 }
 

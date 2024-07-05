@@ -46,23 +46,28 @@ export default class InscriptionService {
    *   - phoneNumber: string
    *   - email: string
    */
-  async createOrFindPerson(data: {
-    dni: string,
-    firstName: string,
-    middleName?: string,
-    lastName: string,
-    secondLastName?: string,
-    phoneNumber: string,
-    email: string,
-  }) {
-    let person = await prisma.person.findUnique({
-      where: { dni: data.dni },
-    });
-    
-    if (!person) {
-      if(!InscriptionValidator.validateUniquePerson(data.dni, data.email)){
-        throw new Error('email o dni de la persona ya fue registrado al sistema, verifique si esta correcto');
-      }else{
+    async createOrFindPerson(data: {
+      dni: string,
+      firstName: string,
+      middleName?: string,
+      lastName: string,
+      secondLastName?: string,
+      phoneNumber: string,
+      email: string,
+    }) {
+      let person = await prisma.person.findUnique({
+        where: { dni: data.dni },
+      });
+      
+      if (!person) {
+        const existingPersonByEmail = await prisma.person.findUnique({
+          where: { email: data.email },
+        });
+  
+        if (existingPersonByEmail) {
+          throw new Error('El email ya está registrado en el sistema, verifique si es correcto.');
+        }
+  
         person = await prisma.person.create({
           data: {
             dni: data.dni,
@@ -74,13 +79,16 @@ export default class InscriptionService {
             email: data.email,
           },
         });
-
       }
+
+      /**
+       * aqui falta la logica para asegurarse de que el dni 
+       * sea de la persona que se esta registrando.
+       * 
+       */
+
+      return person;
     }
-
-    return person;
-  }
-
  
 
 
@@ -95,9 +103,7 @@ export default class InscriptionService {
    * @param photoCertificate - (Opcional) Ruta del certificado de foto.
    */
   async createInscription(personId: number, principalCareerId: number, secondaryCareerId: number, photoCertificate?: string) {
-    if (principalCareerId === secondaryCareerId) {
-      throw new Error("Las carreras primaria y secundaria son iguales");
-    }
+    
 
     const inscription = await prisma.inscription.create({
       data: {
@@ -143,7 +149,7 @@ export default class InscriptionService {
         });
       } catch (error) {
         if (error.code === 'P2002') {
-          console.log(`Duplicate entry for inscriptionId: ${inscriptionId} and admissionTestId: ${test.admissionTestId}`);
+          console.log(`Entrada duplicada para inscriptionId: ${inscriptionId} y admissionTestId: ${test.admissionTestId}`);
         } else {
           throw error;
         }

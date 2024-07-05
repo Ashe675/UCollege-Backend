@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import InscriptionService from '../services/inscription/inscriptionService';
 import InscriptionValidator from '../validators/InscriptionValidator';
+import deleteImage from '../utils/fileHandler';
 
 
 /**
@@ -33,6 +34,12 @@ export default class InscriptionController {
     this.inscriptionService = new InscriptionService();
   }
 
+  /**
+   * Maneja el registro de inscripciones.
+   * @param req - Objeto de solicitud HTTP (Request).
+   * @param res - Objeto de respuesta HTTP (Response).
+   * @returns Una respuesta JSON con el resultado de la inscripción o un mensaje de error.
+   */
   async register(req: Request, res: Response) {
     const {
       dni,
@@ -59,10 +66,6 @@ export default class InscriptionController {
       });
 
       
-      
-      //let isEspecialTest = await InscriptionValidator.isEspecialTest(principalCareerId, secondaryCareerId);
-      
-      
       const validation = await InscriptionValidator.counterInscription(person.id);
       if (!validation.valid) {
         throw new Error(validation.message);
@@ -72,12 +75,19 @@ export default class InscriptionController {
 
       await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
 
-      res.status(201).json(inscription);
+      res.status(201).json("Inscriptcion creado correctamente");
     } catch (error) {
       console.error(error);
       if (error.message) {
+        
+        //Eliminamos la imagen del servidor
+        deleteImage(photoCertificate);
+        
         res.status(400).json({ error: error.message });
       } else {
+        
+        //Eliminamos la imagen del servidor
+        deleteImage(photoCertificate);
         res.status(500).json({ error: 'Internal server error' });
       }
     }
