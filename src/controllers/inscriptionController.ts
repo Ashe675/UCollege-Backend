@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import InscriptionService from '../services/inscription/inscriptionService';
-import InscriptionValidator from '../validators/inscription/InscriptionValidator';
+import InscriptionValidator from '../validators/InscriptionValidator';
 
 export default class InscriptionController {
   private inscriptionService: InscriptionService;

@@ -1,7 +1,7 @@
 import express from 'express';
 import InscriptionController from '../controllers/inscriptionController';
-import upload from '../middleware/inscription/upload'; 
-import InscriptionValidator  from '../middleware/inscription/validateInscription';
+import upload from '../middleware/upload'; 
+import InscriptionValidator  from '../middleware/DataInscriptionValidator';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();

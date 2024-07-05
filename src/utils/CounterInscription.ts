@@ -28,7 +28,7 @@ export async function counterInscription(personId: number) {
             }
         }
     }
-    console.log(pccnsCount);
+    //console.log(pccnsCount);
 
     // Verificar si la persona ha excedido los límites permitidos
     if (pccnsCount > 1) {

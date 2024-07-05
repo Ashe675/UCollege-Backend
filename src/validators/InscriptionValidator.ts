@@ -1,4 +1,4 @@
-import { prisma } from '../../config/db';
+import { prisma } from '../config/db';
 
 class InscriptionValidator {
     async counterInscription(personId: number) {
@@ -33,18 +33,18 @@ class InscriptionValidator {
                 }
             }
         }
-        console.log(pccnsCount);
+        //console.log(pccnsCount);
 
         // Verificar si la persona ha excedido los límites permitidos
-        if (paaCount > 3) {
+        if (paaCount >= 3) {
             return { valid: false, message: 'La prueba PAA solo se puede realizar tre veces.' };
         }
 
-        if (pamCount > 2) {
+        if (pamCount >= 2) {
             return { valid: false, message: 'La prueba PAM solo se puede realizar dos veces.' };
         }
 
-        if (pccnsCount > 1) {
+        if (pccnsCount >= 1) {
             return { valid: false, message: 'La prueba PCCNS solo se puede realizar una vez.' };
         }
 
@@ -80,6 +80,31 @@ class InscriptionValidator {
             return false;
           }
     }
+
+    async validateUniquePerson(dni, email) {
+        //const { dni, email } = req.body;
+        
+        try {
+          const existingPerson = await prisma.person.findFirst({
+            where: {
+              OR: [
+                { dni },
+                { email },
+              ],
+            },
+          });
+          
+          if (existingPerson) {
+            return true;
+          }
+
+          return false;
+        } catch (error) {
+          console.error(error);
+          
+        }
+      }
+
 }
 
 export default new InscriptionValidator();

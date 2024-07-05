@@ -1,5 +1,5 @@
 import { prisma } from '../../config/db';
-import InscriptionValidator from '../../validators/inscription/InscriptionValidator';
+import InscriptionValidator from '../../validators/InscriptionValidator';
 
 export default class InscriptionService {
   async createOrFindPerson(data: {
@@ -16,6 +16,9 @@ export default class InscriptionService {
     });
     
     if (!person) {
+      if(InscriptionValidator.validateUniquePerson(person.dni, person.email)){
+        throw new Error('email o dni de la persona ya fue registrado al sistema, verifique si esta correcto');
+      }
       person = await prisma.person.create({
         data: {
           dni: data.dni,

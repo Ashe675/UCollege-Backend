@@ -1,8 +1,8 @@
 import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../../config/db';
+//import { prisma } from '../config/db';
 
-class InscriptionValidator {
+class DataInscription {
   static validateCareerIds() {
     return [
       body('principalCareerId')
@@ -22,6 +22,18 @@ class InscriptionValidator {
     ];
   }
 
+  /**
+ * Middleware para verificar los resultados de la validación de la solicitud.
+ * 
+ * Esta función realiza las siguientes acciones:
+ * 1. Obtiene los errores de validación de la solicitud `req` usando `validationResult`.
+ * 2. Si hay errores de validación, responde con un estado 400 (Bad Request) y un JSON que contiene los errores.
+ * 3. Si no hay errores, llama a `next()` para pasar el control al siguiente middleware.
+ * 
+ * @param req - El objeto de solicitud (Request).
+ * @param res - El objeto de respuesta (Response).
+ * @param next - La función que se llama para pasar el control al siguiente middleware.
+ */
   static checkValidationResult(req: Request, res: Response, next: NextFunction) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -53,7 +65,8 @@ class InscriptionValidator {
         .notEmpty().withMessage('Phone number is required'),
       body('email')
         .isEmail().withMessage('Email must be a valid email address'),
-        InscriptionValidator.validateCareerIds(),
+        DataInscription.validateCareerIds(),
+        DataInscription.checkValidationResult,
         
         (req: Request, res: Response, next: NextFunction) => {
           
@@ -66,6 +79,8 @@ class InscriptionValidator {
     ];
   }
 
+  /**
+   * 
   static async validateUniquePerson(req: Request, res: Response, next: NextFunction) {
     const { dni, phoneNumber, email } = req.body;
     
@@ -78,17 +93,18 @@ class InscriptionValidator {
           ],
         },
       });
-
+      
       if (existingPerson) {
         return res.status(400).json({ error: 'Una persona con este DNI o correo electrónico ya existe en la base de datos.' });
       }
-
+      
       next();
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Error interno del servidor.' });
     }
   }
+  */
 }
 
-export default InscriptionValidator;
+export default DataInscription;
