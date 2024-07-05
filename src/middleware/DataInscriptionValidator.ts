@@ -42,6 +42,37 @@ class DataInscription {
     next();
   }
 
+  /**
+ * Middleware para validar los datos de una persona en una solicitud HTTP.
+ * 
+ * Esta función realiza las siguientes validaciones en los campos del cuerpo de la solicitud:
+ * 
+ * 1. **DNI**:
+ *    - Debe tener exactamente 13 caracteres.
+ *    - Debe ser una cadena de texto.
+ * 
+ * 2. **Nombre**:
+ *    - `firstName`: Debe ser una cadena de texto y no puede estar vacío.
+ *    - `middleName`: Opcional, pero si se proporciona, debe ser una cadena de texto.
+ *    - `lastName`: Debe ser una cadena de texto y no puede estar vacío.
+ *    - `secondLastName`: Opcional, pero si se proporciona, debe ser una cadena de texto.
+ * 
+ * 3. **Número de teléfono**:
+ *    - Debe ser una cadena de texto y no puede estar vacío.
+ * 
+ * 4. **Correo electrónico**:
+ *    - Debe ser una dirección de correo electrónico válida.
+ * 
+ * 5. **Validaciones adicionales**:
+ *    - `DataInscription.validateCareerIds()`: Valida los IDs de las carreras.
+ *    - `DataInscription.checkValidationResult`: Verifica los resultados de la validación.
+ * 
+ * 6. **Manejo de errores**:
+ *    - Si hay errores de validación, responde con un estado 400 (Bad Request) y un JSON que contiene los errores.
+ *    - Si no hay errores, llama a `next()` para pasar el control al siguiente middleware.
+ * 
+ * @returns Un array de middlewares de validación.
+ */
   static validatePerson() {
     
     return [
@@ -79,32 +110,6 @@ class DataInscription {
     ];
   }
 
-  /**
-   * 
-  static async validateUniquePerson(req: Request, res: Response, next: NextFunction) {
-    const { dni, phoneNumber, email } = req.body;
-    
-    try {
-      const existingPerson = await prisma.person.findFirst({
-        where: {
-          OR: [
-            { dni },
-            { email },
-          ],
-        },
-      });
-      
-      if (existingPerson) {
-        return res.status(400).json({ error: 'Una persona con este DNI o correo electrónico ya existe en la base de datos.' });
-      }
-      
-      next();
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Error interno del servidor.' });
-    }
-  }
-  */
 }
 
 export default DataInscription;

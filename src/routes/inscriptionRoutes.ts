@@ -32,7 +32,7 @@ router.post('/register',
   upload.single('photoCertificate'), 
   (req, res, next) => {
     if (!req.file) {
-      return res.status(400).json({ error: 'PhotoCertificate is required and must be an image' });
+      return res.status(400).json({ error: 'Se requiere el certificado de foto y debe ser una imagen.' });
     }
     next();
   },

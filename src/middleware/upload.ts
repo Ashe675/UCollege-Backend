@@ -2,6 +2,25 @@ import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 import { Request } from 'express';
 
+/**
+ * Middleware de Multer para manejar la carga de archivos.
+ * 
+ * Esta configuración de Multer realiza las siguientes acciones:
+ * 
+ * 1. **Almacenamiento**:
+ *    - Define el directorio `uploads/` como el destino donde se almacenarán las imágenes.
+ *    - Genera un nombre de archivo único para cada imagen cargada, combinando el nombre del campo, un sufijo único basado en la fecha y una extensión de archivo.
+ * 
+ * 2. **Filtro de archivos**:
+ *    - Acepta solo archivos de imagen (mimetype que comienza con 'image/').
+ *    - Rechaza otros tipos de archivos.
+ * 
+ * 3. **Límites**:
+ *    - Establece un límite de tamaño de archivo de 5MB.
+ * 
+ */
+
+
 // Configurar almacenamiento
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
