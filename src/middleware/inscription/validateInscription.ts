@@ -1,11 +1,6 @@
 import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
-
-
 import { prisma } from '../../config/db';
-
-
-
 
 class InscriptionValidator {
   static validateCareerIds() {
@@ -35,8 +30,9 @@ class InscriptionValidator {
     next();
   }
 
-  public static validatePerson(){
-    return[
+  static validatePerson() {
+    
+    return [
       body('dni')
         .isLength({ min: 13, max: 13 }).withMessage('DNI must be 13 characters long')
         .isString().withMessage('DNI must be a string'),
@@ -57,38 +53,35 @@ class InscriptionValidator {
         .notEmpty().withMessage('Phone number is required'),
       body('email')
         .isEmail().withMessage('Email must be a valid email address'),
-      body('principalCareerId')
-        .isInt({ gt: 0 }).withMessage('PrincipalCareerId must be a positive integer'),
-      body('secondaryCareerId')
-        .isInt({ gt: 0 }).withMessage('SecondaryCareerId must be a positive integer'),
-      
-
-      (req: Request, res: Response, next: NextFunction) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-          return res.status(400).json({ errors: errors.array() });
+        InscriptionValidator.validateCareerIds(),
+        
+        (req: Request, res: Response, next: NextFunction) => {
+          
+          const errors = validationResult(req);
+          if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+          }
+          next();
         }
-        next();
-      }
     ];
   }
 
-  public static async validateUniquePerson(req: Request, res: Response, next: NextFunction){
+  static async validateUniquePerson(req: Request, res: Response, next: NextFunction) {
     const { dni, phoneNumber, email } = req.body;
-
+    
     try {
       const existingPerson = await prisma.person.findFirst({
         where: {
           OR: [
             { dni },
-            { phoneNumber },
+            
             { email },
           ],
         },
       });
 
       if (existingPerson) {
-        return res.status(400).json({ error: 'Una persona con este DNI, número de teléfono o correo electrónico ya existe en la base de datos.' });
+        return res.status(400).json({ error: 'Una persona con este DNI o correo electrónico ya existe en la base de datos.' });
       }
 
       next();

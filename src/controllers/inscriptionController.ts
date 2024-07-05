@@ -33,7 +33,10 @@ export default class InscriptionController {
         email,
       });
 
+      
+      
       await this.inscriptionService.validateSpecialTest(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
+      console.log("aqui esta el puto error en la linea ...");
       
       const inscription = await this.inscriptionService.createInscription(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10), photoCertificate);
 

@@ -14,7 +14,7 @@ export default class InscriptionService {
     let person = await prisma.person.findUnique({
       where: { dni: data.dni },
     });
-
+    
     if (!person) {
       person = await prisma.person.create({
         data: {
@@ -28,8 +28,13 @@ export default class InscriptionService {
         },
       });
     }
+    
+    
+    if (person){
+      return person;
 
-    return person;
+    }
+    
   }
 
   async validateSpecialTest(personId: number, principalCareerId: number, secondaryCareerId: number) {

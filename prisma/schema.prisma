@@ -13,7 +13,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Aqui van los modelos:
+// Aqui van los modelos
+
 // Modelo Person
 model Person {
   id             Int           @id @default(autoincrement())
@@ -22,7 +23,7 @@ model Person {
   middleName     String?       @db.VarChar(45)
   lastName       String        @db.VarChar(45)
   secondLastName String?       @db.VarChar(45)
-  phoneNumber    String        @unique @db.VarChar(20)
+  phoneNumber    String        @db.VarChar(20)
   email          String        @unique @db.VarChar(100)
   inscriptions   Inscription[]
 }
@@ -50,8 +51,10 @@ model Inscription {
   photoCertificate  String   @db.VarChar(300)
   date              DateTime @default(now()) @db.Date
   personId          Int
+  opinionId         Int?
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
+  opinion         Opinion?       @relation(fields: [opinionId], references: [id])
   person            Person   @relation(fields: [personId], references: [id])
   results           Result[]
 
@@ -72,7 +75,6 @@ model AdmissionTest {
   results             Result[]
 }
 
-
 // Modelo AdmissionTest_Career
 model AdmissionTest_Career {
   id              Int           @id @default(autoincrement())
@@ -87,12 +89,19 @@ model AdmissionTest_Career {
   @@index([admissionTestId], name: "fk_AdmissionTest_has_Career_AdmissionTest1_idx")
 }
 
+// Modelo Opinion
+model Opinion {
+  id              Int            @id @default(autoincrement())
+  message         String         @db.VarChar(90)
+  inscriptions    Inscription[]
+}
+
 // Modelo Result
 model Result {
   inscriptionId   Int
   admissionTestId Int
   score           Float?
-  message         String?        @db.VarChar(90)
+  message         String?        @db.VarChar(18)
   date            DateTime?      @db.Date
   inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
@@ -100,7 +109,7 @@ model Result {
   @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
   @@index([inscriptionId], name: "fk_Inscription_has_AdmissionTest_Inscription1_idx")
 
-  @@id([inscriptionId, admissionTestId])
+   @@id([inscriptionId, admissionTestId])
 }
 
 // Modelo CountryDepartment
