@@ -28,23 +28,17 @@ export default class InscriptionService {
         },
       });
     }
-    
-    
-    if (person){
-      return person;
 
-    }
-    
+    return person;
   }
 
   async validateSpecialTest(personId: number, principalCareerId: number, secondaryCareerId: number) {
     const validateSpecialTest = await InscriptionValidator.isEspecialTest(principalCareerId, secondaryCareerId);
     if (validateSpecialTest) {
-      const validation = await InscriptionValidator.counterInscription(personId);
-      if (!validation.valid) {
-        throw new Error(validation.message);
-      }
+      
+      return true;
     }
+    return false;
   }
 
   async createInscription(personId: number, principalCareerId: number, secondaryCareerId: number, photoCertificate?: string) {

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import InscriptionService from '../services/inscription/inscriptionService';
+import InscriptionValidator from '../validators/inscription/InscriptionValidator';
 
 export default class InscriptionController {
   private inscriptionService: InscriptionService;
@@ -35,14 +36,19 @@ export default class InscriptionController {
 
       
       
-      await this.inscriptionService.validateSpecialTest(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
-      console.log("aqui esta el puto error en la linea ...");
+      let isEspecialTest = await InscriptionValidator.isEspecialTest(principalCareerId, secondaryCareerId);
       
+      if(isEspecialTest){
+        const validation = await InscriptionValidator.counterInscription(person.id);
+        if (!validation.valid) {
+          throw new Error(validation.message);
+        }
+      }
       const inscription = await this.inscriptionService.createInscription(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10), photoCertificate);
 
       await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
 
-      res.status(201).json(inscription);
+      res.status(201).json("inscription");
     } catch (error) {
       console.error(error);
       if (error.message) {

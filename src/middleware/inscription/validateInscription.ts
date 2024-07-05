@@ -74,7 +74,6 @@ class InscriptionValidator {
         where: {
           OR: [
             { dni },
-            
             { email },
           ],
         },

@@ -20,14 +20,15 @@ class InscriptionValidator {
         
         for (const inscription of inscriptions) {
             for (const result of inscription.results) {
-                console.log(result);
-                if (result.admissionTest.name === 'PCCNS') {
+                //console.log(result);
+                if (result.admissionTest.code === 'PCCNS') {
                     pccnsCount++;
-                } else if (result.admissionTest.name === 'PAM') {
+                } else if (result.admissionTest.code === 'PAM') {
                     pamCount++;
                 }
             }
         }
+        console.log(pccnsCount);
 
         // Verificar si la persona ha excedido los límites permitidos
         if (pccnsCount > 1) {

@@ -37,7 +37,7 @@ router.post('/register',
     next();
   },
   ...InscriptionValidator.validatePerson(),
-  InscriptionValidator.validateUniquePerson,
+  
   (req, res) => inscriptionController.register(req, res)
 );
 
