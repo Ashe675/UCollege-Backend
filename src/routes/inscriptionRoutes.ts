@@ -1,12 +1,11 @@
 import express from 'express';
 import InscriptionController from '../controllers/inscriptionController';
 import upload from '../middleware/inscription/upload'; 
-import { validateInscription } from '../middleware/inscription/validateInscription';
-import { validatePerson } from '../middleware/inscription/validatePerson';
-import { validateUniquePerson } from '../middleware/inscription/validateUniquePerson';
+import InscriptionValidator  from '../middleware/inscription/validateInscription';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
+
 
 router.post('/register', 
   upload.single('photoCertificate'), 
@@ -16,8 +15,8 @@ router.post('/register',
     }
     next();
   },
-  validatePerson,
-  validateUniquePerson,
+  InscriptionValidator.validatePerson,
+  InscriptionValidator.validateUniquePerson,
   (req, res) => inscriptionController.register(req, res)
 );
 
