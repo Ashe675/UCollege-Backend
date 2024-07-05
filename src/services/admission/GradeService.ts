@@ -1,5 +1,5 @@
 import { prisma } from "../../config/db"
-import { DataCSV } from "../admission/CSVService";
+import { DataCSV } from "./CSVService";
 
 export class GradeService {
     static validateAndSaveResult = async (result: DataCSV, index: number) => {
