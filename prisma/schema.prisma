@@ -39,6 +39,7 @@ model Career {
   admissionsTests AdmissionTest_Career[]
   inscriptionsPrincipals    Inscription[] @relation("principalCareer")
   inscriptionsSecondaries    Inscription[] @relation("secondaryCareer")
+  regionalCentersCareers   RegionalCenter_Career[]
 
   @@index([id], name: "pk_Career_idx")
 }
@@ -61,6 +62,24 @@ model Inscription {
   @@index([principalCareerId], name: "fk_Inscription_Career1_idx")
   @@index([secondaryCareerId], name: "fk_Inscription_Career2_idx")
   @@index([personId], name: "fk_Inscription_Person1_idx")
+}
+
+// Modelo Centro Regional
+model RegionalCenter_Career {
+  id                 Int         @id @default(autoincrement())
+  careerId           Int
+  regionalCenterId   Int
+  startDate          DateTime    @default(now()) @db.Date
+  finalDate          DateTime?
+  active             Boolean     @default(true)
+
+  // Indexes
+  @@index([regionalCenterId], name: "fk_Career_has_RegionalCenter_RegionalCenter1_idx")
+  @@index([careerId], name: "fk_Faculty_has_RegionalCenter_Faculty1_idx")
+
+  // Foreign keys
+  career             Career     @relation(fields: [careerId], references: [id])
+  regionalCenter     RegionalCenter @relation(fields: [regionalCenterId], references: [id])
 }
 
 // Modelo AdmissionTest
@@ -116,7 +135,7 @@ model Result {
 model CountryDepartment {
   id    Int    @id @default(autoincrement())
   name  String @db.VarChar(85)
-  Towns Town[]
+  towns Town[]
 }
 
 // Modelo Town
@@ -124,8 +143,8 @@ model Town {
   id                  Int               @id @default(autoincrement())
   name                String            @db.VarChar(100)
   countryDepartmentId Int
-  CountryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
-  RegionalCenters     RegionalCenter[]
+  countryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
+  regionalCenters     RegionalCenter[]
 
   @@index([countryDepartmentId], name: "fk_Town_CountryDepartment1_idx")
 }
@@ -135,10 +154,11 @@ model RegionalCenter {
   id                Int       @id @default(autoincrement())
   name              String    @db.VarChar(100)
   date              DateTime  @db.Date
-  RegionalCentercol String    @db.VarChar(45)
+  code              String    @db.VarChar(45)
   finalDate         DateTime? @db.Date
   townId            Int
-  Town              Town      @relation(fields: [townId], references: [id])
+  town              Town      @relation(fields: [townId], references: [id])
+  regionalCentersCareer     RegionalCenter_Career[]
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
 }
