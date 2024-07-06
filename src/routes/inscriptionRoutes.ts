@@ -15,17 +15,19 @@ const inscriptionController = new InscriptionController();
  * Método: POST
  * Tipo de cuerpo: form-data
  * Contenido del cuerpo:
- * - principalCareerId: number (ej. 2)
- * - secondaryCareerId: number (ej. 3)
- * - personId: number (ej. 1)
- * - photoCertificate: file (ej. 'WhatsApp Image 2023-10-29 at 1.50.07 PM.jpeg')
- * - dni: string (ej. '0804596512126')
- * - firstName: string (ej. 'Carlos')
- * - middleName: string (ej. 'Jose')
- * - lastName: string (ej. 'Gallo')
- * - secondLastName: string (ej. 'C')
- * - phoneNumber: string (ej. '95957802')
- * - email: string (ej. 'm.funcz03@example.com')
+ * - principalCareerId:   number (ej. 2)
+ * - secondaryCareerId:   number (ej. 3)
+ * - personId:            number (ej. 1)
+ * - processId:           number 
+ * - regionalCenterId:    number
+ * - photoCertificate:    file (ej. 'WhatsApp Image 2023-10-29 at 1.50.07 PM.jpeg')
+ * - dni:                 string (ej. '0804596512126')
+ * - firstName:           string  (ej. 'Carlos')
+ * - middleName:          string (ej. 'Jose')
+ * - lastName:            string (ej. 'Gallo')
+ * - secondLastName:      string (ej. 'C')
+ * - phoneNumber:         string (ej. '95957802')
+ * - email:               string (ej. 'm.funcz03@example.com')
  */
 
 
