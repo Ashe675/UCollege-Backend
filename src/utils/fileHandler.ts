@@ -11,7 +11,7 @@ const deleteImage = (fileName: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     const filePath = path.join(__dirname, '../..', '', fileName);
     
-
+    console.log(filePath);
     fs.unlink(filePath, (err) => {
       if (err) {
         return reject(err);

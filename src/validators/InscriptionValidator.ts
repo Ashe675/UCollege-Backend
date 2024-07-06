@@ -65,41 +65,7 @@ class InscriptionValidator {
         return { valid: true };
     }
 
-    /**
-     * Verifica si la combinación de carreras principal y secundaria corresponde a una prueba especial.
-     * 
-     * @param careerId1 - ID de la primera carrera.
-     * @param careerId2 - ID de la segunda carrera.
-     * @returns Una promesa que resuelve a `true` si es una prueba especial, de lo contrario, resuelve a `false`.
-    async isEspecialTest(careerId1: number, careerId2: number): Promise<boolean>{
-        try {
-            // Obtener las pruebas de admisión asociadas a las carreras
-            const testsCareer1 = await prisma.admissionTest_Career.findMany({
-              where: { careerId: careerId1 },
-              include: { admissionTest: true }
-            });
-        
-            const testsCareer2 = await prisma.admissionTest_Career.findMany({
-              where: { careerId: careerId2 },
-              include: { admissionTest: true }
-            });
-            
-            // Combinar las pruebas de ambas carreras
-            const allTests = [...testsCareer1, ...testsCareer2];
-            
-            // Verificar si alguna de las pruebas es "PAM" o "PCCNS"
-            for (const test of allTests) {
-                if (test.admissionTest.code === 'PAM' || test.admissionTest.code === 'PCCNS') {
-                    return true;
-                }
-            }
-            return false;
-        } catch (error) {
-            console.error('Error al verificar las pruebas especiales:', error);
-            return false;
-        }
-    }
-    */
+    
     
     /**
      * Valida si una persona con el DNI o correo electrónico proporcionado ya existe en la base de datos.
@@ -131,6 +97,27 @@ class InscriptionValidator {
             console.error(error);
             return false
           
+        }
+    }
+
+    async isActiveProcess(processId: number) {
+        try {
+            const existingProcess = await prisma.process.findFirst({
+                where: {
+                    id: processId
+                },
+            });
+    
+            // Verifica si el proceso existe y está activo
+            if (!existingProcess || !existingProcess.active) {
+                return false;
+            }
+    
+            return true;
+    
+        } catch (error) {
+            console.error(error);
+            return false; 
         }
     }
 

@@ -102,15 +102,18 @@ export default class InscriptionService {
    * @param secondaryCareerId - ID de la carrera secundaria.
    * @param photoCertificate - (Opcional) Ruta del certificado de foto.
    */
-  async createInscription(personId: number, principalCareerId: number, secondaryCareerId: number, photoCertificate?: string) {
+  async createInscription(personId: number, principalCareerId: number, secondaryCareerId: number, processId: number, regionalCenterId: number , photoCertificate?: string) {
     
 
     const inscription = await prisma.inscription.create({
       data: {
+        
         principalCareerId,
         secondaryCareerId,
         photoCertificate: photoCertificate || '',
         personId,
+        processId,
+        regionalCenterId,
       },
     });
 

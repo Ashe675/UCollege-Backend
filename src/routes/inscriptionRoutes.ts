@@ -2,6 +2,7 @@ import express from 'express';
 import InscriptionController from '../controllers/inscriptionController';
 import upload from '../middleware/upload'; 
 import InscriptionValidator  from '../middleware/DataInscriptionValidator';
+import {validateProcess} from '../middleware/isActiveProcess'
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -37,6 +38,7 @@ router.post('/register',
     next();
   },
   ...InscriptionValidator.validatePerson(),
+  validateProcess,
   
   (req, res) => inscriptionController.register(req, res)
 );

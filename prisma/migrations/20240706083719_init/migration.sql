@@ -1,4 +1,23 @@
 -- CreateTable
+CREATE TABLE "ProcessType" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(65) NOT NULL,
+
+    CONSTRAINT "ProcessType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Process" (
+    "id" SERIAL NOT NULL,
+    "startDate" DATE NOT NULL,
+    "finalDate" DATE,
+    "active" BOOLEAN NOT NULL DEFAULT true,
+    "processTypeId" INTEGER NOT NULL,
+
+    CONSTRAINT "Process_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Person" (
     "id" SERIAL NOT NULL,
     "dni" VARCHAR(13) NOT NULL,
@@ -33,6 +52,7 @@ CREATE TABLE "Inscription" (
     "date" DATE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "personId" INTEGER NOT NULL,
     "opinionId" INTEGER,
+    "processId" INTEGER NOT NULL,
 
     CONSTRAINT "Inscription_pkey" PRIMARY KEY ("id")
 );
@@ -109,6 +129,9 @@ CREATE TABLE "RegionalCenter" (
 );
 
 -- CreateIndex
+CREATE INDEX "fk_Process_ProcessType1_idx" ON "Process"("processTypeId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Person_dni_key" ON "Person"("dni");
 
 -- CreateIndex
@@ -128,6 +151,9 @@ CREATE INDEX "fk_Inscription_Career2_idx" ON "Inscription"("secondaryCareerId");
 
 -- CreateIndex
 CREATE INDEX "fk_Inscription_Person1_idx" ON "Inscription"("personId");
+
+-- CreateIndex
+CREATE INDEX "fk_Inscription_Process1_idx" ON "Inscription"("processId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "AdmissionTest_code_key" ON "AdmissionTest"("code");
@@ -151,6 +177,9 @@ CREATE INDEX "fk_Town_CountryDepartment1_idx" ON "Town"("countryDepartmentId");
 CREATE INDEX "fk_RegionalCenter_Town1_idx" ON "RegionalCenter"("townId");
 
 -- AddForeignKey
+ALTER TABLE "Process" ADD CONSTRAINT "Process_processTypeId_fkey" FOREIGN KEY ("processTypeId") REFERENCES "ProcessType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Inscription" ADD CONSTRAINT "Inscription_principalCareerId_fkey" FOREIGN KEY ("principalCareerId") REFERENCES "Career"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -161,6 +190,9 @@ ALTER TABLE "Inscription" ADD CONSTRAINT "Inscription_opinionId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "Inscription" ADD CONSTRAINT "Inscription_personId_fkey" FOREIGN KEY ("personId") REFERENCES "Person"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Inscription" ADD CONSTRAINT "Inscription_processId_fkey" FOREIGN KEY ("processId") REFERENCES "Process"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "AdmissionTest_Career" ADD CONSTRAINT "AdmissionTest_Career_admissionTestId_fkey" FOREIGN KEY ("admissionTestId") REFERENCES "AdmissionTest"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

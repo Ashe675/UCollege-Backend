@@ -2,14 +2,15 @@ import { body, validationResult } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
 //import { prisma } from '../config/db';
 
+
 class DataInscription {
   static validateCareerIds() {
     return [
       body('principalCareerId')
-        .isInt({ gt: 0 }).withMessage('PrincipalCareerId must be a positive integer')
+        .isInt({ gt: 0 }).withMessage('PrincipalCareerId debe ser un entero positivo')
         .toInt(),
       body('secondaryCareerId')
-        .isInt({ gt: 0 }).withMessage('SecondaryCareerId must be a positive integer')
+        .isInt({ gt: 0 }).withMessage('SecondaryCareerId debe ser un entero positivo')
         .toInt(),
     ];
   }
@@ -17,10 +18,28 @@ class DataInscription {
   static validatePersonId() {
     return [
       body('personId')
-        .isInt({ gt: 0 }).withMessage('PersonId must be a positive integer')
+        .isInt({ gt: 0 }).withMessage('PersonId debe ser un entero positivo')
         .toInt(),
     ];
   }
+  
+  static validateProcessId() {
+    return [
+      body('processId')
+        .isInt({ gt: 0 }).withMessage('ProcessId debe ser un entero positivo')
+        .toInt(),
+    ];
+  }
+
+  static validateRegionId() {
+    return [
+      body('regionalCenterId')
+        .isInt({ gt: 0 }).withMessage('ProcessId debe ser un entero positivo')
+        .toInt(),
+    ];
+  }
+
+
 
   /**
  * Middleware para verificar los resultados de la validación de la solicitud.
@@ -41,6 +60,7 @@ class DataInscription {
     }
     next();
   }
+
 
   /**
  * Middleware para validar los datos de una persona en una solicitud HTTP.
@@ -97,6 +117,9 @@ class DataInscription {
       body('email')
         .isEmail().withMessage('Email must be a valid email address'),
         DataInscription.validateCareerIds(),
+        //DataInscription.validatePersonId(),
+        DataInscription.validateProcessId(),
+        DataInscription.validateRegionId(),
         DataInscription.checkValidationResult,
         
         (req: Request, res: Response, next: NextFunction) => {

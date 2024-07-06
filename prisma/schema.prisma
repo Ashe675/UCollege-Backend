@@ -15,6 +15,31 @@ datasource db {
 
 // Aqui van los modelos
 
+// Otros modelos existentes...
+
+// Modelo ProcessType
+model ProcessType {
+  id    Int      @id @default(autoincrement())
+  name  String   @db.VarChar(65)
+  processes Process[]
+}
+
+// Modelo Process
+model Process {
+  id            Int           @id @default(autoincrement())
+  startDate     DateTime      @db.Date
+  finalDate     DateTime?     @db.Date
+  active        Boolean       @db.Boolean @default(true)
+  processTypeId Int
+  processType   ProcessType   @relation(fields: [processTypeId], references: [id])
+  inscriptions  Inscription[] // Relación inversa
+
+  @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
+}
+
+// Otros modelos existentes...
+
+
 // Modelo Person
 model Person {
   id             Int           @id @default(autoincrement())
@@ -43,6 +68,41 @@ model Career {
   @@index([id], name: "pk_Career_idx")
 }
 
+
+
+// Modelo CountryDepartment
+model CountryDepartment {
+  id    Int    @id @default(autoincrement())
+  name  String @db.VarChar(85)
+  Towns Town[]
+}
+
+// Modelo Town
+model Town {
+  id                  Int               @id @default(autoincrement())
+  name                String            @db.VarChar(100)
+  countryDepartmentId Int
+  CountryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
+  RegionalCenters     RegionalCenter[]
+
+  @@index([countryDepartmentId], name: "fk_Town_CountryDepartment1_idx")
+}
+
+// Modelo RegionalCenter
+model RegionalCenter {
+  id                Int       @id @default(autoincrement())
+  name              String    @db.VarChar(100)
+  date              DateTime  @db.Date
+  RegionalCentercol String    @db.VarChar(45)
+  finalDate         DateTime? @db.Date
+  townId            Int
+  Town              Town      @relation(fields: [townId], references: [id])
+  Inscription     Inscription[]
+
+  @@index([townId], name: "fk_RegionalCenter_Town1_idx")
+}
+
+
 // Modelo Inscription
 model Inscription {
   id                Int      @id @default(autoincrement())
@@ -52,16 +112,26 @@ model Inscription {
   date              DateTime @default(now()) @db.Date
   personId          Int
   opinionId         Int?
+  processId         Int
+  regionalCenterId  Int      // Nueva llave foránea
+
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
-  opinion         Opinion?       @relation(fields: [opinionId], references: [id])
+  opinion           Opinion? @relation(fields: [opinionId], references: [id])
   person            Person   @relation(fields: [personId], references: [id])
+  process           Process  @relation(fields: [processId], references: [id])
   results           Result[]
+  regionalCenter    RegionalCenter @relation(fields: [regionalCenterId], references: [id]) // Nueva relación
 
   @@index([principalCareerId], name: "fk_Inscription_Career1_idx")
   @@index([secondaryCareerId], name: "fk_Inscription_Career2_idx")
   @@index([personId], name: "fk_Inscription_Person1_idx")
+  @@index([processId], name: "fk_Inscription_Process1_idx")
+  @@index([regionalCenterId], name: "fk_Inscription_RegionalCenter1_idx") // Nuevo índice
 }
+
+
+
 
 // Modelo AdmissionTest
 model AdmissionTest {
@@ -110,35 +180,4 @@ model Result {
   @@index([inscriptionId], name: "fk_Inscription_has_AdmissionTest_Inscription1_idx")
 
    @@id([inscriptionId, admissionTestId])
-}
-
-// Modelo CountryDepartment
-model CountryDepartment {
-  id    Int    @id @default(autoincrement())
-  name  String @db.VarChar(85)
-  Towns Town[]
-}
-
-// Modelo Town
-model Town {
-  id                  Int               @id @default(autoincrement())
-  name                String            @db.VarChar(100)
-  countryDepartmentId Int
-  CountryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
-  RegionalCenters     RegionalCenter[]
-
-  @@index([countryDepartmentId], name: "fk_Town_CountryDepartment1_idx")
-}
-
-// Modelo RegionalCenter
-model RegionalCenter {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(100)
-  date              DateTime  @db.Date
-  RegionalCentercol String    @db.VarChar(45)
-  finalDate         DateTime? @db.Date
-  townId            Int
-  Town              Town      @relation(fields: [townId], references: [id])
-
-  @@index([townId], name: "fk_RegionalCenter_Town1_idx")
 }

@@ -51,6 +51,8 @@ export default class InscriptionController {
       email,
       principalCareerId,
       secondaryCareerId,
+      processId,
+      regionalCenterId,
     } = req.body;
     const photoCertificate = req.file?.path;
 
@@ -71,7 +73,13 @@ export default class InscriptionController {
         throw new Error(validation.message);
       }
       
-      const inscription = await this.inscriptionService.createInscription(person.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10), photoCertificate);
+      const inscription = await this.inscriptionService.createInscription(
+        person.id, 
+        parseInt(principalCareerId, 10), 
+        parseInt(secondaryCareerId, 10), 
+        processId ,
+        regionalCenterId,
+        photoCertificate);
 
       await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
 
