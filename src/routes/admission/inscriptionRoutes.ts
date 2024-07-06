@@ -4,7 +4,7 @@ import { param } from 'express-validator';
 
 const router = express.Router();
 
-router.get('admission/inscription/:dni', [
+router.get('/admission/inscription/:dni', [
     param('dni')
       .notEmpty().withMessage('DNI es necesario')
       .isLength({ min: 13, max: 13 }).withMessage('DNI tiene que tener 13 digitos')
