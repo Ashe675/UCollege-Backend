@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-import { validationResult } from 'express-validator';
+
+
 
 export const getInscriptionDetailsByDni = async (dni) => {
   const person = await prisma.person.findUnique({
