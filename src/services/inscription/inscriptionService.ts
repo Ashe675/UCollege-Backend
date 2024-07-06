@@ -159,4 +159,20 @@ export default class InscriptionService {
       }
     }
   }
+
+  async validateProcessIdUnique(personId: number, processId: number): Promise<boolean> {
+    try {
+        const existingInscription = await prisma.inscription.findFirst({
+            where: {
+                personId,
+                processId
+            },
+        });
+
+        return !!existingInscription; // Devuelve true si existe, false si no existe
+    } catch (error) {
+        console.error('Error al validar proceso único:', error);
+        return false;
+    }
+  }
 }

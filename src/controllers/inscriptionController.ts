@@ -73,6 +73,10 @@ export default class InscriptionController {
         throw new Error(validation.message);
       }
       
+      const inscriptionProcess = await this.inscriptionService.validateProcessIdUnique(person.id, processId);
+      if (inscriptionProcess) {
+        throw new Error('No se puede inscribir en este proceso por que ya este inscrito');
+      }
       const inscription = await this.inscriptionService.createInscription(
         person.id, 
         parseInt(principalCareerId, 10), 
@@ -100,4 +104,6 @@ export default class InscriptionController {
       }
     }
   }
+
+  
 }
