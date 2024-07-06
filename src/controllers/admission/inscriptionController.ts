@@ -1,14 +1,13 @@
 import { getInscriptionDetailsByDni } from '../../services/admission/getinscriptionsService';
+import { Request, Response } from 'express';
 
-export const getInscriptionDetails = async (req, res) => {
-  const { dni } = req.params;
-  try {
-    const person = await getInscriptionDetailsByDni(dni);
-    if (!person) {
-      return res.status(404).json({ error: 'No se encontro la persona por ese DNI' });
+export const getInscriptionDetails = async (req: Request, res: Response) => {
+    const { dni } = req.params;
+  
+    try {
+      const details = await getInscriptionDetailsByDni(dni);
+      res.json(details);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
     }
-    res.status(200).json(person);
-  } catch (error) {
-    res.status(500).json({ error: 'Error interno en el servidor' });
-  }
-};
+  };

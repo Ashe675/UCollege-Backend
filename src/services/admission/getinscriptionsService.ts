@@ -35,7 +35,7 @@ export const getInscriptionDetailsByDni = async (dni) => {
   });
 
   if (!person) {
-    throw new Error('Person not found');
+    throw new Error('No se encontraron registros con ese DNI');
   }
 
   const inscriptionDetails = {
