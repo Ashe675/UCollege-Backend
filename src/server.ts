@@ -8,6 +8,7 @@ import uploadRouter from './routes/admission/uploadRoutes'
 import resultRoutes from './routes/admission/resultRoutes';
 import careerRoutes from './routes/admission/careerRoutes';
 import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
+import inscriptionsByDni from './routes/admission/inscriptionRoutes';
 
 
 dotenv.config()
@@ -29,6 +30,8 @@ app.use('/api', resultRoutes);
 app.use('/api', careerRoutes);
 app.use('/api', regionalCenterRoutes);
 
+app.use('/api', inscriptionsByDni);
+//http://localhost:4000/api/inscriptions/:dni
 
 
 app.use('/api/upload',uploadRouter)
