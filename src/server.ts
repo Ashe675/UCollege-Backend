@@ -8,6 +8,7 @@ import uploadRouter from './routes/admission/uploadRoutes'
 import resultRoutes from './routes/admission/resultRoutes';
 import careerRoutes from './routes/admission/careerRoutes';
 import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
+import admissionRoutes from './routes/admission/admissionRoutes'
 
 
 dotenv.config()
@@ -28,6 +29,7 @@ app.use(express.json())
 app.use('/api', resultRoutes);
 app.use('/api', careerRoutes);
 app.use('/api', regionalCenterRoutes);
+app.use('/api', admissionRoutes);
 
 
 

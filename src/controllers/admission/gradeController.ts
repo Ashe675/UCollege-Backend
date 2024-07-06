@@ -3,7 +3,6 @@ import { CSVService } from "../../services/admission/CSVService";
 import { GradeService } from "../../services/admission/gradeService";
 import { sendEmailResults } from "../../services/mail/emailService";
 
-
 export class GradeController {
     static readGrades = async (req: Request, res: Response) => {
          // Verificar que se subió el archivo
@@ -22,7 +21,7 @@ export class GradeController {
             const { results, errors } = await CSVService.processCSV(req.file.buffer.toString('utf8'));
 
             if (errors.length > 0) {
-                return res.status(400).json({ errors });
+                throw new Error(errors[0])
             }
 
 
@@ -33,8 +32,18 @@ export class GradeController {
             await GradeService.updateInscriptions();
 
             res.status(200).send('¡NOTAS SUBIDAS CORRECTAMENTE!');
-            sendEmailResults('jcerratoj@unah.hn')
-            sendEmailResults('josecerrato675@gmail.com')
+        } catch (error) {
+            res.status(400).send({ error: error.message });
+        }
+    }
+
+    static sendEmailsGrades= async (req: Request, res: Response) => {
+        try {
+            const grades = await GradeService.getGrades()
+            for (const grade of grades) {
+                await sendEmailResults(grade)
+            }
+            res.status(200).send('¡Correos Enviados Correctamente!')
         } catch (error) {
             res.status(400).send({ error: error.message });
         }

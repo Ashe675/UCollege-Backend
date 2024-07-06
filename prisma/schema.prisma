@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // Aqui van los modelos:
 // Modelo Person
 model Person {
@@ -30,16 +29,16 @@ model Person {
 
 // Modelo Career
 model Career {
-  id              Int                    @id @default(autoincrement())
-  name            String                 @db.VarChar(50)
-  active          Boolean                @default(true)
-  createdAt       DateTime               @default(now()) @db.Date
-  description     String?                @db.VarChar(100)
-  code            String                 @unique @db.VarChar(45)
-  admissionsTests AdmissionTest_Career[]
-  inscriptionsPrincipals    Inscription[] @relation("principalCareer")
-  inscriptionsSecondaries    Inscription[] @relation("secondaryCareer")
-  regionalCentersCareers   RegionalCenter_Career[]
+  id                      Int                     @id @default(autoincrement())
+  name                    String                  @db.VarChar(50)
+  active                  Boolean                 @default(true)
+  createdAt               DateTime                @default(now()) @db.Date
+  description             String?                 @db.VarChar(100)
+  code                    String                  @unique @db.VarChar(45)
+  admissionsTests         AdmissionTest_Career[]
+  inscriptionsPrincipals  Inscription[]           @relation("principalCareer")
+  inscriptionsSecondaries Inscription[]           @relation("secondaryCareer")
+  regionalCentersCareers  RegionalCenter_Career[]
 
   @@index([id], name: "pk_Career_idx")
 }
@@ -53,9 +52,11 @@ model Inscription {
   date              DateTime @default(now()) @db.Date
   personId          Int
   opinionId         Int?
+  processId         Int
+  process           Process  @relation(fields: [processId], references: [id])
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
-  opinion         Opinion?       @relation(fields: [opinionId], references: [id])
+  opinion           Opinion? @relation(fields: [opinionId], references: [id])
   person            Person   @relation(fields: [personId], references: [id])
   results           Result[]
 
@@ -66,32 +67,32 @@ model Inscription {
 
 // Modelo Centro Regional
 model RegionalCenter_Career {
-  id                 Int         @id @default(autoincrement())
-  careerId           Int
-  regionalCenterId   Int
-  startDate          DateTime    @default(now()) @db.Date
-  finalDate          DateTime?
-  active             Boolean     @default(true)
+  id               Int       @id @default(autoincrement())
+  careerId         Int
+  regionalCenterId Int
+  startDate        DateTime  @default(now()) @db.Date
+  finalDate        DateTime?
+  active           Boolean   @default(true)
+
+  // Foreign keys
+  career         Career         @relation(fields: [careerId], references: [id])
+  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id])
 
   // Indexes
   @@index([regionalCenterId], name: "fk_Career_has_RegionalCenter_RegionalCenter1_idx")
   @@index([careerId], name: "fk_Faculty_has_RegionalCenter_Faculty1_idx")
-
-  // Foreign keys
-  career             Career     @relation(fields: [careerId], references: [id])
-  regionalCenter     RegionalCenter @relation(fields: [regionalCenterId], references: [id])
 }
 
 // Modelo AdmissionTest
 model AdmissionTest {
-  id                  Int                    @id @default(autoincrement())
-  minScoreApprove     Float?
-  score               Float
-  name                String                 @db.VarChar(75)
-  active              Boolean                @default(true)
-  code                String                 @db.VarChar(7) @unique
+  id                   Int                    @id @default(autoincrement())
+  minScoreApprove      Float?
+  score                Float
+  name                 String                 @db.VarChar(75)
+  active               Boolean                @default(true)
+  code                 String                 @unique @db.VarChar(7)
   admissionTestCareers AdmissionTest_Career[]
-  results             Result[]
+  results              Result[]
 }
 
 // Modelo AdmissionTest_Career
@@ -99,8 +100,8 @@ model AdmissionTest_Career {
   id              Int           @id @default(autoincrement())
   admissionTestId Int
   careerId        Int
-  active          Boolean @default(true)
-  minScore        Float 
+  active          Boolean       @default(true)
+  minScore        Float
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
   career          Career        @relation(fields: [careerId], references: [id])
 
@@ -110,9 +111,9 @@ model AdmissionTest_Career {
 
 // Modelo Opinion
 model Opinion {
-  id              Int            @id @default(autoincrement())
-  message         String         @db.VarChar(90)
-  inscriptions    Inscription[]
+  id           Int           @id @default(autoincrement())
+  message      String        @db.VarChar(90)
+  inscriptions Inscription[]
 }
 
 // Modelo Result
@@ -120,15 +121,14 @@ model Result {
   inscriptionId   Int
   admissionTestId Int
   score           Float?
-  message         String?        @db.VarChar(18)
-  date            DateTime?      @db.Date
+  message         String?       @db.VarChar(18)
+  date            DateTime?     @db.Date
   inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
 
+  @@id([inscriptionId, admissionTestId])
   @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
   @@index([inscriptionId], name: "fk_Inscription_has_AdmissionTest_Inscription1_idx")
-
-   @@id([inscriptionId, admissionTestId])
 }
 
 // Modelo CountryDepartment
@@ -151,14 +151,34 @@ model Town {
 
 // Modelo RegionalCenter
 model RegionalCenter {
-  id                Int       @id @default(autoincrement())
-  name              String    @db.VarChar(100)
-  date              DateTime  @db.Date
-  code              String    @db.VarChar(45)
-  finalDate         DateTime? @db.Date
-  townId            Int
-  town              Town      @relation(fields: [townId], references: [id])
-  regionalCentersCareer     RegionalCenter_Career[]
+  id                    Int                     @id @default(autoincrement())
+  name                  String                  @db.VarChar(100)
+  date                  DateTime                @db.Date
+  code                  String                  @db.VarChar(45)
+  finalDate             DateTime?               @db.Date
+  townId                Int
+  town                  Town                    @relation(fields: [townId], references: [id])
+  regionalCentersCareer RegionalCenter_Career[]
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
+}
+
+model ProcessType {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(65)
+
+  processes Process[]
+}
+
+model Process {
+  id            Int           @id @default(autoincrement())
+  startDate     DateTime      @db.Date
+  finalDate     DateTime      @db.Date
+  active        Boolean       @default(true)
+  processTypeId Int
+  inscriptions  Inscription[]
+
+  processType ProcessType @relation(fields: [processTypeId], references: [id])
+
+  @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
