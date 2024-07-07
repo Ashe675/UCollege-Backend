@@ -58,8 +58,8 @@ export const getInscriptionDetailsByDni = async (dni) => {
           name: career.name,
           tests: career.admissionsTests.map((test) => ({
             name: test.admissionTest.name,
-            code: test.admissionTest.code,
-            minScore: test.admissionTest.minScoreApprove // Convertir a string
+            code: test.admissionTest.code, 
+            minScore2: test.minScore // Convertir a string
           }))
         };
         inscriptionDetails.careers.push(careerDetail);
