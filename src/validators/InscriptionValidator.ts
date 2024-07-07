@@ -1,4 +1,6 @@
 import { prisma } from '../config/db';
+import deleteImage from '../utils/fileHandler'
+import { Request, Response, NextFunction } from 'express';
 
 
 /**
@@ -99,6 +101,45 @@ class InscriptionValidator {
           
         }
     }
+
+
+    async getProcessIdInscription(req: Request) {
+        try {
+            const currentDate = new Date();
+      
+            const activeProcess = await prisma.process.findFirst({
+              where: {
+                active: true,
+                processTypeId: 1,
+                startDate: {
+                  lte: currentDate, // startDate less than or equal to currentDate
+                },
+                finalDate: {
+                  gte: currentDate, // finalDate greater than or equal to currentDate
+                },
+              },
+              select: {
+                id: true,
+              },
+            });
+
+            if(activeProcess == null){
+                const photoCertificate = req.file?.path;
+    
+                deleteImage(photoCertificate)
+            }
+      
+            return activeProcess ? activeProcess.id : null;
+          } catch (error) {
+
+            const photoCertificate = req.file?.path;
+    
+            deleteImage(photoCertificate)
+            console.error('Error buscando el proceso activo:', error);
+            return null;
+          }
+    }
+    
 
     async isActiveProcess(processId: number) {
         try {

@@ -103,7 +103,29 @@ export default class InscriptionController {
         res.status(500).json({ error: 'Internal server error' });
       }
     }
+
   }
+
+  async getAproveCSV(req: Request, res: Response){
+
+    try {
+      const csv = await InscriptionService.getApprovedCSVService();
+      
+      // Configuración de la respuesta para retornar el archivo CSV
+      res.header('Content-Type', 'text/csv');
+      res.attachment('approved_candidates.csv');
+      res.send(csv);
+    } catch (error) {
+      if (error.message === 'Ningún estudiante aprobó las pruebas.') {
+        res.status(404).json({ error: 'Ningún estudiante aprobó las pruebas.' });
+      } else {
+        console.error(error);
+        res.status(500).json({ error: 'Ocurrió un error al obtener los candidatos aprobados' });
+      }
+    }
+  
+  }
+
 
   
 }

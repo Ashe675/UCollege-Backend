@@ -20,5 +20,6 @@ export const validateProcess = async (req: Request, res: Response, next: NextFun
     return res.status(400).json({ error: 'El proceso al que intente inscribirse esta inactivo.' });
   }
 
+  
   next();
 };

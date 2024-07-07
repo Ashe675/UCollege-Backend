@@ -3,6 +3,7 @@ import InscriptionController from '../controllers/inscriptionController';
 import upload from '../middleware/upload'; 
 import InscriptionValidator  from '../middleware/DataInscriptionValidator';
 import {validateProcess} from '../middleware/isActiveProcess'
+import {getActiveProcess} from '../middleware/getActiveProcess'
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -18,7 +19,6 @@ const inscriptionController = new InscriptionController();
  * - principalCareerId:   number (ej. 2)
  * - secondaryCareerId:   number (ej. 3)
  * - personId:            number (ej. 1)
- * - processId:           number 
  * - regionalCenterId:    number
  * - photoCertificate:    file (ej. 'WhatsApp Image 2023-10-29 at 1.50.07 PM.jpeg')
  * - dni:                 string (ej. '0804596512126')
@@ -39,10 +39,15 @@ router.post('/register',
     }
     next();
   },
+  getActiveProcess,
   ...InscriptionValidator.validatePerson(),
   validateProcess,
   
   (req, res) => inscriptionController.register(req, res)
+);
+
+router.get('/optener/admitidos/CSV',
+  (req, res) => inscriptionController.getAproveCSV(req, res)
 );
 
 export default router;

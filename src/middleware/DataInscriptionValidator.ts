@@ -118,7 +118,6 @@ class DataInscription {
         .isEmail().withMessage('Email must be a valid email address'),
         DataInscription.validateCareerIds(),
         //DataInscription.validatePersonId(),
-        DataInscription.validateProcessId(),
         DataInscription.validateRegionId(),
         DataInscription.checkValidationResult,
         
