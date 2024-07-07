@@ -59,7 +59,7 @@ export const getInscriptionDetailsByDni = async (dni) => {
           tests: career.admissionsTests.map((test) => ({
             name: test.admissionTest.name,
             code: test.admissionTest.code, 
-            minScore2: test.minScore // Convertir a string
+            minScore: test.minScore
           }))
         };
         inscriptionDetails.careers.push(careerDetail);
