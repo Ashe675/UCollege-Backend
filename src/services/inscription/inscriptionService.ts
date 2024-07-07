@@ -1,5 +1,5 @@
 import { prisma } from '../../config/db';
-import InscriptionValidator from '../../validators/InscriptionValidator';
+import InscriptionValidator from '../../validators/admissions/InscriptionValidator';
 import { createObjectCsvStringifier } from 'csv-writer';
 
 /**
@@ -250,7 +250,7 @@ export default class InscriptionService {
       dni: candidate.person.dni,
       fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
       email: candidate.person.email,
-      career: candidate.opinionId === 3 ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
+      career: candidate.opinionId === 3 || candidate.opinionId === 2  ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
       regionalCenter: `${candidate.regionalCenter.name}, ${candidate.regionalCenter.town.name}, ${candidate.regionalCenter.town.countryDepartment.name}`,
       opinion: candidate.opinion.message,
     }));

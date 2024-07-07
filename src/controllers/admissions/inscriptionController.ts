@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import InscriptionService from '../services/inscription/inscriptionService';
-import InscriptionValidator from '../validators/InscriptionValidator';
-import deleteImage from '../utils/fileHandler';
+import InscriptionService from '../../services/inscription/inscriptionService';
+import InscriptionValidator from '../../validators/admissions/InscriptionValidator';
+import deleteImage from '../../utils/admissions/fileHandler';
 
 
 /**
@@ -75,7 +75,7 @@ export default class InscriptionController {
       
       const inscriptionProcess = await this.inscriptionService.validateProcessIdUnique(person.id, processId);
       if (inscriptionProcess) {
-        throw new Error('No se puede inscribir en este proceso por que ya este inscrito');
+        throw new Error('No se puede inscribir en este proceso de inscripción por que ya este inscrito');
       }
       const inscription = await this.inscriptionService.createInscription(
         person.id, 
@@ -87,9 +87,8 @@ export default class InscriptionController {
 
       await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
 
-      res.status(201).json("Inscriptcion creado correctamente");
+      res.status(201).send("¡Felicidades! Se ha inscrito con éxito");
     } catch (error) {
-      console.error(error);
       if (error.message) {
         
         //Eliminamos la imagen del servidor

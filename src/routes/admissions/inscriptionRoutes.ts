@@ -1,9 +1,10 @@
 import express from 'express';
-import InscriptionController from '../controllers/inscriptionController';
-import upload from '../middleware/upload'; 
-import InscriptionValidator  from '../middleware/DataInscriptionValidator';
-import {validateProcess} from '../middleware/isActiveProcess'
-import {getActiveProcess} from '../middleware/getActiveProcess'
+import InscriptionController from '../../controllers/admissions/inscriptionController';
+import upload from '../../middleware/admissions/upload'; 
+import InscriptionValidator  from '../../middleware/admissions/DataInscriptionValidator';
+import {validateProcess} from '../../middleware/admissions/isActiveProcess'
+import {getActiveProcess} from '../../middleware/admissions/getActiveProcess'
+import { Request, Response, NextFunction } from 'express-serve-static-core';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -33,7 +34,7 @@ const inscriptionController = new InscriptionController();
 
 router.post('/register', 
   upload.single('photoCertificate'), 
-  (req, res, next) => {
+  (req : Request, res : Response, next : NextFunction) => {
     if (!req.file) {
       return res.status(400).json({ error: 'Se requiere el certificado de foto y debe ser una imagen.' });
     }
@@ -43,11 +44,11 @@ router.post('/register',
   ...InscriptionValidator.validatePerson(),
   validateProcess,
   
-  (req, res) => inscriptionController.register(req, res)
+  (req : Request, res : Response) => inscriptionController.register(req, res)
 );
 
-router.get('/optener/admitidos/CSV',
-  (req, res) => inscriptionController.getAproveCSV(req, res)
+router.get('/obtener/admitidos/CSV',
+  (req : Request, res : Response) => inscriptionController.getAproveCSV(req, res)
 );
 
 export default router;

@@ -1,4 +1,4 @@
-import { prisma } from '../config/db';
+import { prisma } from '../../config/db';
 
 
 export async function counterInscription(personId: number) {

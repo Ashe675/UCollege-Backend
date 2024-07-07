@@ -1,7 +1,7 @@
 // Ejemplo de middleware para validar una solicitud
 import { Request, Response, NextFunction } from 'express';
-import InscriptionValidator from '../validators/InscriptionValidator'
-import deleteImage from '../utils/fileHandler'
+import InscriptionValidator from '../../validators/admissions/InscriptionValidator'
+import deleteImage from '../../utils/admissions/fileHandler'
 
 // Middleware de validación
 export const validateProcess = async (req: Request, res: Response, next: NextFunction) => {

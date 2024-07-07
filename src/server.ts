@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 
-import inscriptionRoutes from './routes/inscriptionRoutes';
+import inscriptionRoutes from './routes/admissions/inscriptionRoutes';
 
 dotenv.config()
 connectDB()
