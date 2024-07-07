@@ -1,5 +1,6 @@
 import { prisma } from '../../config/db';
 import InscriptionValidator from '../../validators/InscriptionValidator';
+import { createObjectCsvStringifier } from 'csv-writer';
 
 /**
  * Servicio para manejar las operaciones relacionadas con las inscripciones.
@@ -54,11 +55,11 @@ export default class InscriptionService {
       secondLastName?: string,
       phoneNumber: string,
       email: string,
-    }) {
+      }) {
       let person = await prisma.person.findUnique({
         where: { dni: data.dni },
       });
-      
+        
       if (!person) {
         const existingPersonByEmail = await prisma.person.findUnique({
           where: { email: data.email },
@@ -120,6 +121,51 @@ export default class InscriptionService {
     return inscription;
   }
 
+  static async getApprovedCSVService(): Promise<string> {
+    const approvedCandidates = await prisma.inscription.findMany({
+      where: {
+        opinionId: {
+          in: [1, 2, 3], // Los IDs de las opiniones que representan aprobación
+        },
+      },
+      include: {
+        person: true, // Incluye la información de la persona
+        principalCareer: true, // Incluye la información de la carrera principal
+        secondaryCareer: true, // Incluye la información de la carrera secundaria
+        results: true, // Incluye los resultados de las pruebas
+        opinion: true, // Incluye la opinión para mayor detalle
+      },
+    });
+
+    if (approvedCandidates.length === 0) {
+      throw new Error('Ningún estudiante aprobó las pruebas.');
+    }
+
+   // Configuración del CSV
+   const csvStringifier = createObjectCsvStringifier({
+    header: [
+      { id: 'dni', title: 'DNI' },
+      { id: 'fullName', title: 'Nombre Completo' },
+      { id: 'principalCareer', title: 'Carrera 1' },
+      { id: 'secondaryCareer', title: 'Carrera 2' },
+      { id: 'opinion', title: 'Opinión' },
+    ],
+  });
+
+  // Formateo de los datos para el CSV
+  const records = approvedCandidates.map(candidate => ({
+    dni: candidate.person.dni,
+    fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
+    principalCareer: candidate.principalCareer.name,
+    secondaryCareer: candidate.secondaryCareer ? candidate.secondaryCareer.name : '',
+    opinion: candidate.opinion.message,
+  }));
+    // Generación del CSV
+    const csv = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
+
+    return csv;
+  }
+
   /**
    * Busca las pruebas de admisión asociadas con las carreras principal y secundaria.
    * Crea resultados para cada prueba de admisión encontrada.
@@ -175,4 +221,6 @@ export default class InscriptionService {
         return false;
     }
   }
+
+
 }

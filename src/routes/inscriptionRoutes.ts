@@ -45,4 +45,8 @@ router.post('/register',
   (req, res) => inscriptionController.register(req, res)
 );
 
+router.get('/optener/admitidos/CSV',
+  (req, res) => inscriptionController.getAproveCSV(req, res)
+);
+
 export default router;
