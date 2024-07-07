@@ -134,6 +134,15 @@ export default class InscriptionService {
         secondaryCareer: true, // Incluye la información de la carrera secundaria
         results: true, // Incluye los resultados de las pruebas
         opinion: true, // Incluye la opinión para mayor detalle
+        regionalCenter: {
+          include: {
+            Town: {
+              include: {
+                CountryDepartment: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -141,25 +150,28 @@ export default class InscriptionService {
       throw new Error('Ningún estudiante aprobó las pruebas.');
     }
 
-   // Configuración del CSV
-   const csvStringifier = createObjectCsvStringifier({
-    header: [
-      { id: 'dni', title: 'DNI' },
-      { id: 'fullName', title: 'Nombre Completo' },
-      { id: 'principalCareer', title: 'Carrera 1' },
-      { id: 'secondaryCareer', title: 'Carrera 2' },
-      { id: 'opinion', title: 'Opinión' },
-    ],
-  });
+    // Configuración del CSV
+    const csvStringifier = createObjectCsvStringifier({
+      header: [
+        { id: 'dni', title: 'DNI' },
+        { id: 'fullName', title: 'Nombre Completo' },
+        { id: 'email', title: 'Correo Electrónico' },
+        { id: 'career', title: 'Carrera' },
+        { id: 'regionalCenter', title: 'Centro Regional' },
+        { id: 'opinion', title: 'Opinión' },
+      ],
+    });
 
-  // Formateo de los datos para el CSV
-  const records = approvedCandidates.map(candidate => ({
-    dni: candidate.person.dni,
-    fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
-    principalCareer: candidate.principalCareer.name,
-    secondaryCareer: candidate.secondaryCareer ? candidate.secondaryCareer.name : '',
-    opinion: candidate.opinion.message,
-  }));
+    // Formateo de los datos para el CSV
+    const records = approvedCandidates.map(candidate => ({
+      dni: candidate.person.dni,
+      fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
+      email: candidate.person.email,
+      career: candidate.opinionId === 3 ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
+      regionalCenter: `${candidate.regionalCenter.name}, ${candidate.regionalCenter.Town.name}, ${candidate.regionalCenter.Town.CountryDepartment.name}`,
+      opinion: candidate.opinion.message,
+    }));
+
     // Generación del CSV
     const csv = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(records);
 
