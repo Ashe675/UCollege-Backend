@@ -1,7 +1,5 @@
 // services/admissions/regionalCenterService.ts
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "../../config/db";
 
 export const getRegionalCenters = async () => {
   return await prisma.regionalCenter.findMany(

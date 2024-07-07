@@ -1,11 +1,18 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "../../config/db";
 
 export const getAllInscriptions = async () => {
   return prisma.inscription.findMany({
-    include: {
-      person: true,
+    select: {
+      person: {
+        select: {
+          dni: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          secondLastName: true,
+          email: true,
+        }
+      },
       principalCareer: {
         include: {
           admissionsTests: {
@@ -18,6 +25,25 @@ export const getAllInscriptions = async () => {
       secondaryCareer: {
         include: {
           admissionsTests: {
+            include: {
+              admissionTest: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const getInscriptionDetailsByDni = async (dni) => {
+  return await prisma.person.findUnique({
+    where: { dni },
+    include: {
+      inscriptions: {
+        include: {
+          principalCareer: true,
+          secondaryCareer: true,
+          results: {
             include: {
               admissionTest: true,
             },

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getAllInscriptions } from '../../services/admission/inscriptionService';
 import { prepareCsvRecords, getCsvString } from '../../services/admission/CSVGenerateService';
+import { getInscriptionResultsByDni } from '../../services/admission/resultService';
 
 export const generateCsv = async (req: Request, res: Response) => {
   try {
@@ -19,6 +20,17 @@ export const generateCsv = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error al generar el CSV:', error);
     res.status(500).send('Error interno en el servidor');
+  }
+};
+
+export const getInscriptionResults = async (req: Request, res: Response) => {
+  const { dni } = req.params;
+
+  try {
+    const details = await getInscriptionResultsByDni(dni);
+    res.json(details);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
   }
 };
 

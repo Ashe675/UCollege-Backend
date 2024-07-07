@@ -162,3 +162,4 @@ model RegionalCenter {
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
 }
+
