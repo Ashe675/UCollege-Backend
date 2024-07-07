@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
+
+import inscriptionRoutes from './routes/admissions/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
 
 import resultRoutes from './routes/admission/resultRoutes';
@@ -13,7 +15,6 @@ import inscriptionsByDni from './routes/admission/inscriptionRoutes';
 
 
 dotenv.config()
-
 connectDB()
 
 const app = express()
@@ -37,5 +38,15 @@ app.use('/api', inscriptionsByDni);
 
 
 app.use('/api/upload',uploadRouter)
+
+
+app.get('/', (req, res) => {
+    res.send('Hello World')
+})
+
+app.use(express.json());
+
+app.use('/api/inscriptions', inscriptionRoutes);
+
 
 export default app
