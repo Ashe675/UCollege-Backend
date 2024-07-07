@@ -1,4 +1,4 @@
-import { getInscriptionDetailsByDni } from '../../services/admission/getinscriptionsService';
+import { getInscriptionDetailsByDni } from '../../services/admission/getInscriptionsService';
 import { Request, Response } from 'express';
 
 export const getInscriptionDetails = async (req: Request, res: Response) => {
