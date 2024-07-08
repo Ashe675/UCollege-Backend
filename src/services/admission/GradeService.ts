@@ -153,6 +153,11 @@ export class GradeService {
 
     static async getGrades () {
         const results = await prisma.inscription.findMany({
+            where : {
+                opinionId : {
+                    not : null
+                }
+            },
             select : {
                 person : {
                     select : {
