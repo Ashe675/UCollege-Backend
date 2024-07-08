@@ -12,6 +12,7 @@ import careerRoutes from './routes/admission/careerRoutes';
 import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
 import admissionRoutes from './routes/admission/admissionRoutes'
 import inscriptionsByDni from './routes/admission/inscriptionRoutes';
+import { corsConfig } from './config/cors';
 
 
 dotenv.config()
@@ -20,7 +21,7 @@ connectDB()
 const app = express()
 
 // Habilitando el cors
-app.use(cors())
+app.use(cors(corsConfig))
 
 // Logueando las peticiones
 app.use(morgan('dev'))
