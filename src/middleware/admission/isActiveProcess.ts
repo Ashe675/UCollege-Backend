@@ -1,7 +1,7 @@
 // Ejemplo de middleware para validar una solicitud
 import { Request, Response, NextFunction } from 'express';
-import InscriptionValidator from '../../validators/admissions/InscriptionValidator'
-import deleteImage from '../../utils/admissions/fileHandler'
+import InscriptionValidator from '../../validators/admission/InscriptionValidator'
+import deleteImage from '../../utils/admission/fileHandler'
 
 // Middleware de validación
 export const validateProcess = async (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +17,7 @@ export const validateProcess = async (req: Request, res: Response, next: NextFun
     const photoCertificate = req.file?.path;
     
     deleteImage(photoCertificate)
-    return res.status(400).json({ error: 'El proceso al que intente inscribirse esta inactivo.' });
+    return res.status(400).json({ error: 'El proceso al que intente inscribirse está inactivo.' });
   }
 
   

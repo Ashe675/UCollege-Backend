@@ -1,7 +1,7 @@
 // middleware.ts
 
 import { Request, Response, NextFunction } from 'express';
-import InscriptionValidator from '../../validators/admissions/InscriptionValidator';
+import InscriptionValidator from '../../validators/admission/InscriptionValidator';
 
 // Ejemplo de middleware para verificar si el usuario está autenticado
 export async function getActiveProcess(req: Request, res: Response, next: NextFunction) {

@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 
-import inscriptionRoutes from './routes/admissions/inscriptionRoutes';
+import inscriptionRoutes from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
 
 import resultRoutes from './routes/admission/resultRoutes';
@@ -32,20 +32,8 @@ app.use('/api', resultRoutes);
 app.use('/api', careerRoutes);
 app.use('/api', regionalCenterRoutes);
 app.use('/api', admissionRoutes);
-
 app.use('/api', inscriptionsByDni);
-//http://localhost:4000/api/inscriptions/:dni
-
-
 app.use('/api/upload',uploadRouter)
-
-
-app.get('/', (req, res) => {
-    res.send('Hello World')
-})
-
-app.use(express.json());
-
 app.use('/api/inscriptions', inscriptionRoutes);
 
 

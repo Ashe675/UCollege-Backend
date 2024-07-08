@@ -1,5 +1,5 @@
 import { prisma } from '../../config/db';
-import InscriptionValidator from '../../validators/admissions/InscriptionValidator';
+import InscriptionValidator from '../../validators/admission/InscriptionValidator';
 import { createObjectCsvStringifier } from 'csv-writer';
 
 /**
@@ -73,9 +73,9 @@ export default class InscriptionService {
           data: {
             dni: data.dni,
             firstName: data.firstName,
-            middleName: data.middleName,
+            middleName: data.middleName ? data.middleName : null,
             lastName: data.lastName,
-            secondLastName: data.secondLastName,
+            secondLastName: data.secondLastName ? data.secondLastName : null,
             phoneNumber: data.phoneNumber,
             email: data.email,
           },
@@ -241,7 +241,6 @@ export default class InscriptionService {
         { id: 'email', title: 'Correo Electrónico' },
         { id: 'career', title: 'Carrera' },
         { id: 'regionalCenter', title: 'Centro Regional' },
-        { id: 'opinion', title: 'Opinión' },
       ],
     });
 
@@ -252,7 +251,6 @@ export default class InscriptionService {
       email: candidate.person.email,
       career: candidate.opinionId === 3 || candidate.opinionId === 2  ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
       regionalCenter: `${candidate.regionalCenter.name}, ${candidate.regionalCenter.town.name}, ${candidate.regionalCenter.town.countryDepartment.name}`,
-      opinion: candidate.opinion.message,
     }));
 
     // Generación del CSV
