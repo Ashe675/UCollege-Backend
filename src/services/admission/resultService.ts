@@ -1,6 +1,6 @@
 import { prisma } from "../../config/db";
 
-export const getInscriptionResultsByDni = async (dni: string) => {
+export const getInscriptionResultsByDni = async (dni: string, processId: number) => {
   const person = await prisma.person.findUnique({
     where: { dni },
     include: {
@@ -9,6 +9,9 @@ export const getInscriptionResultsByDni = async (dni: string) => {
           principalCareer: true,
           secondaryCareer: true,
           results: {
+            where: {
+              processId: processId
+            },
             include: {
               admissionTest: true
             }
@@ -18,6 +21,7 @@ export const getInscriptionResultsByDni = async (dni: string) => {
       }
     }
   });
+  
 
   if (!person) {
     throw new Error('No se encontraron registros');
@@ -50,8 +54,15 @@ export const getInscriptionResultsByDni = async (dni: string) => {
         id: inscription.opinion.id,
         message: inscription.opinion.message,
       } : null;
+
+      if (!inscription.opinion) {
+        throw new Error('Resultados no disponibles');
+      }
+
     }
   });
+  
+  
 
   if (inscriptionDetails.results.length === 0) {
     throw new Error('No se encontraron los resultados');
