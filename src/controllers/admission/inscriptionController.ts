@@ -1,5 +1,4 @@
-import { getInscriptionDetailsByDni } from '../../services/admission/getInscriptionsService';
-import { Request, Response } from 'express';
+
 import { Request, Response } from 'express';
 import InscriptionService from '../../services/inscription/inscriptionService';
 import InscriptionValidator from '../../validators/admission/InscriptionValidator';
