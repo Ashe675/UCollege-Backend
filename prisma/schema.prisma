@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 // Aqui van los modelos:
 // Modelo Person
 model Person {
@@ -188,3 +187,4 @@ model Process {
 
   @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
+
