@@ -25,9 +25,10 @@ export const generateCsv = async (req: Request, res: Response) => {
 
 export const getInscriptionResults = async (req: Request, res: Response) => {
   const { dni } = req.params;
-
+  console.log(req.body.resultIdActive);
+  const processId = req.body.resultIdActive
   try {
-    const details = await getInscriptionResultsByDni(dni);
+    const details = await getInscriptionResultsByDni(dni, processId);
     res.json(details);
   } catch (error) {
     res.status(404).json({ error: error.message });

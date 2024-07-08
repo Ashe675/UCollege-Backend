@@ -1,8 +1,9 @@
+
 import { Request, Response } from 'express';
 import InscriptionService from '../../services/inscription/inscriptionService';
 import InscriptionValidator from '../../validators/admission/InscriptionValidator';
 import deleteImage from '../../utils/admission/fileHandler';
-import { getInscriptionDetailsByDni } from '../../services/admission/getinscriptionsService';
+import { getInscriptionDetailsByDni } from '../../services/admission/getInscriptionsService';
 
 
 /**
