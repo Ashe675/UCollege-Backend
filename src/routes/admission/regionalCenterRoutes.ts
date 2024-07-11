@@ -4,7 +4,7 @@ import { getRegionalCentersHandler } from '../../controllers/admission/regionalC
 
 const router = Router();
 
-router.get('/centers', getRegionalCentersHandler);
+router.get('/admission/centers', getRegionalCentersHandler);
 
 export default router;
 

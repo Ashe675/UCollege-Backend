@@ -56,6 +56,4 @@ export async function sendEmailResults(grade: GradesUser) {
         subject: "Resultados de Examen de Admisión UCollege", // Subject line
         html: htmlContent
     });
-
-    console.log(info)
 }
