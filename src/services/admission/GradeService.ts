@@ -2,7 +2,7 @@ import { prisma } from "../../config/db"
 import { DataCSV } from "./CSVService";
 
 export class GradeService {
-    static validateAndSaveResult = async (result: DataCSV, index: number) => {
+    static validateAndSaveResult = async (result: DataCSV, index: number, processResultId : number) => {
         const nota = parseInt(result.nota);
 
         if (isNaN(nota) || nota < 0) {
@@ -26,7 +26,13 @@ export class GradeService {
 
         // validando que la inscripción exista
         const inscription = await prisma.inscription.findFirst({
-            where: { person: { dni: result.dni } }
+            where: { person: { dni: result.dni },
+            results : {
+                every : {
+                    processId : processResultId
+                }
+            }
+        }
         });
 
         if (!inscription) {
@@ -38,6 +44,7 @@ export class GradeService {
             where: {
                 AND: [
                     { inscription: { person: { dni: result.dni } } },
+                    { processId : processResultId },
                     {
                         admissionTest: {
                             OR: [
@@ -52,6 +59,30 @@ export class GradeService {
 
         if (!testInscription) {
             throw new Error(`La persona no está inscrita en el examen, fila: ${index + 1}`);
+        }
+
+        const testInscriptionGrade = await prisma.result.findFirst({
+            where: {
+                AND: [
+                    { inscription: { person: { dni: result.dni } } },
+                    { processId : processResultId },
+                    { score : {
+                        not : null
+                    }},
+                    {
+                        admissionTest: {
+                            OR: [
+                                { code: result.examen.toUpperCase() },
+                                { name: result.examen }
+                            ]
+                        }
+                    }
+                ]
+            }
+        });
+
+        if (testInscriptionGrade) {
+            throw new Error(`La persona ya tiene una calificación, fila: ${index + 1}`);
         }
 
         // obteniendo el puntaje mínimo que se necesita para aprobar un examen
@@ -87,9 +118,17 @@ export class GradeService {
         });
     }
 
-    static updateInscriptions = async () => {
+    static updateInscriptions = async (processResultId : number) => {
         // obteniendo todas las inscripciones
         const inscriptions = await prisma.inscription.findMany({
+            where : {
+                opinionId : null,
+                results : {
+                    every : {
+                        processId : processResultId
+                    }
+                }
+            },
             include: {
                 results: {
                     select: {
@@ -151,14 +190,21 @@ export class GradeService {
         }
     }
 
-    static async getGrades () {
+    static async getGrades (processResultId : number) {
         const results = await prisma.inscription.findMany({
             where : {
                 opinionId : {
                     not : null
-                }
+                },
+                results : {
+                    every : {
+                        processId : processResultId
+                    }
+                },
+                notificated : false
             },
             select : {
+                id : true,
                 person : {
                     select : {
                         email : true,

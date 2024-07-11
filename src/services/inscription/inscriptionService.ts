@@ -53,8 +53,8 @@ export default class InscriptionService {
       middleName?: string,
       lastName: string,
       secondLastName?: string,
-      phoneNumber: string,
-      email: string,
+      phoneNumber: string, // el numero de telefono puede cambiar
+      email: string, // el email puede cambiar
     }) {
       let person = await prisma.person.findUnique({
         where: { dni: data.dni },
@@ -205,12 +205,17 @@ export default class InscriptionService {
     }
   }
 
-  static async getApprovedCSVService(): Promise<string> {
+  static async getApprovedCSVService(processResultId : number): Promise<string> {
     const approvedCandidates = await prisma.inscription.findMany({
       where: {
         opinionId: {
           in: [1, 2, 3], // Los IDs de las opiniones que representan aprobación
         },
+        results : {
+          every : {
+            processId : processResultId
+          }
+        }
       },
       include: {
         person: true, // Incluye la información de la persona

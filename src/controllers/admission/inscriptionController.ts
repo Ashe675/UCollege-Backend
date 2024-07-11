@@ -109,9 +109,9 @@ export default class InscriptionController {
   }
 
   async getAproveCSV(req: Request, res: Response){
-
+    const processResultId = req.processResult.id 
     try {
-      const csv = await InscriptionService.getApprovedCSVService();
+      const csv = await InscriptionService.getApprovedCSVService(processResultId);
       
       // Configuración de la respuesta para retornar el archivo CSV
       res.header('Content-Type', 'text/csv');

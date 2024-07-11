@@ -7,7 +7,7 @@ import {getActiveProcess} from '../../middleware/admission/getActiveProcess'
 import { Request, Response, NextFunction } from 'express-serve-static-core';
 import { param } from 'express-validator';
 import handleInputErrors from '../../middleware/HandleInputError';
-import { checkActiveInscriptionProcess } from '../../middleware/admission/checkActiveResultProcess';
+import { checkActiveInscriptionProcess, checkActiveResultsProcess } from '../../middleware/admission/checkActiveResultProcess';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -51,6 +51,7 @@ router.post('/register',
 );
 
 router.get('/obtener/admitidos/CSV',
+  checkActiveResultsProcess,
   (req : Request, res : Response) => inscriptionController.getAproveCSV(req, res)
 );
 

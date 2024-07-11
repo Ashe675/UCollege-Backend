@@ -4,8 +4,9 @@ import { prepareCsvRecords, getCsvString } from '../../services/admission/CSVGen
 import { getInscriptionResultsByDni } from '../../services/admission/resultService';
 
 export const generateCsv = async (req: Request, res: Response) => {
+  const processResultId = req.processResult.id
   try {
-    const inscriptions = await getAllInscriptions();
+    const inscriptions = await getAllInscriptions(processResultId);
 
     if (!inscriptions.length) {
       return res.status(404).send('No se encontraron inscripciones.');
