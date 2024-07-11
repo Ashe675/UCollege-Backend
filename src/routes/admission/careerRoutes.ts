@@ -3,6 +3,6 @@ const careerController = require('../../controllers/admission/careerController')
 
 const router = Router();
 
-router.get('/careers', careerController.getAllCareers);
+router.get('/admission/careers', careerController.getAllCareers);
 
 export default router;

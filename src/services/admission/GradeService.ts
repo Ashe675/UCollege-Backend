@@ -150,4 +150,48 @@ export class GradeService {
 
         }
     }
+
+    static async getGrades () {
+        const results = await prisma.inscription.findMany({
+            where : {
+                opinionId : {
+                    not : null
+                }
+            },
+            select : {
+                person : {
+                    select : {
+                        email : true,
+                        firstName : true,
+                        lastName : true
+                    }
+                },
+                opinion : {
+                    select : {
+                        message : true
+                    }
+                },
+                results : {
+                    select : {
+                        admissionTest : {
+                            select : {
+                                name : true,
+                                code: true
+                            }
+                        },
+                        message : true,
+                        score : true
+                    }
+                }
+            }
+        })
+
+        if(!results.length){
+            throw Error('No hay calificaciones para enviar')
+        }
+
+        return results;
+    }
+
+
 }

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from "../../config/db";
 
 const getAllCareers = async () => {
   return await prisma.career.findMany({
