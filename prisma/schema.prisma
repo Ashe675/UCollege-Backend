@@ -23,6 +23,7 @@ model Person {
   secondLastName String?       @db.VarChar(45)
   phoneNumber    String        @db.VarChar(20)
   email          String        @unique @db.VarChar(100)
+  user           User?
   inscriptions   Inscription[]
 }
 
@@ -53,12 +54,13 @@ model Inscription {
   opinionId         Int?
   regionalCenterId  Int
   processId         Int
+  notificated       Boolean  @default(false)
   process           Process  @relation(fields: [processId], references: [id])
-  principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
-  secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
-  opinion           Opinion? @relation(fields: [opinionId], references: [id])
-  person            Person   @relation(fields: [personId], references: [id])
-  regionalCenter    RegionalCenter @relation(fields: [regionalCenterId], references: [id])
+  principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id], onDelete: Cascade)
+  secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id], onDelete: Cascade)
+  opinion           Opinion? @relation(fields: [opinionId], references: [id], onDelete: Cascade)
+  person            Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  regionalCenter    RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
   results           Result[]
 
   @@index([principalCareerId], name: "fk_Inscription_Career1_idx")
@@ -74,10 +76,11 @@ model RegionalCenter_Career {
   startDate        DateTime  @default(now()) @db.Date
   finalDate        DateTime?
   active           Boolean   @default(true)
+  regionalCenterCareerStudent RegionalCenter_Career_Student[]
 
   // Foreign keys
-  career         Career         @relation(fields: [careerId], references: [id])
-  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id])
+  career         Career         @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
 
   // Indexes
   @@index([regionalCenterId], name: "fk_Career_has_RegionalCenter_RegionalCenter1_idx")
@@ -103,8 +106,8 @@ model AdmissionTest_Career {
   careerId        Int
   active          Boolean       @default(true)
   minScore        Float
-  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
-  career          Career        @relation(fields: [careerId], references: [id])
+  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id], onDelete: Cascade)
+  career          Career        @relation(fields: [careerId], references: [id], onDelete: Cascade)
 
   @@index([careerId], name: "fk_AdmissionTest_has_Career_Career1_idx")
   @@index([admissionTestId], name: "fk_AdmissionTest_has_Career_AdmissionTest1_idx")
@@ -125,9 +128,9 @@ model Result {
   message         String?       @db.VarChar(18)
   date            DateTime?     @db.Date
   processId       Int       
-  inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
-  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
-  process         Process       @relation(fields: [processId], references: [id])
+  inscription     Inscription   @relation(fields: [inscriptionId], references: [id], onDelete: Cascade)
+  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id], onDelete: Cascade)
+  process         Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
 
   @@id([inscriptionId, admissionTestId])
   @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
@@ -146,7 +149,7 @@ model Town {
   id                  Int               @id @default(autoincrement())
   name                String            @db.VarChar(100)
   countryDepartmentId Int
-  countryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id])
+  countryDepartment   CountryDepartment @relation(fields: [countryDepartmentId], references: [id], onDelete: Cascade)
   regionalCenters     RegionalCenter[]
 
   @@index([countryDepartmentId], name: "fk_Town_CountryDepartment1_idx")
@@ -160,7 +163,7 @@ model RegionalCenter {
   code                  String                  @db.VarChar(45)
   finalDate             DateTime?               @db.Date
   townId                Int
-  town                  Town                    @relation(fields: [townId], references: [id])
+  town                  Town                    @relation(fields: [townId], references: [id], onDelete: Cascade)
   regionalCentersCareer RegionalCenter_Career[]
   inscriptions          Inscription[]
 
@@ -180,10 +183,70 @@ model Process {
   finalDate     DateTime      @db.Date
   active        Boolean       @default(true)
   processTypeId Int
+  processId     Int?          
   inscriptions  Inscription[]
   results       Result[]
-  processType ProcessType @relation(fields: [processTypeId], references: [id])
+  subprocesses     Process[]   @relation("ProcessToSubprocess")
+  parentProcess     Process?     @relation("ProcessToSubprocess",fields: [processId], references: [id], onDelete: Cascade)
+  processType ProcessType @relation(fields: [processTypeId], references: [id], onDelete: Cascade)
 
   @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
 
+
+model User {
+  id            Int @id @default(autoincrement())
+  identificationCode  Int @unique
+  personId      Int   @unique
+  active        Boolean @default(true)
+  institutionalEmail String @db.VarChar(100)
+  password       String @unique @db.VarChar(100)
+  verified       Boolean @default(false)
+  avatar        String? @db.VarChar(200)
+  img1          String? @db.VarChar(200)
+  img2          String? @db.VarChar(200)
+  img3          String? @db.VarChar(200)
+  description   String? @db.VarChar(200)
+  roleId        Int
+
+  student     Student?
+  person      Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  role        Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([personId], name: "fk_User_Person_idx")
+  @@index([roleId], name: "fk_User_Role_idx")
+}
+
+
+enum RoleEnum {
+  ADMIN
+  STUDENT
+  TEACHER
+  DEPARTMENT_HEAD
+  COORDINATOR
+}
+model Role {
+  id            Int @id @default(autoincrement())
+  name          RoleEnum  @unique
+  users         User[]
+} 
+
+model Student {
+  id             Int                 @id @default(autoincrement())
+  globalAverage  Float?              
+  userId         Int                 @unique
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  regionalCenterCareerStudent   RegionalCenter_Career_Student[]
+}
+
+model RegionalCenter_Career_Student {
+  studentId                Int                 
+  regionalCenterCareerId   Int                 
+  selected                 Boolean             @default(false)
+  student                  Student             @relation(fields: [studentId], references: [id])
+  regionalCenterCareer     RegionalCenter_Career @relation(fields: [regionalCenterCareerId], references: [id])
+
+  @@id([studentId, regionalCenterCareerId])
+  @@index([studentId], name: "fk_RegionalCenterCareerStudent_Student_idx")
+  @@index([regionalCenterCareerId], name: "fk_RegionalCenterCareerStudent_RegionalCenter_idx")
+}

@@ -130,7 +130,7 @@ export default class InscriptionService {
    * @param principalCareerId - ID de la carrera principal.
    * @param secondaryCareerId - ID de la carrera secundaria.
    */
-  async createResults(inscriptionId: number, principalCareerId: number, secondaryCareerId: number) {
+  async createResults(inscriptionId: number, principalCareerId: number, secondaryCareerId: number, processInscriptionId : number) {
     const admissionTests = await prisma.admissionTest_Career.findMany({
       where: {
         OR: [
@@ -143,7 +143,7 @@ export default class InscriptionService {
       },
     });
 
-    const processId = await this.getIdResultProcessActive();
+    const processId = await this.getIdResultProcessActive(processInscriptionId);
 
     for (const test of admissionTests) {
       try {
@@ -181,15 +181,16 @@ export default class InscriptionService {
     }
   }
 
-  async getIdResultProcessActive(): Promise<number | null> {
+  async getIdResultProcessActive(inscriptionId : number): Promise<number | null> {
     try {
-      const currentDate = new Date();
+      // const currentDate = new Date();
 
       const activeProcess = await prisma.process.findFirst({
         where: {
-          active: true,
-          startDate: { lte: currentDate }, // startDate less than or equal to currentDate
-          finalDate: { gte: currentDate }, // finalDate greater than or equal to currentDate
+          processId : inscriptionId,
+          // active: true,
+          // startDate: { lte: currentDate }, // startDate less than or equal to currentDate
+          // finalDate: { gte: currentDate }, // finalDate greater than or equal to currentDate
           processTypeId: 2,
         },
         select: {

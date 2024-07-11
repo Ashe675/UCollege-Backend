@@ -88,7 +88,7 @@ export default class InscriptionController {
         regionalCenterId,
         photoCertificate);
 
-      await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10));
+      await this.inscriptionService.createResults(inscription.id, parseInt(principalCareerId, 10), parseInt(secondaryCareerId, 10), processId);
 
       res.status(201).send("¡Felicidades! Se ha inscrito con éxito");
     } catch (error) {
@@ -134,9 +134,9 @@ export default class InscriptionController {
 
 export const getInscriptionDetails = async (req: Request, res: Response) => {
   const { dni } = req.params;
-
+  const processInscriptionId = req.processInscription.id
   try {
-    const details = await getInscriptionDetailsByDni(dni);
+    const details = await getInscriptionDetailsByDni(dni, processInscriptionId);
     res.json(details);
   } catch (error) {
     res.status(404).json({ error: error.message });

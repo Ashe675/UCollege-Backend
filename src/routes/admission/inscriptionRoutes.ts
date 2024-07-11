@@ -7,6 +7,7 @@ import {getActiveProcess} from '../../middleware/admission/getActiveProcess'
 import { Request, Response, NextFunction } from 'express-serve-static-core';
 import { param } from 'express-validator';
 import handleInputErrors from '../../middleware/HandleInputError';
+import { checkActiveInscriptionProcess } from '../../middleware/admission/checkActiveResultProcess';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -57,6 +58,6 @@ router.get('/admission/inscription/:dni', [
   param('dni')
     .notEmpty().withMessage('DNI is required')
     .isLength({ min: 13, max: 13 }).withMessage('DNI must be 13 digits long')
-],handleInputErrors, getInscriptionDetails);
+],handleInputErrors, checkActiveInscriptionProcess,getInscriptionDetails);
 
 export default router;
