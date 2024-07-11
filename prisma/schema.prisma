@@ -56,19 +56,11 @@ model Inscription {
   regionalCenterId  Int
   processId         Int
   process           Process  @relation(fields: [processId], references: [id])
-<<<<<<< HEAD
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id], onDelete: Cascade)
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id], onDelete: Cascade)
   opinion           Opinion? @relation(fields: [opinionId], references: [id], onDelete: Cascade)
   person            Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
   regionalCenter    RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
-=======
-  principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id])
-  secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id])
-  opinion           Opinion? @relation(fields: [opinionId], references: [id])
-  person            Person   @relation(fields: [personId], references: [id])
-  regionalCenter    RegionalCenter @relation(fields: [regionalCenterId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
   results           Result[]
   notificated     Boolean       @default(false)
 
@@ -85,18 +77,11 @@ model RegionalCenter_Career {
   startDate        DateTime  @default(now()) @db.Date
   finalDate        DateTime?
   active           Boolean   @default(true)
-<<<<<<< HEAD
   regionalCenterCareerStudent RegionalCenter_Career_Student[]
 
   // Foreign keys
   career         Career         @relation(fields: [careerId], references: [id], onDelete: Cascade)
   regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
-=======
-
-  // Foreign keys
-  career         Career         @relation(fields: [careerId], references: [id])
-  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
 
   // Indexes
   @@index([regionalCenterId], name: "fk_Career_has_RegionalCenter_RegionalCenter1_idx")
@@ -122,13 +107,8 @@ model AdmissionTest_Career {
   careerId        Int
   active          Boolean       @default(true)
   minScore        Float
-<<<<<<< HEAD
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id], onDelete: Cascade)
   career          Career        @relation(fields: [careerId], references: [id], onDelete: Cascade)
-=======
-  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
-  career          Career        @relation(fields: [careerId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
 
   @@index([careerId], name: "fk_AdmissionTest_has_Career_Career1_idx")
   @@index([admissionTestId], name: "fk_AdmissionTest_has_Career_AdmissionTest1_idx")
@@ -149,15 +129,9 @@ model Result {
   message         String?       @db.VarChar(18)
   date            DateTime?     @db.Date
   processId       Int       
-<<<<<<< HEAD
   inscription     Inscription   @relation(fields: [inscriptionId], references: [id], onDelete: Cascade)
   admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id], onDelete: Cascade)
   process         Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
-=======
-  inscription     Inscription   @relation(fields: [inscriptionId], references: [id])
-  admissionTest   AdmissionTest @relation(fields: [admissionTestId], references: [id])
-  process         Process       @relation(fields: [processId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
 
   @@id([inscriptionId, admissionTestId])
   @@index([admissionTestId], name: "fk_Inscription_has_AdmissionTest_AdmissionTest1_idx")
@@ -190,11 +164,7 @@ model RegionalCenter {
   code                  String                  @db.VarChar(45)
   finalDate             DateTime?               @db.Date
   townId                Int
-<<<<<<< HEAD
   town                  Town                    @relation(fields: [townId], references: [id], onDelete: Cascade)
-=======
-  town                  Town                    @relation(fields: [townId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
   regionalCentersCareer RegionalCenter_Career[]
   inscriptions          Inscription[]
 
@@ -214,23 +184,16 @@ model Process {
   finalDate     DateTime      @db.Date
   active        Boolean       @default(true)
   processTypeId Int
-<<<<<<< HEAD
   processId     Int?          
   inscriptions  Inscription[]
   results       Result[]
   subprocesses     Process[]   @relation("ProcessToSubprocess")
   parentProcess     Process?     @relation("ProcessToSubprocess",fields: [processId], references: [id], onDelete: Cascade)
   processType ProcessType @relation(fields: [processTypeId], references: [id], onDelete: Cascade)
-=======
-  inscriptions  Inscription[]
-  results       Result[]
-  processType ProcessType @relation(fields: [processTypeId], references: [id])
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
 
   @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
 
-<<<<<<< HEAD
 
 model User {
   id            Int @id @default(autoincrement())
@@ -288,5 +251,3 @@ model RegionalCenter_Career_Student {
   @@index([studentId], name: "fk_RegionalCenterCareerStudent_Student_idx")
   @@index([regionalCenterCareerId], name: "fk_RegionalCenterCareerStudent_RegionalCenter_idx")
 }
-=======
->>>>>>> 20029d2b0710e9f3fedf6ea46ca7d73dafe34915
