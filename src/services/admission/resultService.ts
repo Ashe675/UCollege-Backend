@@ -24,7 +24,7 @@ export const getInscriptionResultsByDni = async (dni: string, processId: number)
   
 
   if (!person) {
-    throw new Error('No se encontraron registros');
+    throw new Error('No se encontraron registros asociados a ese DNI');
   }
 
   const inscriptionDetails = {

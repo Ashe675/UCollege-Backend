@@ -53,8 +53,8 @@ export default class InscriptionService {
       middleName?: string,
       lastName: string,
       secondLastName?: string,
-      phoneNumber: string,
-      email: string,
+      phoneNumber: string, // el numero de telefono puede cambiar
+      email: string, // el email puede cambiar
     }) {
       let person = await prisma.person.findUnique({
         where: { dni: data.dni },
@@ -130,7 +130,7 @@ export default class InscriptionService {
    * @param principalCareerId - ID de la carrera principal.
    * @param secondaryCareerId - ID de la carrera secundaria.
    */
-  async createResults(inscriptionId: number, principalCareerId: number, secondaryCareerId: number) {
+  async createResults(inscriptionId: number, principalCareerId: number, secondaryCareerId: number, processInscriptionId : number) {
     const admissionTests = await prisma.admissionTest_Career.findMany({
       where: {
         OR: [
@@ -143,7 +143,7 @@ export default class InscriptionService {
       },
     });
 
-    const processId = await this.getIdResultProcessActive();
+    const processId = await this.getIdResultProcessActive(processInscriptionId);
 
     for (const test of admissionTests) {
       try {
@@ -181,15 +181,16 @@ export default class InscriptionService {
     }
   }
 
-  async getIdResultProcessActive(): Promise<number | null> {
+  async getIdResultProcessActive(inscriptionId : number): Promise<number | null> {
     try {
-      const currentDate = new Date();
+      // const currentDate = new Date();
 
       const activeProcess = await prisma.process.findFirst({
         where: {
-          active: true,
-          startDate: { lte: currentDate }, // startDate less than or equal to currentDate
-          finalDate: { gte: currentDate }, // finalDate greater than or equal to currentDate
+          processId : inscriptionId,
+          // active: true,
+          // startDate: { lte: currentDate }, // startDate less than or equal to currentDate
+          // finalDate: { gte: currentDate }, // finalDate greater than or equal to currentDate
           processTypeId: 2,
         },
         select: {
@@ -204,12 +205,17 @@ export default class InscriptionService {
     }
   }
 
-  static async getApprovedCSVService(): Promise<string> {
+  static async getApprovedCSVService(processResultId : number): Promise<string> {
     const approvedCandidates = await prisma.inscription.findMany({
       where: {
         opinionId: {
           in: [1, 2, 3], // Los IDs de las opiniones que representan aprobación
         },
+        results : {
+          every : {
+            processId : processResultId
+          }
+        }
       },
       include: {
         person: true, // Incluye la información de la persona
@@ -249,7 +255,7 @@ export default class InscriptionService {
       dni: candidate.person.dni,
       fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
       email: candidate.person.email,
-      career: candidate.opinionId === 3 || candidate.opinionId === 2  ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
+      career: candidate.opinionId === 3 ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
       regionalCenter: `${candidate.regionalCenter.name}, ${candidate.regionalCenter.town.name}, ${candidate.regionalCenter.town.countryDepartment.name}`,
     }));
 
