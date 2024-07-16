@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
+import { startCronJobs } from './utils/auth/cronToken';
 
 import inscriptionRoutes from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
@@ -12,11 +13,15 @@ import careerRoutes from './routes/admission/careerRoutes';
 import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
 import admissionRoutes from './routes/admission/admissionRoutes'
 import inscriptionsByDni from './routes/admission/inscriptionRoutes';
+
+import authRoutes from './routes/auth/authRoutes';
+
 import { corsConfig } from './config/cors';
 
 
 dotenv.config()
 connectDB()
+startCronJobs()
 
 const app = express()
 
@@ -36,6 +41,8 @@ app.use('/api', admissionRoutes);
 app.use('/api', inscriptionsByDni);
 app.use('/api/upload',uploadRouter)
 app.use('/api/inscriptions', inscriptionRoutes);
+
+app.use('/api/auth', authRoutes);
 
 
 export default app
