@@ -60,7 +60,7 @@ export class AuthController {
                 }
             })
 
-            await AuthEmail.sendPasswordResendToken({ email: userFound.person.email, name: userFound.person.firstName, token: tokenGenerated })
+            await AuthEmail.sendPasswordResendToken({ email: userFound.person.email, name: userFound.person.firstName, token: tokenGenerated }, false)
 
             res.send('Te hemos enviado un email a tu correo personal con las instrucciones')
         } catch (error) {
@@ -69,7 +69,7 @@ export class AuthController {
     }
 
     static forgotPasswordTeacher = async (req: Request, res: Response) => {
-        const { idTeacher }: { idTeacher: number } = req.body
+        const  idTeacher : number  = parseInt(req.body.idTeacher)
         try {
             const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true } })
             if (!userFound) {
@@ -97,9 +97,9 @@ export class AuthController {
                 }
             })
 
-            await AuthEmail.sendPasswordResendToken({ email: userFound.person.email, name: userFound.person.firstName, token: tokenGenerated })
+            await AuthEmail.sendPasswordResendToken({ email: userFound.person.email, name: userFound.person.firstName, token: tokenGenerated }, true)
 
-            res.send('Te hemos enviado un email a tu correo personal con las instrucciones')
+            res.send(`Hemos enviado un email al docente ${userFound.person.firstName} ${userFound.person.lastName} con el enlace para cambiar su contraseña`)
         } catch (error) {
             res.status(500).json({ error: 'Server internal error' })
         }
