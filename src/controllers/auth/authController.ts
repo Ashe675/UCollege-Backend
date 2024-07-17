@@ -9,8 +9,10 @@ export class AuthController {
 
     static login = async (req: Request, res: Response) => {
         const { institutionalEmail, password }: { institutionalEmail: string, password: string } = req.body
+        const lowerEmail = institutionalEmail.toLowerCase()
+
         try {
-            const userFound = await prisma.user.findUnique({ where: { institutionalEmail }, include: { role: true } })
+            const userFound = await prisma.user.findUnique({ where: { institutionalEmail : lowerEmail }, include: { role: true } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })
@@ -33,8 +35,10 @@ export class AuthController {
 
     static forgotPassword = async (req: Request, res: Response) => {
         const { institutionalEmail }: { institutionalEmail: string } = req.body
+        const lowerEmail = institutionalEmail.toLowerCase()
+
         try {
-            const userFound = await prisma.user.findUnique({ where: { institutionalEmail }, include: { role: true, person: true } })
+            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true, person: true } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })

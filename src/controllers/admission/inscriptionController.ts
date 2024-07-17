@@ -58,6 +58,8 @@ export default class InscriptionController {
     } = req.body;
     const photoCertificate = req.file.path;
 
+    const lowerEmail = email.toLowerCase()
+
     try {
       const person = await this.inscriptionService.createOrFindPerson({
         dni,
@@ -66,7 +68,7 @@ export default class InscriptionController {
         lastName,
         secondLastName,
         phoneNumber,
-        email,
+        email : lowerEmail,
       });
 
       const inscriptionProcess = await this.inscriptionService.validateProcessIdUnique(person.id, processId);
