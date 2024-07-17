@@ -27,6 +27,13 @@ router.post('/update-password',
     AuthController.updateCurrentUserPassword
 )
 
+router.post('/update-password-teacher',
+    authenticate,
+    authorizeRole(['DEPARTMENT_HEAD']),
+    ...AuthValidator.validatorForgotPasswordTeacher(),
+    AuthController.forgotPasswordTeacher
+)
+
 router.post('/check-password',
     authenticate,
     ...AuthValidator.validatorCheckPassword(),

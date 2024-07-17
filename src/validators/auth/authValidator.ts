@@ -12,6 +12,15 @@ export class AuthValidator {
         ];
     }
 
+    static validatorForgotPasswordTeacher() {
+        return [
+            body('idTeacher')
+                .notEmpty().withMessage('Id of Teacher is required')
+                .isNumeric().withMessage('Id ot Teacher must be numeric'),
+            handleInputErrors
+        ];
+    }
+
     static validatorForgotPassword() {
         return [
             body('institutionalEmail')

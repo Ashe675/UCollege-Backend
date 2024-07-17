@@ -11,7 +11,6 @@ const deleteExpiredTokens = async () => {
         }
       }
     });
-    console.log('Expired tokens deleted');
   } catch (error) {
     console.error('Error deleting expired tokens:', error);
   }

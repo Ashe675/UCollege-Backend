@@ -7,7 +7,7 @@ interface IEmail {
 }
 
 export class AuthEmail {
-    static sendPasswordResendToken = async (user: IEmail) => {
+    static sendPasswordResendToken = async (user: IEmail, isTeacher : boolean) => {
         const htmlContent =
             `<!DOCTYPE html>
                 <html lang="es">
@@ -57,7 +57,7 @@ export class AuthEmail {
                         <b style="color: #2a2929; font-weight: 700">${user.token}</b>
                     </p>
                     <p style="color: #444; font-size: 18px">
-                        Este token expira en 15 minutos.
+                        ${isTeacher ? 'Este enlace expira en 2 minutos.' : 'Este token expira en 15 minutos.'}
                     </p>
                     </div>
                 </body>

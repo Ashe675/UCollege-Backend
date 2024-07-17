@@ -12,7 +12,7 @@ export const generateCsv = async (req: Request, res: Response) => {
       return res.status(404).send('No se encontraron inscripciones.');
     }
 
-    const records = prepareCsvRecords(inscriptions);
+    const records = await prepareCsvRecords(inscriptions);
     const csvString = getCsvString(records);
 
     res.setHeader('Content-disposition', 'attachment; filename=results.csv');
