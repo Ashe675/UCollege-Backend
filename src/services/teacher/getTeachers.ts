@@ -4,7 +4,8 @@ export const getAllTeachers = async () => {
     try {
       const teachers = await prisma.user.findMany({
         where: {
-          roleId: 4, // Solo maestros
+          roleId: 4,
+          active: true, // Solo maestros
         },
         include: {
           person: {

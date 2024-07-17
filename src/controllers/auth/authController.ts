@@ -68,6 +68,43 @@ export class AuthController {
         }
     }
 
+    static forgotPasswordTeacher = async (req: Request, res: Response) => {
+        const { idTeacher }: { idTeacher: number } = req.body
+        try {
+            const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true } })
+            if (!userFound) {
+                const error = new Error('¡El usuario no existe!')
+                return res.status(404).send({ error: error.message })
+            }
+
+            if (userFound.role.name !== 'TEACHER' && userFound.role.name !== 'COORDINATOR') {
+                const error = new Error('El usuario no es un docente.')
+                return res.status(404).send({ error: error.message })
+            }
+
+            // if a token exists, remove it
+            const tokenExists = await prisma.userToken.findUnique({ where: { userId: userFound.id } })
+            if (tokenExists) {
+                await prisma.userToken.delete({ where: { token: tokenExists.token } })
+            }
+
+            const tokenGenerated = generateToken()
+            await prisma.userToken.create({
+                data: {
+                    token: tokenGenerated,
+                    userId: userFound.id,
+                    expiresAt: new Date(Date.now() + 2 * 60 * 1000)
+                }
+            })
+
+            await AuthEmail.sendPasswordResendToken({ email: userFound.person.email, name: userFound.person.firstName, token: tokenGenerated })
+
+            res.send('Te hemos enviado un email a tu correo personal con las instrucciones')
+        } catch (error) {
+            res.status(500).json({ error: 'Server internal error' })
+        }
+    }
+
 
     static validateToken = async (req: Request, res: Response) => {
         const { token } = req.body
