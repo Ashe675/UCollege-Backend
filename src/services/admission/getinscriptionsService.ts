@@ -1,11 +1,16 @@
 import { prisma } from "../../config/db";
 
 
-export const getInscriptionDetailsByDni = async (dni) => {
+export const getInscriptionDetailsByDni = async (dni: string, processInscriptionId: number) => {
   const person = await prisma.person.findUnique({
-    where: { dni },
+    where: {
+      dni
+    },
     include: {
       inscriptions: {
+        where: {
+          processId: processInscriptionId
+        },
         include: {
           principalCareer: {
             include: {
@@ -34,6 +39,10 @@ export const getInscriptionDetailsByDni = async (dni) => {
     throw new Error('No se encontraron registros con ese DNI');
   }
 
+  if (person.inscriptions.length === 0) {
+    throw new Error('No se encontraron registros con ese DNI');
+  }
+
   const inscriptionDetails = {
     person: {
       firstName: person.firstName,
@@ -58,7 +67,7 @@ export const getInscriptionDetailsByDni = async (dni) => {
           name: career.name,
           tests: career.admissionsTests.map((test) => ({
             name: test.admissionTest.name,
-            code: test.admissionTest.code, 
+            code: test.admissionTest.code,
             minScore: test.minScore
           }))
         };

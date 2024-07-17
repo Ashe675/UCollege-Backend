@@ -6,7 +6,7 @@ import { checkActiveResultsProcess } from "../../middleware/admission/checkActiv
 
 const router = Router();
 
-router.get('/admission/generate-csv', generateCsv);
+router.get('/admission/generate-csv',checkActiveResultsProcess, generateCsv);
 
 router.get('/admission/viewresults/:dni',  [
     param('dni')

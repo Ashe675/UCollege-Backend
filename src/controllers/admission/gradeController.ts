@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { CSVService } from "../../services/admission/CSVService";
 import { GradeService } from "../../services/admission/GradeService";
 import { sendEmailResults } from "../../services/mail/emailService";
+import { prisma } from "../../config/db";
 
 export class GradeController {
     static readGrades = async (req: Request, res: Response) => {
@@ -16,6 +17,8 @@ export class GradeController {
             return res.status(400).send('El archivo subido no es un archivo CSV.');
         }
 
+        const processResultId = req.processResult.id
+
         try {
 
             const { results, errors } = await CSVService.processCSV(req.file.buffer.toString('utf8'));
@@ -26,10 +29,10 @@ export class GradeController {
 
 
             for (const [index, result] of results.entries()) {
-                await GradeService.validateAndSaveResult(result, index);
+                await GradeService.validateAndSaveResult(result, index, processResultId);
             }
 
-            await GradeService.updateInscriptions();
+            await GradeService.updateInscriptions(processResultId);
 
             res.status(200).send('¡NOTAS SUBIDAS CORRECTAMENTE!');
         } catch (error) {
@@ -38,10 +41,19 @@ export class GradeController {
     }
 
     static sendEmailsGrades= async (req: Request, res: Response) => {
+        const processResultId = req.processResult.id
         try {
-            const grades = await GradeService.getGrades()
+            const grades = await GradeService.getGrades(processResultId)
             for (const grade of grades) {
                 await sendEmailResults(grade)
+                await prisma.inscription.update({
+                    where : {
+                        id : grade.id
+                    },
+                    data : {
+                        notificated : true
+                    }
+                })
             }
             res.status(200).send('¡Correos Enviados Correctamente!')
         } catch (error) {
