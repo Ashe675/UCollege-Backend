@@ -245,7 +245,8 @@ export default class InscriptionService {
         { id: 'dni', title: 'DNI' },
         { id: 'fullName', title: 'Nombre Completo' },
         { id: 'email', title: 'Correo Electrónico' },
-        { id: 'career', title: 'Carrera' },
+        { id: 'principalCareer', title: 'Carrera' },
+        { id: 'secondaryCareer', title: 'Carrera Secundaria' },
         { id: 'regionalCenter', title: 'Centro Regional' },
       ],
     });
@@ -255,7 +256,8 @@ export default class InscriptionService {
       dni: candidate.person.dni,
       fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
       email: candidate.person.email,
-      career: candidate.opinionId === 3 ? candidate.secondaryCareer?.name : candidate.principalCareer.name,
+      principalCareer: candidate.opinionId === 1 || candidate.opinionId === 2 ? candidate.principalCareer?.name : 'null',
+      secondaryCareer: candidate.opinionId ===3 || candidate.opinionId === 1  ? candidate.secondaryCareer.name : 'null',
       regionalCenter: `${candidate.regionalCenter.name}, ${candidate.regionalCenter.town.name}, ${candidate.regionalCenter.town.countryDepartment.name}`,
     }));
 

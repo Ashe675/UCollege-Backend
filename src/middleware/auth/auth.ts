@@ -49,7 +49,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 export const authorizeRole = (roleNames: string[]) => {
     return (req : Request, res : Response, next : NextFunction) => {
         if (!roleNames.includes(req.user.role.name)) {
-            return res.status(403).send('No tienes los permisos necesarios');
+            const error = new Error('No tiene los permisos necesarios')
+            return res.status(403).json({ error: error.message })
         }
         next();
     };
