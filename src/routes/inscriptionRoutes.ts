@@ -18,7 +18,7 @@ const inscriptionController = new InscriptionController();
  * Contenido del cuerpo:
  * - principalCareerId:   number (ej. 2)
  * - secondaryCareerId:   number (ej. 3)
- * - personId:            number (ej. 1)
+ * - regionalCenterId:            number (ej. 1)
  * - regionalCenterId:    number
  * - photoCertificate:    file (ej. 'WhatsApp Image 2023-10-29 at 1.50.07 PM.jpeg')
  * - dni:                 string (ej. '0804596512126')
