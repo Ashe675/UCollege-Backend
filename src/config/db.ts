@@ -4,7 +4,6 @@ dotenv.config()
 import colors from 'colors'
 
 export const prisma = new PrismaClient()
-
 // Conectando a bdd
 export async function connectDB() {
     try {

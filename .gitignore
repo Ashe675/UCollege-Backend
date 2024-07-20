@@ -5,3 +5,8 @@ package-lock.json
 dist/
 seed.ts
 cleanTables.ts
+results.csv
+*.png
+*.jpg
+*.jpeg
+migrations/

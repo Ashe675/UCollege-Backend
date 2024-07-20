@@ -1,5 +1,5 @@
-import { prisma } from '../config/db';
-import deleteImage from '../utils/fileHandler'
+import { prisma } from '../../config/db';
+import deleteImage from '../../utils/admission/fileHandler'
 import { Request, Response, NextFunction } from 'express';
 
 
