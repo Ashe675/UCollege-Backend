@@ -14,6 +14,7 @@ import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
 import admissionRoutes from './routes/admission/admissionRoutes'
 import inscriptionsByDni from './routes/admission/inscriptionRoutes';
 import teacherRoutes from './routes/teachers/teachersRoutes';
+import adminRoutes from './routes/admin/adminRoutes'
 
 import authRoutes from './routes/auth/authRoutes';
 
@@ -43,6 +44,9 @@ app.use('/api', inscriptionsByDni);
 app.use('/api/upload',uploadRouter)
 app.use('/api/inscriptions', inscriptionRoutes);
 app.use('/api/teacher', teacherRoutes);
+
+// Ruta para crear un usuario docente
+app.use('/api/admin', adminRoutes);
 
 app.use('/api/auth', authRoutes);
 
