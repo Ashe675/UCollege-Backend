@@ -27,6 +27,11 @@ model Person {
   inscriptions   Inscription[]
 }
 
+enum TypeCareerEnum {
+  TRIMESTRAL
+  SEMESTRAL
+}
+
 // Modelo Career
 model Career {
   id                      Int                     @id @default(autoincrement())
@@ -34,11 +39,15 @@ model Career {
   active                  Boolean                 @default(true)
   createdAt               DateTime                @default(now()) @db.Date
   description             String?                 @db.VarChar(100)
+  typeCareer              TypeCareerEnum?
   code                    String                  @unique @db.VarChar(45)
   admissionsTests         AdmissionTest_Career[]
   inscriptionsPrincipals  Inscription[]           @relation("principalCareer")
   inscriptionsSecondaries Inscription[]           @relation("secondaryCareer")
   regionalCentersCareers  RegionalCenter_Career[]
+  regionalCenter_Faculty_Careers RegionalCenter_Faculty_Career[]
+  departament  Departament?
+  studyPlanes StudyPlan[]
 
   @@index([id], name: "pk_Career_idx")
 }
@@ -76,7 +85,6 @@ model RegionalCenter_Career {
   startDate        DateTime  @default(now()) @db.Date
   finalDate        DateTime?
   active           Boolean   @default(true)
-  regionalCenterCareerStudent RegionalCenter_Career_Student[]
 
   // Foreign keys
   career         Career         @relation(fields: [careerId], references: [id], onDelete: Cascade)
@@ -166,6 +174,8 @@ model RegionalCenter {
   town                  Town                    @relation(fields: [townId], references: [id], onDelete: Cascade)
   regionalCentersCareer RegionalCenter_Career[]
   inscriptions          Inscription[]
+  regionalCenter_Faculties RegionalCenter_Faculty[]
+  buildings  Building[]
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
 }
@@ -189,6 +199,10 @@ model Process {
   subprocesses     Process[]   @relation("ProcessToSubprocess")
   parentProcess     Process?     @relation("ProcessToSubprocess",fields: [processId], references: [id], onDelete: Cascade)
   processType ProcessType @relation(fields: [processTypeId], references: [id], onDelete: Cascade)
+  planning     Planning? @relation(fields: [planningId], references: [id], onDelete: Cascade)
+  planningId  Int?
+  academicPeriod AcademicPeriod?
+  daysEnrolls DayEnroll[]
 
   @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
@@ -214,6 +228,11 @@ model User {
   person      Person @relation(fields: [personId], references: [id], onDelete: Cascade)
   role        Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
+  sections    Section[]
+
+  carrers RegionalCenter_Faculty_Career_User[]
+  carrersOptions OptionCareer[]
+
   @@index([personId], name: "fk_User_Person_idx")
   @@index([roleId], name: "fk_User_Role_idx")
 }
@@ -237,27 +256,252 @@ model Student {
   globalAverage  Float?              
   userId         Int                 @unique
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  regionalCenterCareerStudent   RegionalCenter_Career_Student[]
-}
+  enrollments Enrollment[]
 
-model RegionalCenter_Career_Student {
-  studentId                Int                 
-  regionalCenterCareerId   Int                 
-  selected                 Boolean             @default(false)
-  student                  Student             @relation(fields: [studentId], references: [id])
-  regionalCenterCareer     RegionalCenter_Career @relation(fields: [regionalCenterCareerId], references: [id])
-
-  @@id([studentId, regionalCenterCareerId])
-  @@index([studentId], name: "fk_RegionalCenterCareerStudent_Student_idx")
-  @@index([regionalCenterCareerId], name: "fk_RegionalCenterCareerStudent_RegionalCenter_idx")
 }
 
 model UserToken {
   token       String @unique
   userId      Int @unique
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt   DateTime
   createdAt   DateTime @default(now())
 
   @@index([userId])
 }
+
+model Faculty {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(80)
+  startDate   DateTime @db.Date @default(now())
+  finalDate   DateTime? @db.Date
+  active      Boolean  @default(true)
+  regionalCenter_Faculties RegionalCenter_Faculty[]
+}
+
+model RegionalCenter_Faculty {
+  faculty     Faculty @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  facultyId  Int
+  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
+  regionalCenterId Int
+  startDate   DateTime @db.Date @default(now())
+  finalDate   DateTime? @db.Date
+  active      Boolean  @default(true)
+  @@id([facultyId, regionalCenterId])
+  regionalCenter_Faculty_Careers RegionalCenter_Faculty_Career[]
+}
+
+model RegionalCenter_Faculty_Career {
+  id                         Int      @id @default(autoincrement())
+  regionalCenter_Faculty     RegionalCenter_Faculty @relation(fields: [regionalCenter_Faculty_FacultyId, regionalCenter_Faculty_RegionalCenterId], references: [facultyId, regionalCenterId], onDelete: Cascade)
+  regionalCenter_Faculty_FacultyId  Int
+  regionalCenter_Faculty_RegionalCenterId Int
+  career                     Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  careerId                  Int
+  startDate                  DateTime @db.Date @default(now())
+  finalDate                  DateTime? @db.Date
+  active                     Boolean  @default(true)
+  sections Section[]
+  users RegionalCenter_Faculty_Career_User[]
+  usersOptions OptionCareer[]
+
+
+}
+
+model Departament {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(80)
+  createdAt    DateTime @db.Date @default(now())
+  active       Boolean  @default(true)
+  careerId    Int @unique
+  career       Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  classes      Class[]
+}
+
+model Planning {
+  id          Int      @id @default(autoincrement())
+  description String?  @db.VarChar(100)
+  year        Int    
+  processes   Process[]
+}
+
+model Class {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(50)
+  active       Boolean  @default(true)
+  createdAt    DateTime @db.Date
+  code         String   @unique @db.VarChar(45)
+  UV           Int
+  departament  Departament @relation(fields: [departamentId], references: [id], onDelete: Cascade)
+  departamentId Int
+  sections     Section[]
+  
+  studyPlan    StudyPlan_Class[] @relation("StudyPlanClass")
+  prerequisiteClasses StudyPlan_Class[] @relation("PrerequisiteClass")
+
+}
+
+model Building {
+  id          Int      @id @default(autoincrement())
+  code        String   @db.VarChar(4)
+  active      Boolean
+  classrooms  Classroom[]
+  regionalCenterId Int
+  regionalCenter RegionalCenter @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
+
+}
+
+model Classroom {
+  id          Int      @id @default(autoincrement())
+  code        String   @db.VarChar(10)
+  floor       Int
+  number      Int
+  capacity    Int
+  building    Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  buildingId Int
+  Sections    Section[]
+}
+
+model Section {
+  id            Int        @id @default(autoincrement())
+  code          String     @unique @db.VarChar(20)
+  capacity      Int
+  IH            Int        
+  FH            Int        
+  active        Boolean    @default(true)
+  class         Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId      Int
+  regionalCenter_Faculty_CareerId Int 
+  regionalCenter_Faculty_Career RegionalCenter_Faculty_Career @relation(fields: [regionalCenter_Faculty_CareerId], references: [id], onDelete: Cascade)
+  teacherId Int
+  teacher  User @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classroomId   Int
+  classroom     Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade) 
+  academicPeriodId    Int
+  academicPeriod    AcademicPeriod @relation(fields: [academicPeriodId], references: [id], onDelete: Cascade)
+  waitingList WaitingList?
+  section_Day Section_Day[]
+  enrollments   Enrollment[]
+}
+
+model AcademicPeriod {
+  id           Int      @id @default(autoincrement())
+  number       Int      
+  process      Process @relation(fields: [processId], references: [id], onDelete: Cascade)
+  processId   Int       @unique
+  sections     Section[]
+}
+
+model Enrollment {
+  section      Section   @relation(fields: [sectionId], references: [id])
+  sectionId   Int
+  date         DateTime @db.Date @default(now())
+  grade        Float?
+  message      String?  @db.VarChar(45)
+  student      Student   @relation(fields: [studentId], references: [id])
+  studentId   Int
+  waitingList  WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
+  waitingListId Int?
+  @@id([sectionId, studentId])
+}
+
+model WaitingList {
+  id Int     @id @default(autoincrement())
+  top Int    @default(autoincrement())
+  sectionId  Int @unique
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  
+}
+
+enum DayEnum {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
+model Day {
+  id Int @id @default(autoincrement())
+  name DayEnum @unique
+  section_Day Section_Day[]
+}
+model Section_Day{
+  sectionId   Int
+  dayId  Int
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  day Day @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+
+  @@id([sectionId, dayId])
+}
+
+
+model RegionalCenter_Faculty_Career_User {
+  id                             Int      @id @default(autoincrement())
+  regionalCenter_Faculty_Career  RegionalCenter_Faculty_Career @relation(fields: [regionalCenter_Faculty_CareerId], references: [id], onDelete:  Cascade)
+  regionalCenter_Faculty_CareerId Int
+  user                           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                      Int
+  startDate                      DateTime @db.Date @default(now())
+  finalDate                      DateTime? @db.Date
+
+  @@index([userId], name: "fk_RegionalCenter_Faculty_Career_has_User_User1_idx")
+  @@index([regionalCenter_Faculty_CareerId], name: "fk_RegionalCenter_Faculty_Career_has_User_RegionalCenter_Fa_idx")
+}
+
+
+model OptionCareer {
+  id                             Int      @id @default(autoincrement())
+  regionalCenter_Faculty_Career  RegionalCenter_Faculty_Career @relation(fields: [regionalCenter_Faculty_CareerId], references: [id])
+  regionalCenter_Faculty_CareerId Int
+  user                           User     @relation(fields: [userId], references: [id])
+  userId                      Int
+  date                      DateTime @db.Date @default(now())
+
+
+  @@index([userId], name: "OptionCareer_has_User_User1_idx")
+  @@index([regionalCenter_Faculty_CareerId], name: "OptionCareer_has_User_RegionalCenter_Fa_idx")
+}
+
+model DayEnroll {
+  id            Int      @id @default(autoincrement())
+  startDate          DateTime @db.Date
+  finalDate          DateTime @db.Date
+  globalAvarage Float
+  process       Process  @relation(fields: [processId], references: [id])
+  processId    Int
+
+  @@index([processId], name: "fk_DayEnroll_Process1_idx")
+}
+
+model StudyPlan {
+  id        Int               @id @default(autoincrement())
+  createdAt DateTime          @default(now()) @db.Date
+  finalDate DateTime?         @db.Date
+  careerId  Int
+
+  career    Career            @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  classes   StudyPlan_Class[]
+
+  @@index([careerId], name: "fk_StudyPlan_Career1_idx")
+}
+
+model StudyPlan_Class {
+  id                Int       @id @default(autoincrement())
+  studyPlanId       Int
+  classId           Int
+  prerequisiteClassId Int?
+
+  studyPlan         StudyPlan @relation(fields: [studyPlanId], references: [id], onDelete: Cascade)
+  class             Class     @relation( "StudyPlanClass" ,fields: [classId], references: [id], onDelete: Cascade)
+  prerequisite      Class?     @relation("PrerequisiteClass", fields: [prerequisiteClassId], references: [id], onDelete: Cascade)
+
+  @@index([studyPlanId], name: "fk_StudyPlan_has_Class_StudyPlan1_idx")
+  @@index([classId], name: "fk_StudyPlan_has_Class_Class1_idx")
+  @@index([prerequisiteClassId], name: "fk_StudyPlan_Class_Class1_idx")
+}
+
