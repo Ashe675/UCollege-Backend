@@ -13,4 +13,6 @@ router.post('/student/select-career',
     EnrollController.selectCareer
 )
 
+router.get('/student/upload-admitteds', EnrollController.readCSVStudentsAdmitteds )
+
 export default router

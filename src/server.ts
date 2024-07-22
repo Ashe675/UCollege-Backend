@@ -47,5 +47,4 @@ app.use('/api/enroll', enrollRoutes)
 
 app.use('/api/auth', authRoutes);
 
-
 export default app

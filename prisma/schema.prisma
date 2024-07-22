@@ -232,6 +232,7 @@ model User {
 
   carrers RegionalCenter_Faculty_Career_User[]
   carrersOptions OptionCareer[]
+  teacherDepartments RegionalCenter_Faculty_Career_Department_Teacher[]
 
   @@index([personId], name: "fk_User_Person_idx")
   @@index([roleId], name: "fk_User_Role_idx")
@@ -304,7 +305,7 @@ model RegionalCenter_Faculty_Career {
   sections Section[]
   users RegionalCenter_Faculty_Career_User[]
   usersOptions OptionCareer[]
-
+  departments RegionalCenter_Faculty_Career_Department[]
 
 }
 
@@ -316,6 +317,8 @@ model Departament {
   careerId    Int @unique
   career       Career   @relation(fields: [careerId], references: [id], onDelete: Cascade)
   classes      Class[]
+  regionalCenterFacultyCareer RegionalCenter_Faculty_Career_Department[]
+
 }
 
 model Planning {
@@ -503,5 +506,29 @@ model StudyPlan_Class {
   @@index([studyPlanId], name: "fk_StudyPlan_has_Class_StudyPlan1_idx")
   @@index([classId], name: "fk_StudyPlan_has_Class_Class1_idx")
   @@index([prerequisiteClassId], name: "fk_StudyPlan_Class_Class1_idx")
+}
+
+model RegionalCenter_Faculty_Career_Department {
+  departmentId                          Int
+  regionalCenter_Faculty_CareerId        Int
+  active                                  Boolean  @default(true)
+  RegionalCenterFacultyCareerDepartmentTeacher RegionalCenter_Faculty_Career_Department_Teacher[]
+
+  Departament      Departament  @relation(fields: [departmentId], references: [id])
+  RegionalCenterFacultyCareer  RegionalCenter_Faculty_Career  @relation(fields: [regionalCenter_Faculty_CareerId], references: [id])
+
+  @@id([departmentId, regionalCenter_Faculty_CareerId])
+}
+
+model RegionalCenter_Faculty_Career_Department_Teacher {
+  teacherId Int
+  regionalCenter_Faculty_Career_Department_Departament_id Int
+  regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id Int
+  active Boolean @default(true)
+
+  teacher User @relation(fields: [teacherId], references: [id])
+  regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId])
+
+  @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id])
 }
 
