@@ -531,3 +531,4 @@ model RegionalCenter_Faculty_Career_Department_Teacher {
 
   @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id])
 }
+
