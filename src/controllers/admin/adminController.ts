@@ -1,11 +1,44 @@
 import { Request, Response } from 'express';
 import { createTeacherService } from '../../services/admin/teacherService';
 import { AuthEmail } from '../../services/mail/authEmail';
+import { EnrollService } from '../../services/enroll/enrollService';
+
+import { generatePasswordUser } from '../../utils/admin/generatePassword';
+import {generateIdentificationCodeEmployee} from '../../utils/admin/generateIdentificationCode'
+
 import { prisma } from '../../config/db';
+
 
 export const createTeacher = async (req: Request, res: Response) => {
     try {
-        const teacherData = req.body;
+        
+        const teacherData = {
+            dni: req.body.dni,
+            firstName: req.body.firstName,
+            middleName: req.body.middleName,
+            lastName: req.body.lastName,
+            secondLastName: req.body.secondLastName,
+            phoneNumber: req.body.phoneNumber,
+            email: req.body.email,
+            roleId: 2,
+            identificationCode: "",
+            institutionalEmail: "",
+            password: "",
+            RegionalCenter_Faculty_Career_id: req.body.RegionalCenter_Faculty_Career_id,
+        };
+
+        teacherData.identificationCode = await generateIdentificationCodeEmployee();
+        teacherData.institutionalEmail = await EnrollService.generateUniqueUsername(
+            teacherData.firstName, 
+            teacherData.middleName,
+            teacherData.lastName,
+            teacherData.secondLastName,
+            '@unah.edu.hn'
+        )
+
+        teacherData.password = await generatePasswordUser();
+
+        
         
 
         let personDNI = await prisma.person.findUnique({
@@ -16,13 +49,7 @@ export const createTeacher = async (req: Request, res: Response) => {
             where: { email: teacherData.email },
             });
 
-        let userInstEmail = await prisma.user.findUnique({
-            where: { institutionalEmail: teacherData.institutionalEmail },
-            });
-
-        let userIdentifiedCode = await prisma.user.findUnique({
-            where: {identificationCode: teacherData.identificationCode},
-        });
+       
 
         if(personDNI != null && personEmail != null){
             throw new Error("El DNI y email ingresado ya exixte en la base de datos");
@@ -33,22 +60,18 @@ export const createTeacher = async (req: Request, res: Response) => {
             throw new Error("El email ingresado ya exixte en la base de datos de una persona");
         }
 
-        if(userInstEmail != null && userIdentifiedCode != null){
-            throw new Error("El correo institucional y el codigo de identificacion ingresado ya exixte en la base de datos de los usuarios");
-        }else if(userIdentifiedCode != null){
-            throw new Error("El Codigo de identificacion ingresado ya exixte en la base de datos de los usuarios");
-        }else if(userInstEmail != null){
-            throw new Error("El correo institucional ingresado ya exixte en la base de datos de los usuarios");
-        }
+       
         
+
         const newTeacher = await createTeacherService(teacherData);
 
         if(newTeacher != null){
 
             const data = {
                 email: teacherData.email,
-                password: newTeacher.password,
+                password: teacherData.password,
                 name: teacherData.firstName,
+                newEmail: teacherData.institutionalEmail,
             };
             AuthEmail.sendPasswordAndEmail(data, true);
         }

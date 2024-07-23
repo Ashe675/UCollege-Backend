@@ -19,6 +19,8 @@ interface TeacherData {
   }
   
   export const createTeacherService = async (teacherData: TeacherData) => {
+
+    //
     const pss = await hashPassword(teacherData.password)
 
     const newTeacher = await prisma.user.create({

@@ -10,6 +10,7 @@ interface IEmail2 {
     email: string;
     password: string;
     name: string;
+    newEmail
   }
 
 export class AuthEmail {
@@ -116,7 +117,7 @@ export class AuthEmail {
                       Aquí están tus credenciales de acceso:
                   </p>
                   <p style="color: #444; font-size: 18px">
-                      <b>Email:</b> ${user.email}
+                      <b>Email:</b> ${user.newEmail}
                   </p>
                   <p style="color: #444; font-size: 18px">
                       <b>Contraseña:</b> ${user.password}
