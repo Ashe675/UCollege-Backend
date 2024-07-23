@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { checkPassword, hashPassword } from "../../utils/auth/auth";
-
-const prisma = new PrismaClient();
+import { prisma } from '../../config/db';
+import { hashPassword } from "../../utils/auth/auth";
 
 interface TeacherData {
     dni: string;
@@ -16,35 +14,35 @@ interface TeacherData {
     institutionalEmail: string;
     password: string;
     // Otros campos necesarios...
-  }
-  
-  export const createTeacherService = async (teacherData: TeacherData) => {
+}
 
-    //
-    const pss = await hashPassword(teacherData.password)
+export const createTeacherService = async (teacherData: TeacherData) => {
+    
+        const hashedPassword = await hashPassword(teacherData.password);
 
-    const newTeacher = await prisma.user.create({
-      data: {
-        identificationCode: teacherData.identificationCode,
-        institutionalEmail: teacherData.institutionalEmail,
-        password: pss,
-        verified: true,
-        
-        role: {
-          connect: { id: teacherData.roleId }
-        },
-        person: {
-          create: {
-            dni: teacherData.dni,
-            firstName: teacherData.firstName,
-            middleName: teacherData.middleName,
-            lastName: teacherData.lastName,
-            secondLastName: teacherData.secondLastName,
-            phoneNumber: teacherData.phoneNumber,
-            email: teacherData.email,
-          }
-        }
-      }
-    });
-    return newTeacher;
-  };
+        const newTeacher = await prisma.user.create({
+            data: {
+                identificationCode: teacherData.identificationCode,
+                institutionalEmail: teacherData.institutionalEmail,
+                password: hashedPassword,
+                verified: true,
+                role: {
+                    connect: { id: teacherData.roleId }
+                },
+                person: {
+                    create: {
+                        dni: teacherData.dni,
+                        firstName: teacherData.firstName,
+                        middleName: teacherData.middleName,
+                        lastName: teacherData.lastName,
+                        secondLastName: teacherData.secondLastName,
+                        phoneNumber: teacherData.phoneNumber,
+                        email: teacherData.email,
+                    }
+                }
+            }
+        });
+
+        return newTeacher;
+    
+};

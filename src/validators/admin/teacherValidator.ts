@@ -8,6 +8,6 @@ export const validateTeacher = [
     check('phoneNumber').isString().withMessage('Phone number is required'),
     check('email').isEmail().withMessage('Valid email is required'),
     check('RegionalCenter_Faculty_Career_id').isInt().withMessage('El id del centro regional faculta carrera debe ser entero'),
-    
+    check('departamentId').isInt().withMessage("el id del departamento debe ser entero"),
     handleInputErrors,
 ];

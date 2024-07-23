@@ -1,24 +1,13 @@
 import { Router } from 'express';
 import { createTeacher } from '../../controllers/admin/adminController';
 import { validateTeacher } from '../../validators/admin/teacherValidator';
-import { isValidDepartament, isValidRegionalCenter } from '../../validators/validateRegionalCenter';
+import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
 import { authenticate, authorizeRole } from '../../middleware/auth/auth'
 
 
 const router = Router();
 /*
 Este es el JSON que se debe enviar para consumir la API de creación de profesores:
-{
-  "dni": "1234567890124",
-  "firstName": "John",
-  "middleName": "Doe",
-  "lastName": "Smith",
-  "secondLastName": "Brown",
-  "phoneNumber": "1234567890",
-  "email": "john.doe@example2.com",
-  
-}
-
 {
   "dni": "9876543210987",
   "firstName": "Jane",
@@ -28,7 +17,9 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
   "phoneNumber": "0987654321",
   "email": "jane.elizabeth@example.com",
   
-  "RegionalCenter_Faculty_Career_id": 1
+  "RegionalCenter_Faculty_Career_id": 1,
+  "departamentId" : 1,
+
 }
 */
 /**
@@ -42,11 +33,12 @@ isValidDepartament,
 createTeacher);
 */
 
-router.post('/create-teacher' ,
+router.post('/create-teacher',
   validateTeacher, 
   isValidRegionalCenter,
   isValidDepartament, 
-  
-  createTeacher);
+  isDepartamentInRegionalCenter,
+  createTeacher
+  );
 
 export default router;
