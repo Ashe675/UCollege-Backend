@@ -8,7 +8,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
   // Verificación para creación de procesos (POST)
   if (req.method === 'POST') {
     if (!processTypeId) {
-      return res.status(400).json({ error: 'Process type ID is required.' });
+      return res.status(400).json({ error: 'El id del tipo de proceso es requerido.' });
     }
 
     try {
