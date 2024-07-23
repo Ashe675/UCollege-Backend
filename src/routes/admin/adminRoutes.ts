@@ -10,6 +10,6 @@ const router = Router();
 router.post('/process',authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator,checkActiveProcess, createProcessController);
 router.put('/process/activate',authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator,checkActiveProcess, activateProcessController);
 router.put('/process/deactivate',authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator,checkActiveProcess, deactivateProcessController);
-router.put('/process/updateFinalDate',authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, updateFinalDateController);
+router.put('/process/updateFinalDate',authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, checkActiveProcess, updateFinalDateController);
 
 export default router;

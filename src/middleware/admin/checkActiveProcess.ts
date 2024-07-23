@@ -73,13 +73,14 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
       }
        // Verificación para actualizar la fecha final
        if (req.originalUrl.includes('/updateFinalDate')) {
+        
         if (finalDate) {
           const finalDateParsed = new Date(finalDate);
           if (finalDateParsed < process.startDate ) {
-            return res.status(400).json({ error: 'Final date cannot be earlier than the start date.' });
+            return res.status(400).json({ error: 'La fecha final no puede ser anterior a la fecha de inicio' });
           }
           if (!process.active) {
-            return res.status(400).json({ error: 'Cannot update final date for inactive process.' });
+            return res.status(400).json({ error: 'No se puede modificar la fecha de un proceso inactivo.' });
           }
         }
       }
