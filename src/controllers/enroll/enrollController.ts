@@ -1,5 +1,6 @@
 import { Request, Response } from "express"
 import { EnrollService } from "../../services/enroll/enrollService"
+import { CSVService } from '../../services/admission/CSVService';
 
 export class EnrollController {
     static async selectCareer (req : Request, res:Response) {
@@ -14,11 +15,38 @@ export class EnrollController {
     }
 
     static async readCSVStudentsAdmitteds(req: Request, res : Response){
-        try {
-            
-            const userName = await EnrollService.generateUniqueUsername('Jose','Manuel','Cerrato',null, "@unah.edu.hn")
+         // Verificar que se subió el archivo
+         if (!req.files) {
+            return res.status(400).send('No se subió ningún archivo.');
+        }
 
-            res.send(userName)
+        // Verificar que solo se suba un archivo
+        if(req.files && req.files.length !== 1){
+            return res.status(400).send('Solo se puede subir un archivo.');
+        }
+
+        // Verificar que el archivo es un CSV
+        const fileType = req.files[0].mimetype;
+        if (fileType !== 'text/csv') {
+            return res.status(400).send('El archivo subido no es un archivo CSV.');
+        }
+
+        const csvText = req.files[0].buffer.toString('utf8')
+        console.log(csvText)
+
+        try {
+            const {results, errors} =  await CSVService.processCSVAdmitteds(csvText)
+
+            if (errors.length > 0) {
+                throw new Error(errors[0])
+            }
+
+            await EnrollService.createUsersStudents(results)
+           
+
+            
+
+            res.send("Listo")
         } catch (error) {
             res.status(400).json({ error: error.message })
         }

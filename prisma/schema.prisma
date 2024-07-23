@@ -168,7 +168,7 @@ model RegionalCenter {
   id                    Int                     @id @default(autoincrement())
   name                  String                  @db.VarChar(100)
   date                  DateTime                @db.Date
-  code                  String                  @db.VarChar(45)
+  code                  String                  @db.VarChar(45) @unique
   finalDate             DateTime?               @db.Date
   townId                Int
   town                  Town                    @relation(fields: [townId], references: [id], onDelete: Cascade)
@@ -346,7 +346,7 @@ model Class {
 
 model Building {
   id          Int      @id @default(autoincrement())
-  code        String   @db.VarChar(4)
+  code        String   @db.VarChar(10)
   active      Boolean
   classrooms  Classroom[]
   regionalCenterId Int

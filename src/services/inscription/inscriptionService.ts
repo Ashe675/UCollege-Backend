@@ -244,7 +244,8 @@ export default class InscriptionService {
       header: [
         { id: 'dni', title: 'DNI' },
         { id: 'fullName', title: 'Nombre Completo' },
-        { id: 'email', title: 'Correo Electrónico' },
+        { id: 'email', title: 'Correo Electronico' },
+        { id: 'phoneNumber', title: 'Numero Telefonico' },
         { id: 'principalCareer', title: 'Carrera Principal' },
         { id: 'secondaryCareer', title: 'Carrera Secundaria' },
         { id: 'regionalCenter', title: 'Centro Regional' },
@@ -256,9 +257,10 @@ export default class InscriptionService {
       dni: candidate.person.dni,
       fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
       email: candidate.person.email,
-      principalCareer: candidate.opinionId === 1 || candidate.opinionId === 2 ? candidate.principalCareer?.name : 'null',
-      secondaryCareer: candidate.opinionId ===3 || candidate.opinionId === 1  ? candidate.secondaryCareer.name : 'null',
-      regionalCenter: `${candidate.regionalCenter.name}`,
+      phoneNumber : candidate.person.phoneNumber,
+      principalCareer: candidate.opinionId === 1 || candidate.opinionId === 2 ? candidate.principalCareer?.code : 'null',
+      secondaryCareer: candidate.opinionId ===3 || candidate.opinionId === 1  ? candidate.secondaryCareer.code : 'null',
+      regionalCenter: `${candidate.regionalCenter.code}`,
     }));
 
     // Generación del CSV
