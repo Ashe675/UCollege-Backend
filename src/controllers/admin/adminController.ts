@@ -9,6 +9,37 @@ import { prisma } from '../../config/db';
 
 export const createTeacher = async (req: Request, res: Response) => {
     try {
+        
+
+        const roleSpecial = await prisma.role.findUnique({
+            where:{id: parseInt(req.body.roleId)}
+        });
+
+        if(
+            !(roleSpecial.name == 'DEPARTMENT_HEAD' || 
+            roleSpecial.name == 'COORDINATOR' ||
+            roleSpecial.name == 'TEACHER')
+        ){
+            return res.status(400).json({ error: "El roleId no es valido para crear un docente" });
+        }
+
+
+        if(roleSpecial.name == 'DEPARTMENT_HEAD' || roleSpecial.name =='COORDINATOR'){
+            const teacherRoleSpecial = await prisma.user.findMany({
+                where:{
+                    roleId: roleSpecial.id,
+                    active: true
+                },
+                
+            });
+
+            if(teacherRoleSpecial.length > 0){
+                return res.status(400).json({ error: `Ya esxite un usuario activo con el rol de ${roleSpecial.name}` });
+            }
+        }
+
+
+
         const teacherData = {
             dni: req.body.dni,
             firstName: req.body.firstName,
@@ -17,7 +48,7 @@ export const createTeacher = async (req: Request, res: Response) => {
             secondLastName: req.body.secondLastName,
             phoneNumber: req.body.phoneNumber,
             email: req.body.email,
-            roleId: 2,
+            roleId: req.body.roleId,
             identificationCode: "",
             institutionalEmail: "",
             password: "",
@@ -80,3 +111,50 @@ export const createTeacher = async (req: Request, res: Response) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+
+
+// Obtener todos los docentes
+export const getTeachers = async (req, res) => {
+  try {
+    const teachers = await prisma.user.findMany({
+      where: {
+        role: {
+          name: 'TEACHER'
+        },
+      },
+      include: {
+        person: true,
+        role: true,
+      }
+    });
+    res.status(200).json(teachers);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener los docentes' });
+  }
+};
+
+// Obtener un docente por ID
+export const getTeacher = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const teacher = await prisma.user.findUnique({
+      where: {
+        id: parseInt(id),
+      },
+      include: {
+        person: true,
+        role: true,
+      }
+    });
+
+    if (!teacher || teacher.role.name !== 'TEACHER') {
+      return res.status(404).json({ error: 'Docente no encontrado' });
+    }
+
+    res.status(200).json(teacher);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener el docente' });
+  }
+};
+
