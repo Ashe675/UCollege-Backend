@@ -12,3 +12,14 @@ export const validateTeacher = [
     check('departamentId').isInt().withMessage("el id del departamento debe ser entero"),
     handleInputErrors,
 ];
+
+export const validateTeacherUpdate = [
+    
+    check('firstName').isString().withMessage('First name is required'),
+    check('lastName').isString().withMessage('Last name is required'),
+    check('phoneNumber').isString().withMessage('Phone number is required'),
+    check('email').isEmail().withMessage('Valid email is required'),
+    check('roleId').isInt().withMessage('El id del rol debe ser un entero'),
+    
+    handleInputErrors,
+]

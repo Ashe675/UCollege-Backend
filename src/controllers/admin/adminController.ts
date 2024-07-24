@@ -227,3 +227,200 @@ export const getTeacherById = async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Error al obtener el docente' });
     }
   };
+
+  // Obtener un docente por su DNI
+export const getTeacherByDni = async (req: Request, res: Response) => {
+    try {
+      const { dni } = req.params;
+  
+      // Encuentra a la persona por su DNI
+      const person = await prisma.person.findUnique({
+        where: { dni: dni },
+        include: {
+          user: {
+            include: {
+              role: true,
+            }
+          }
+        }
+      });
+  
+      if (!person || !person.user || !['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD'].includes(person.user.role.name)) {
+        return res.status(404).json({ error: 'Docente no encontrado o no es un docente válido' });
+      }
+  
+      const teacher = person.user;
+  
+      const RegionalCenter_Faculty_Career_Department_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: teacher.id }
+      });
+  
+      const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.regionalCenter.findUnique({
+          where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+        })
+        : null;
+  
+      const departament = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.departament.findUnique({
+          where: {
+            id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_Departament_id
+          }
+        })
+        : null;
+  
+      const formattedTeacher = {
+        user_id: teacher.id,
+        avatar: teacher.avatar,
+        firstName: person.firstName,
+        middleName: person.middleName,
+        lastName: person.lastName,
+        secondLastName: person.secondLastName,
+        regionalCenter: regionalCenter ? regionalCenter.name : null,
+        departament: departament ? departament.name : null,
+        role: teacher.role.name,
+        dni: person.dni,
+        identificationCode: teacher.identificationCode
+      };
+  
+      res.status(200).json(formattedTeacher);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener el docente' });
+    }
+};
+
+// Obtener un docente por su código de identificación
+export const getTeacherByIdentificationCode = async (req: Request, res: Response) => {
+    try {
+      const { identificationCode } = req.params;
+  
+      // Encuentra al usuario por su código de identificación
+      const teacher = await prisma.user.findUnique({
+        where: { identificationCode: identificationCode },
+        include: {
+          person: true,
+          role: true,
+        }
+      });
+  
+      if (!teacher || !['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD'].includes(teacher.role.name)) {
+        return res.status(404).json({ error: 'Docente no encontrado o no es un docente válido' });
+      }
+  
+      const RegionalCenter_Faculty_Career_Department_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: teacher.id }
+      });
+  
+      const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.regionalCenter.findUnique({
+          where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+        })
+        : null;
+  
+      const departament = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.departament.findUnique({
+          where: {
+            id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_Departament_id
+          }
+        })
+        : null;
+  
+      const formattedTeacher = {
+        user_id: teacher.id,
+        avatar: teacher.avatar,
+        firstName: teacher.person.firstName,
+        middleName: teacher.person.middleName,
+        lastName: teacher.person.lastName,
+        secondLastName: teacher.person.secondLastName,
+        regionalCenter: regionalCenter ? regionalCenter.name : null,
+        departament: departament ? departament.name : null,
+        role: teacher.role.name,
+        dni: teacher.person.dni,
+        identificationCode: teacher.identificationCode
+      };
+  
+      res.status(200).json(formattedTeacher);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener el docente' });
+    }
+  };
+
+  //Actualizar docente
+  export const updateTeacher = async (req: Request, res: Response) => {
+    try {
+      const { identificationCode } = req.params;
+      const { firstName, middleName, lastName, secondLastName, email, roleId } = req.body;
+  
+      // Encuentra al usuario por su código de identificación
+      const teacher = await prisma.user.findUnique({
+        where: { identificationCode: identificationCode },
+        include: {
+          person: true,
+          role: true,
+        }
+      });
+      
+      const roleSpecial = await prisma.role.findUnique({
+        where:{id: parseInt(roleId)}
+        });
+
+        if(
+            !(roleSpecial.name == 'DEPARTMENT_HEAD' || 
+            roleSpecial.name == 'COORDINATOR' ||
+            roleSpecial.name == 'TEACHER')
+        ){
+            return res.status(400).json({ error: "El roleId no es valido para actualizar un docente" });
+        }
+
+
+        if(roleSpecial.name == 'DEPARTMENT_HEAD' || roleSpecial.name =='COORDINATOR'){
+            const teacherRoleSpecial = await prisma.user.findMany({
+                where:{
+                    roleId: roleSpecial.id,
+                    active: true
+                },
+                
+            });
+
+            if(teacherRoleSpecial.length > 0){
+                return res.status(400).json({ error: `Ya esxite un usuario activo con el rol de ${roleSpecial.name} considere desactivar a ese usuario, campbiar de rol o eliminarlo para poder actualizar con este rol` });
+            }
+        }
+  
+        if (!teacher) {
+            return res.status(404).json({ error: 'Docente no encontrado' });
+        }
+        
+  
+      // Actualizar la persona asociada
+      await prisma.person.update({
+        where: { id: teacher.personId },
+        data: {
+          firstName: firstName,
+          middleName: middleName,
+          lastName: lastName,
+          secondLastName: secondLastName,
+          email: email,
+        }
+      });
+  
+
+      // Actualizar el rol del usuario
+      await prisma.user.update({
+        where: { id: teacher.id },
+        data: {
+          roleId: roleId,
+        }
+      });
+  
+      
+      
+  
+      res.status(200).json({ message: 'Docente actualizado exitosamente' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al actualizar el docente' });
+    }
+  };

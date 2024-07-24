@@ -1,7 +1,13 @@
 import { Router } from 'express';
-import { createTeacher, getTeachers, getTeacherById } from '../../controllers/admin/adminController';
+import { createTeacher, 
+        getTeachers, 
+        getTeacherById, 
+        getTeacherByDni,
+        getTeacherByIdentificationCode,
+        updateTeacher
+       } from '../../controllers/admin/adminController';
 
-import { validateTeacher } from '../../validators/admin/teacherValidator';
+import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
 import { authenticate, authorizeRole } from '../../middleware/auth/auth'
 
@@ -42,24 +48,48 @@ router.get('/teachers',
 );
 
 // Ruta para obtener un docente por ID
-router.get('/teacher/:id', 
+router.get('/teacher-by-id/:id', 
   authenticate, 
   authorizeRole(['ADMIN']),
   getTeacherById
 );
 
-/**
+router.get('/teacher-by-dni/:dni',
+  authenticate, 
+  authorizeRole(['ADMIN']),
+  getTeacherByDni
+)
+
+router.get('/teacher-by-code/:identificationCode',
+  authenticate, 
+  authorizeRole(['ADMIN']),
+  getTeacherByIdentificationCode
+)
+
+
 // Ruta para actualizar un docente
-router.put('/teachers/:id', 
+
+/**
+ * Forma del json para la peticion
+ * {
+  "firstName": "Jane",
+  "middleName": "Elizabeth",
+  "lastName": "Doe",
+  "secondLastName": "White",
+  "email": "jane.elizabeth@example.com",
+  "roleId": 4,
+}
+
+ */
+router.put('/teacher-update/:identificationCode', 
   authenticate, 
   authorizeRole(['ADMIN']) ,
-  validateTeacher, 
-  isValidRegionalCenter,
-  isValidDepartament, 
-  isDepartamentInRegionalCenter,
+  validateTeacherUpdate, 
+  
   updateTeacher
   );
   
+  /**
    * 
 // Ruta para eliminar un docente
 router.delete('/teachers/:id', 
