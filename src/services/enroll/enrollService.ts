@@ -5,6 +5,7 @@ import { StudentData } from "../admission/CSVService";
 import { generateIdentificationCodeStudent } from "../../utils/admin/generateIdentifactionCode";
 import { generatePasswordUser } from "../../utils/admin/generatePassword";
 import { hashPassword } from "../../utils/auth/auth";
+import { AuthEmail, IEmail2 } from "../mail/authEmail";
 
 export class EnrollService {
     static async enrollStudentCareer(optionId: number, userId: number) {
@@ -86,22 +87,23 @@ export class EnrollService {
 
     static async createUsersStudents(students: StudentData[]) {
         let index = 0;
+        const users: IEmail2[] = []
         await prisma.$transaction(async tx => {
             for (const student of students) {
                 index++
                 let principalCareerFound: Career = undefined;
                 let secondaryCareerFound: Career = undefined;
-                let regionalCenterFacultyPrincipalCareer : RegionalCenter_Faculty_Career = undefined;
-                let regionalCenterFacultySecondaryCareer : RegionalCenter_Faculty_Career = undefined;
+                let regionalCenterFacultyPrincipalCareer: RegionalCenter_Faculty_Career = undefined;
+                let regionalCenterFacultySecondaryCareer: RegionalCenter_Faculty_Career = undefined;
                 let career: Career = undefined;
-                let regionalCenterFactultyCareer : RegionalCenter_Faculty_Career = undefined;
-                console.log(student, index)
+                let regionalCenterFactultyCareer: RegionalCenter_Faculty_Career = undefined;
+           
 
-                if(student.dni.length > 13){
+                if (student.dni.length > 13) {
                     throw new Error(`DNI inválido, línea: ${index}`)
                 }
 
-                if(student.primer_nombre.toUpperCase() == 'NULL' ||  student.primer_apellido.toUpperCase() == 'NULL'){
+                if (student.primer_nombre.toUpperCase() == 'NULL' || student.primer_apellido.toUpperCase() == 'NULL') {
                     throw new Error(`Nombre inválido, línea: ${index}`)
                 }
 
@@ -131,7 +133,7 @@ export class EnrollService {
                     }
                 }
 
-                
+
 
                 if (student.carrera_secundaria.toUpperCase() !== 'NULL') {
 
@@ -168,9 +170,11 @@ export class EnrollService {
                 let userFound = await tx.user.findFirst({ where: { person: { dni: student.dni } } })
                 if (userFound) {
                     await tx.regionalCenter_Faculty_Career_User.deleteMany({ where: { userId: userFound.id } })
-                    await tx.user.update({ data : { verified : false }, where : {
-                        id : userFound.id
-                    } })
+                    await tx.user.update({
+                        data: { verified: false }, where: {
+                            id: userFound.id
+                        }
+                    })
 
                     await tx.optionCareer.deleteMany({ where: { userId: userFound.id } })
 
@@ -179,13 +183,12 @@ export class EnrollService {
                 } else {
                     const middleName = student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre
                     const secondLastName = student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido
-                    const userName = await EnrollService.generateUniqueUsername(student.primer_nombre, middleName  , student.primer_apellido, secondLastName)
+                    const userName = await EnrollService.generateUniqueUsername(student.primer_nombre, middleName, student.primer_apellido, secondLastName)
                     const identificationCode = await generateIdentificationCodeStudent()
-                    
+
                     const passwordGenerate = await generatePasswordUser()
                     const passwordHashed = await hashPassword(passwordGenerate)
 
-                    console.log(userName, identificationCode, passwordGenerate)
 
                     let person = {
                         dni: student.dni,
@@ -194,16 +197,15 @@ export class EnrollService {
                         middleName,
                         lastName: student.primer_apellido,
                         secondLastName,
-                        phoneNumber : student.numero_telefonico,
+                        phoneNumber: student.numero_telefonico,
                     }
-                    console.log(person)
 
                     userFound = await tx.user.create({
                         data: {
                             identificationCode,
                             institutionalEmail: userName,
                             password: passwordHashed,
-                            verified : false,
+                            verified: false,
                             role: {
                                 connect: {
                                     name: RoleEnum.STUDENT
@@ -216,32 +218,45 @@ export class EnrollService {
                                         dni: student.dni,
                                         email: student.correo_electronico,
                                         firstName: student.primer_nombre,
-                                        middleName : student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre,
+                                        middleName: student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre,
                                         lastName: student.primer_apellido,
-                                        secondLastName : student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido,
-                                        phoneNumber : student.numero_telefonico 
+                                        secondLastName: student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido,
+                                        phoneNumber: student.numero_telefonico
                                     }
                                 }
                             }
                         }
                     })
+
+                    await tx.student.create({
+                        data : {
+                            userId : userFound.id
+                        }
+                    })
+
+                    users.push({
+                        email: student.correo_electronico,
+                        newEmail: userFound.institutionalEmail,
+                        name: student.primer_nombre,
+                        password: passwordGenerate
+                    })
                 }
 
+
+
                 if (principalCareerFound && secondaryCareerFound) {
-                    const result = await tx.optionCareer.createManyAndReturn({
-                        data : [
+                    await tx.optionCareer.createManyAndReturn({
+                        data: [
                             {
-                                userId : userFound.id,
-                                regionalCenter_Faculty_CareerId : regionalCenterFacultyPrincipalCareer.id 
+                                userId: userFound.id,
+                                regionalCenter_Faculty_CareerId: regionalCenterFacultyPrincipalCareer.id
                             },
                             {
-                                userId : userFound.id,
-                                regionalCenter_Faculty_CareerId : regionalCenterFacultySecondaryCareer.id
+                                userId: userFound.id,
+                                regionalCenter_Faculty_CareerId: regionalCenterFacultySecondaryCareer.id
                             }
                         ]
                     })
-                    console.log(principalCareerFound, secondaryCareerFound)
-                    console.log(result)
 
                 } else {
                     career = principalCareerFound?.id ? principalCareerFound : secondaryCareerFound
@@ -249,17 +264,29 @@ export class EnrollService {
                     console.log(regionalCenterFactultyCareer)
                     console.log(career)
 
-                    const result2 = await tx.regionalCenter_Faculty_Career_User.create({
-                        data : {
-                            userId : userFound.id,
-                            regionalCenter_Faculty_CareerId : regionalCenterFactultyCareer.id
+                    await tx.regionalCenter_Faculty_Career_User.create({
+                        data: {
+                            userId: userFound.id,
+                            regionalCenter_Faculty_CareerId: regionalCenterFactultyCareer.id
                         }
                     })
 
-                    console.log(result2)
-                }
-            }
-        })
-    }
+                    await tx.user.update({ where : { id : userFound.id }, data : {
+                        verified : true
+                    } })
 
+                    
+                }
+
+            }
+        }, {
+            maxWait: 20000, // Aumenta el tiempo máximo de espera a 10 segundos
+            timeout: 30000, // Aumenta el tiempo de espera de la transacción a 20 segundos
+        })
+
+        for (const user of users) {
+            await AuthEmail.sendPasswordAndEmail(user, true);
+        }
+
+    }
 }
