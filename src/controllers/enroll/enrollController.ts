@@ -40,13 +40,9 @@ export class EnrollController {
             if (errors.length > 0) {
                 throw new Error(errors[0])
             }
-
             await EnrollService.createUsersStudents(results)
-           
 
-            
-
-            res.send("Listo")
+            res.send("¡Estudiantes ingresados correctamente, correos con sus credenciales enviados! ")
         } catch (error) {
             res.status(400).json({ error: error.message })
         }

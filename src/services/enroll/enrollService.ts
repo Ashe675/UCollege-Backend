@@ -1,7 +1,10 @@
-import { Career } from "@prisma/client";
+import { Career, RegionalCenter_Faculty_Career, RoleEnum } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { insertRandomDots, makeUserMethodSingle, shuffleArray } from "../../utils/enroll/generateRandomEmail";
 import { StudentData } from "../admission/CSVService";
+import { generateIdentificationCodeStudent } from "../../utils/admin/generateIdentifactionCode";
+import { generatePasswordUser } from "../../utils/admin/generatePassword";
+import { hashPassword } from "../../utils/auth/auth";
 
 export class EnrollService {
     static async enrollStudentCareer(optionId: number, userId: number) {
@@ -86,10 +89,21 @@ export class EnrollService {
         await prisma.$transaction(async tx => {
             for (const student of students) {
                 index++
-                let principalCareerFound : Career = undefined;
-                let secondaryCareerFound : Career = undefined;
-                let career : Career = undefined;
+                let principalCareerFound: Career = undefined;
+                let secondaryCareerFound: Career = undefined;
+                let regionalCenterFacultyPrincipalCareer : RegionalCenter_Faculty_Career = undefined;
+                let regionalCenterFacultySecondaryCareer : RegionalCenter_Faculty_Career = undefined;
+                let career: Career = undefined;
+                let regionalCenterFactultyCareer : RegionalCenter_Faculty_Career = undefined;
+                console.log(student, index)
 
+                if(student.dni.length > 13){
+                    throw new Error(`DNI inválido, línea: ${index}`)
+                }
+
+                if(student.primer_nombre.toUpperCase() == 'NULL' ||  student.primer_apellido.toUpperCase() == 'NULL'){
+                    throw new Error(`Nombre inválido, línea: ${index}`)
+                }
 
                 if (student.carrera_principal.toUpperCase() === student.carrera_secundaria.toUpperCase()) {
                     throw new Error(`La carrera principal y secundaria deben de ser distintas, línea: ${index}`)
@@ -103,31 +117,31 @@ export class EnrollService {
 
 
                 if (student.carrera_principal.toUpperCase() !== 'NULL') {
-                    
+
                     principalCareerFound = await tx.career.findUnique({ where: { code: student.carrera_principal.toUpperCase() } })
 
                     if (!principalCareerFound) {
                         throw new Error(`La carrera principal no existe, línea: ${index}`)
                     }
 
-                    const regionalCenterFacultyPrincipalCareer = await tx.regionalCenter_Faculty_Career.findFirst({ where: { careerId: principalCareerFound.id, regionalCenter_Faculty_RegionalCenterId: regionalCenter.id, active: true } })
+                    regionalCenterFacultyPrincipalCareer = await tx.regionalCenter_Faculty_Career.findFirst({ where: { careerId: principalCareerFound.id, regionalCenter_Faculty_RegionalCenterId: regionalCenter.id, active: true } })
 
                     if (!regionalCenterFacultyPrincipalCareer) {
                         throw new Error(`La carrera principal ${principalCareerFound.code} no está disponible en el centro regional ${regionalCenter.code}, línea: ${index}`)
                     }
                 }
 
-
+                
 
                 if (student.carrera_secundaria.toUpperCase() !== 'NULL') {
-                    
+
                     secondaryCareerFound = await tx.career.findUnique({ where: { code: student.carrera_secundaria.toUpperCase() } })
 
                     if (!secondaryCareerFound) {
                         throw new Error(`La carrera secundaria no existe, línea: ${index}`)
                     }
 
-                    const regionalCenterFacultySecondaryCareer = await tx.regionalCenter_Faculty_Career.findFirst({ where: { careerId: secondaryCareerFound.id, regionalCenter_Faculty_RegionalCenterId: regionalCenter.id, active: true } })
+                    regionalCenterFacultySecondaryCareer = await tx.regionalCenter_Faculty_Career.findFirst({ where: { careerId: secondaryCareerFound.id, regionalCenter_Faculty_RegionalCenterId: regionalCenter.id, active: true } })
 
                     if (!regionalCenterFacultySecondaryCareer) {
                         throw new Error(`La carrera secundaria ${secondaryCareerFound.code} no está disponible en el centro regional ${regionalCenter.code}, línea: ${index}`)
@@ -135,42 +149,115 @@ export class EnrollService {
                 }
 
 
-                if(!principalCareerFound && !secondaryCareerFound){
-                    throw new Error(`El estudiante no aprobó ninguna carrera, línea: ${index}`)
-                }
-                
-                const userIsEnrollment = await tx.enrollment.findFirst({where : { student : { user : { person : { dni : student.dni } } } }})
-
-                if(userIsEnrollment){
-                    throw new Error(`El estudiante ya está matriculado: ${index}`)
+                if (!principalCareerFound && !secondaryCareerFound) {
+                    throw new Error(`El estudiante no aprobó ninguna carrera, fila: ${index}`)
                 }
 
-                let userFound = await tx.user.findFirst({where : { person : { dni : student.dni } }}) 
-                if(userFound){
-                    await tx.regionalCenter_Faculty_Career_User.deleteMany({where : { userId : userFound.id }})
-                    await tx.optionCareer.deleteMany({where : { userId : userFound.id }})
+                const userIsEnrollment = await tx.enrollment.findFirst({ where: { student: { user: { person: { dni: student.dni } } } } })
 
-                    const emailExists = await tx.person.findFirst({where : { dni : { not : student.dni }, email : student.correo_electronico}})
+                if (userIsEnrollment) {
+                    throw new Error(`El estudiante ya está matriculado, fila: ${index}`)
+                }
 
-                    if(emailExists){
-                        throw new Error(`El correo le pertenece a otra pesona: ${index}`)
+                const emailExists = await tx.person.findFirst({ where: { dni: { not: student.dni }, email: student.correo_electronico } })
+
+                if (emailExists) {
+                    throw new Error(`El correo le pertenece a otra pesona, fila: ${index}`)
+                }
+
+                let userFound = await tx.user.findFirst({ where: { person: { dni: student.dni } } })
+                if (userFound) {
+                    await tx.regionalCenter_Faculty_Career_User.deleteMany({ where: { userId: userFound.id } })
+                    await tx.user.update({ data : { verified : false }, where : {
+                        id : userFound.id
+                    } })
+
+                    await tx.optionCareer.deleteMany({ where: { userId: userFound.id } })
+
+                    await tx.person.update({ data: { email: student.correo_electronico }, where: { dni: student.dni } })
+                    await tx.person.update({ data: { phoneNumber: student.numero_telefonico }, where: { dni: student.dni } })
+                } else {
+                    const middleName = student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre
+                    const secondLastName = student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido
+                    const userName = await EnrollService.generateUniqueUsername(student.primer_nombre, middleName  , student.primer_apellido, secondLastName)
+                    const identificationCode = await generateIdentificationCodeStudent()
+                    
+                    const passwordGenerate = await generatePasswordUser()
+                    const passwordHashed = await hashPassword(passwordGenerate)
+
+                    console.log(userName, identificationCode, passwordGenerate)
+
+                    let person = {
+                        dni: student.dni,
+                        email: student.correo_electronico,
+                        firstName: student.primer_nombre,
+                        middleName,
+                        lastName: student.primer_apellido,
+                        secondLastName,
+                        phoneNumber : student.numero_telefonico,
                     }
+                    console.log(person)
 
-                    await tx.person.update({data : { email : student.correo_electronico }, where : { dni : student.dni }})
-                }else{
-                    const userName = await EnrollService.generateUniqueUsername('Jose','Manuel','Cerrato',null, "@unah.hn")
-                    // userFound = await tx.user.create({data : {
-                    //     identificationCode : 
-                    // }})
+                    userFound = await tx.user.create({
+                        data: {
+                            identificationCode,
+                            institutionalEmail: userName,
+                            password: passwordHashed,
+                            verified : false,
+                            role: {
+                                connect: {
+                                    name: RoleEnum.STUDENT
+                                }
+                            },
+                            person: {
+                                connectOrCreate: {
+                                    where: { dni: student.dni },
+                                    create: {
+                                        dni: student.dni,
+                                        email: student.correo_electronico,
+                                        firstName: student.primer_nombre,
+                                        middleName : student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre,
+                                        lastName: student.primer_apellido,
+                                        secondLastName : student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido,
+                                        phoneNumber : student.numero_telefonico 
+                                    }
+                                }
+                            }
+                        }
+                    })
                 }
 
-                if(principalCareerFound && secondaryCareerFound){
+                if (principalCareerFound && secondaryCareerFound) {
+                    const result = await tx.optionCareer.createManyAndReturn({
+                        data : [
+                            {
+                                userId : userFound.id,
+                                regionalCenter_Faculty_CareerId : regionalCenterFacultyPrincipalCareer.id 
+                            },
+                            {
+                                userId : userFound.id,
+                                regionalCenter_Faculty_CareerId : regionalCenterFacultySecondaryCareer.id
+                            }
+                        ]
+                    })
                     console.log(principalCareerFound, secondaryCareerFound)
-                }else{
-                    career = principalCareerFound?.id ? principalCareerFound : secondaryCareerFound 
-                    console.log(career)
-                }
+                    console.log(result)
 
+                } else {
+                    career = principalCareerFound?.id ? principalCareerFound : secondaryCareerFound
+                    regionalCenterFactultyCareer = regionalCenterFacultyPrincipalCareer?.id ? regionalCenterFacultyPrincipalCareer : regionalCenterFacultySecondaryCareer
+                    console.log(regionalCenterFactultyCareer)
+                    console.log(career)
+
+                    const result2 = await tx.regionalCenter_Faculty_Career_User.create({
+                        data : {
+                            userId : userFound.id,
+                            regionalCenter_Faculty_CareerId : regionalCenterFactultyCareer.id
+                        }
+                    })
+
+                    console.log(result2)
+                }
             }
         })
     }

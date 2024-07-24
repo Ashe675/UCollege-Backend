@@ -9,7 +9,10 @@ export type DataCSV = {
 
 export type StudentData = {
     dni: string;
-    nombre_completo: string;
+    primer_nombre: string;
+    segundo_nombre: string;
+    primer_apellido: string;
+    segundo_apellido: string;
     correo_electronico: string;
     numero_telefonico : string;
     carrera_principal: string;
@@ -86,19 +89,19 @@ export class CSVService {
     }
 
     static processCSVAdmitteds(csvText: string) {
-        const expectedHeaders = new Set(['dni', 'nombre_completo', 'correo_electronico', 'numero_telefonico','carrera_principal', 'carrera_secundaria', 'centro_regional']);
+        const expectedHeaders = new Set(['dni', 'primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido', 'correo_electronico', 'numero_telefonico','carrera_principal', 'carrera_secundaria', 'centro_regional']);
         const results: StudentData[] = []
         const uniqueRecords = new Set<string>();
         const errors: string[] = [];
 
         // Expresiones regulares para validación
         const dniRegex = /^[0-9-\s]+$/
-        const nombreCompletoRegex = /^[a-zA-Z\s]+$/
+        const nombreRegex = /^[a-zA-Z]+$/
         const correoElectronicoRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
         const phoneNumberRegex = /^([0-9]{8})|([0-9]{4}(\-|\s)[0-9]{4})$/
         const carreraPrincipalRegex = /^[a-zA-Z]+$/
         const carreraSecundariaRegex = /^[a-zA-Z]+$/
-        const centroRegionalRegex = /^[a-zA-Z]+$/
+        const centroRegionalRegex = /^[a-zA-Z\-]+$/
         let count = 0
 
         // creando un stream a partir de una cadena 
@@ -128,14 +131,17 @@ export class CSVService {
             
             // Validando cada campo de la fila
             const dniValid = dniRegex.test(data.dni);
-            const nombreCompletoValid = nombreCompletoRegex.test(data.nombre_completo);
+            const primerNombreValid = nombreRegex.test(data.primer_nombre);
+            const segundoNombreValid = nombreRegex.test(data.segundo_nombre);
+            const primerApellidoValid = nombreRegex.test(data.primer_apellido);
+            const segundoApellidoValid = nombreRegex.test(data.segundo_apellido);
             const correoElectronicoValid = correoElectronicoRegex.test(data.correo_electronico);
             const phoneNumberValid = phoneNumberRegex.test(data.numero_telefonico)
             const carreraPrincipalValid = carreraPrincipalRegex.test(data.carrera_principal);
             const carreraSecundariaValid = carreraSecundariaRegex.test(data.carrera_secundaria);
             const centroRegionalValid = centroRegionalRegex.test(data.centro_regional);
 
-            if (!dniValid || !nombreCompletoValid || !correoElectronicoValid || !phoneNumberValid || !carreraPrincipalValid || !carreraSecundariaValid || !centroRegionalValid) {
+            if (!dniValid || !primerNombreValid || !segundoNombreValid || !primerApellidoValid || !segundoApellidoValid || !correoElectronicoValid || !phoneNumberValid || !carreraPrincipalValid || !carreraSecundariaValid || !centroRegionalValid) {
                 errors.push(`Datos inválidos en la fila: ${count}`);
                 return;
             }
@@ -143,7 +149,10 @@ export class CSVService {
             // Limpiar espacios en blanco en el DNI
             const cleanedData = {
                 dni: data.dni.replace(/\s+/g, '').replace(/\-/g, ''),
-                nombre_completo: data.nombre_completo,
+                primer_nombre: data.primer_nombre,
+                segundo_nombre: data.segundo_nombre,
+                primer_apellido: data.primer_apellido,
+                segundo_apellido: data.segundo_apellido,
                 correo_electronico: data.correo_electronico,
                 numero_telefonico : data.numero_telefonico.replace(/\s+/g, '').replace(/\-/g, ''),
                 carrera_principal: data.carrera_principal,
