@@ -351,16 +351,32 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
   export const updateTeacher = async (req: Request, res: Response) => {
     try {
       const { identificationCode } = req.params;
-      const { firstName, middleName, lastName, secondLastName, email, roleId } = req.body;
+      const { firstName, middleName, lastName, secondLastName, email,phoneNumber ,roleId } = req.body;
   
       // Encuentra al usuario por su código de identificación
       const teacher = await prisma.user.findUnique({
-        where: { identificationCode: identificationCode },
+        where: { identificationCode: identificationCode,
+            role:{
+                name:{
+                    in:['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD']
+                }
+            }
+         },
         include: {
           person: true,
           role: true,
         }
       });
+      const isNewEmailValid = await prisma.person.findFirst({
+            where: {
+                id: {not:teacher.personId},
+                email: email
+            }
+      });
+
+      if(isNewEmailValid){
+        return res.status(400).json({ error: "El email a actualizar no es valido, ya existe" });
+      }
       
       const roleSpecial = await prisma.role.findUnique({
         where:{id: parseInt(roleId)}
@@ -403,6 +419,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
           lastName: lastName,
           secondLastName: secondLastName,
           email: email,
+          phoneNumber: phoneNumber,
         }
       });
   
@@ -422,5 +439,81 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Error al actualizar el docente' });
+    }
+  };
+
+
+  //Eliminar Docente
+  export const deleteTeacher = async (req: Request, res: Response) => {
+    const { id } = req.params;
+  
+    try {
+      // Buscar el docente por su código de identificación
+      const teacher = await prisma.user.findUnique({
+        where: {
+          id: parseInt(id),
+          role: {
+            name:{
+                in:['TEACHER', 'COORDINATOR', 'DEPARTMENT_HEAD']
+            }
+          }
+        },
+        include: {
+          person: true,
+          teacherDepartments: true,
+        },
+      });
+  
+      if (!teacher) {
+        return res.status(404).json({ error: 'Docente no encontrado' });
+      }
+  
+      // Iniciar una transacción para eliminar de todas las tablas relevantes
+      await prisma.$transaction(async (transaction) => {
+        // Eliminar registros relacionados en RegionalCenter_Faculty_Career_Department_Teacher
+        await transaction.regionalCenter_Faculty_Career_Department_Teacher.deleteMany({
+          where: {
+            teacherId: teacher.id,
+          },
+        });
+    
+        // Verificar si el registro en la tabla Person existe antes de eliminarlo
+        const personExists = await transaction.person.findUnique({
+          where: {
+            id: teacher.personId,
+          },
+        });
+    
+        if (personExists) {
+          await transaction.person.delete({
+            where: {
+              id: teacher.personId,
+            },
+          });
+        } else {
+          console.warn(`No se encontró la persona con id: ${teacher.personId}`);
+        }
+    
+        // Verificar si el registro en la tabla User existe antes de eliminarlo
+        const userExists = await transaction.user.findUnique({
+          where: {
+            id: teacher.id,
+          },
+        });
+    
+        if (userExists) {
+          await transaction.user.delete({
+            where: {
+              id: teacher.id,
+            },
+          });
+        } else {
+          console.warn(`No se encontró el usuario con id: ${teacher.id}`);
+        }
+      });
+      res.status(200).json({ message: 'Docente eliminado exitosamente' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al eliminar el docente' });
     }
   };

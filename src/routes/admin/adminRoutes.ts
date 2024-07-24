@@ -4,7 +4,8 @@ import { createTeacher,
         getTeacherById, 
         getTeacherByDni,
         getTeacherByIdentificationCode,
-        updateTeacher
+        updateTeacher,
+        deleteTeacher
        } from '../../controllers/admin/adminController';
 
 import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
@@ -77,6 +78,7 @@ router.get('/teacher-by-code/:identificationCode',
   "lastName": "Doe",
   "secondLastName": "White",
   "email": "jane.elizabeth@example.com",
+  "phoneNumber":95496655
   "roleId": 4,
 }
 
@@ -89,14 +91,12 @@ router.put('/teacher-update/:identificationCode',
   updateTeacher
   );
   
-  /**
-   * 
+ 
 // Ruta para eliminar un docente
-router.delete('/teachers/:id', 
+router.delete('/teacher-delete/:id', 
 authenticate, 
 authorizeRole(['ADMIN']),
 deleteTeacher
 );
-*/
 
 export default router;
