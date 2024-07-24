@@ -12,7 +12,7 @@ export class AuthController {
         const lowerEmail = institutionalEmail.toLowerCase()
 
         try {
-            const userFound = await prisma.user.findUnique({ where: { institutionalEmail : lowerEmail }, include: { role: true } })
+            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })
@@ -27,7 +27,7 @@ export class AuthController {
 
             const jwtoken = generateJWT({ id: userFound.id, role: userFound.role.name })
 
-            res.send(jwtoken)
+            res.json({ jwtoken, user: { verified: userFound.verified, id: userFound.id } })
         } catch (error) {
             res.status(500).json({ error: 'Server internal error' })
         }
@@ -73,7 +73,7 @@ export class AuthController {
     }
 
     static forgotPasswordTeacher = async (req: Request, res: Response) => {
-        const  idTeacher : number  = parseInt(req.body.idTeacher)
+        const idTeacher: number = parseInt(req.body.idTeacher)
         try {
             const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true } })
             if (!userFound) {
@@ -200,6 +200,23 @@ export class AuthController {
                 return res.status(404).json({ error: error.message })
             }
             return res.status(200).send('Token encontrado')
+        } catch (error) {
+            res.status(500).json({ error: 'An error occurred' })
+        }
+    }
+
+    static async optionsStudent(req: Request, res: Response) {
+        try {
+            const options = await prisma.optionCareer.findMany({ where: { userId: req.user.id }, select: { id: true , regionalCenter_Faculty_Career: { select: { id: true, career: { select: { name: true } }, regionalCenter_Faculty : { select : {regionalCenter : { select : {name : true} }}} } } }, orderBy : { id : "asc" } })
+
+            if (!options.length) {
+                const error = new Error('No tienes opciones para elegir')
+                return res.status(404).json({ error: error.message })
+            }
+
+            const regionalCenter = options[0].regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
+
+            return res.json({options, regionalCenter})
         } catch (error) {
             res.status(500).json({ error: 'An error occurred' })
         }

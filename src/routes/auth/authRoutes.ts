@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { AuthController } from "../../controllers/auth/authController";
 import { AuthValidator } from "../../validators/auth/authValidator";
-import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+import { authenticate, authenticateVerifiedLess, authorizeRole } from '../../middleware/auth/auth';
+import { RoleEnum } from "@prisma/client";
 const router = Router()
 
 router.post('/login', ...AuthValidator.validatorLogin(), AuthController.login)
@@ -18,6 +19,13 @@ router.get('/user',
     authenticate,
     AuthController.user
 )
+
+router.get('/student/options-careers',
+    authenticateVerifiedLess,
+    authorizeRole([RoleEnum.STUDENT]),
+    AuthController.optionsStudent
+)
+
 
 // //** Profile */
 
