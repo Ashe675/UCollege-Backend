@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createTeacher, getTeachers, getTeacher } from '../../controllers/admin/adminController';
+import { createTeacher, getTeachers, getTeacherById } from '../../controllers/admin/adminController';
 
 import { validateTeacher } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
@@ -25,8 +25,8 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
 }
 */
 router.post('/create-teacher',
-  //authenticate, 
-  //authorizeRole(['ADMIN']) ,
+  authenticate, 
+  authorizeRole(['ADMIN']) ,
   validateTeacher, 
   isValidRegionalCenter,
   isValidDepartament, 
@@ -45,7 +45,7 @@ router.get('/teachers',
 router.get('/teacher/:id', 
   authenticate, 
   authorizeRole(['ADMIN']),
-  getTeacher
+  getTeacherById
 );
 
 /**

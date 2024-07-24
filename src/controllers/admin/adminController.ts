@@ -113,48 +113,117 @@ export const createTeacher = async (req: Request, res: Response) => {
 };
 
 
-
-// Obtener todos los docentes
-export const getTeachers = async (req, res) => {
-  try {
-    const teachers = await prisma.user.findMany({
-      where: {
-        role: {
-          name: 'TEACHER'
+export const getTeachers = async (req: Request, res: Response) => {
+    try {
+      const teachers = await prisma.user.findMany({
+        where: {
+          role: {
+            name: {
+                in: ['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD']
+              }
+          },
         },
-      },
-      include: {
-        person: true,
-        role: true,
-      }
-    });
-    res.status(200).json(teachers);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los docentes' });
-  }
-};
-
-// Obtener un docente por ID
-export const getTeacher = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const teacher = await prisma.user.findUnique({
-      where: {
-        id: parseInt(id),
-      },
-      include: {
-        person: true,
-        role: true,
-      }
-    });
-
-    if (!teacher || teacher.role.name !== 'TEACHER') {
-      return res.status(404).json({ error: 'Docente no encontrado' });
+        include: {
+          person: true,
+          role: true,
+        }
+      });
+  
+      // Mapea los docentes y realiza las consultas adicionales
+      const formattedTeachers = await Promise.all(teachers.map(async teacher => {
+        const RegionalCenter_Faculty_Career_Department_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+          where: { teacherId: teacher.id }
+        });
+  
+        const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher 
+          ? await prisma.regionalCenter.findUnique({
+            where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+          })
+          : null;
+  
+        const departament = RegionalCenter_Faculty_Career_Department_Teacher 
+          ? await prisma.departament.findUnique({
+            where: {
+              id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_Departament_id
+            }
+          })
+          : null;
+  
+        return {
+          user_id: teacher.id,
+          avatar: teacher.avatar,
+          firstName: teacher.person.firstName,
+          middleName: teacher.person.middleName,
+          lastName: teacher.person.lastName,
+          secondLastName: teacher.person.secondLastName,
+          regionalCenter: regionalCenter ? regionalCenter.name : null,
+          departament: departament ? departament.name : null,
+          role: teacher.role.name,
+          dni: teacher.person.dni,
+          identificationCode: teacher.identificationCode
+        };
+      }));
+  
+      res.status(200).json(formattedTeachers);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener los docentes' });
     }
+  };
+  
 
-    res.status(200).json(teacher);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el docente' });
-  }
-};
-
+  // Obtener un docente por su ID
+export const getTeacherById = async (req: Request, res: Response) => {
+    try {
+      const teacherId = parseInt(req.params.id);
+  
+      const teacher = await prisma.user.findUnique({
+        where: { id: teacherId },
+        include: {
+          person: true,
+          role: true,
+        },
+      });
+  
+      if (!teacher || !['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD'].includes(teacher.role.name)) {
+        return res.status(404).json({ error: 'Docente no encontrado o no es un docente válido' });
+      }
+  
+      const RegionalCenter_Faculty_Career_Department_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: teacher.id }
+      });
+  
+      const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.regionalCenter.findUnique({
+          where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+        })
+        : null;
+  
+      const departament = RegionalCenter_Faculty_Career_Department_Teacher 
+        ? await prisma.departament.findUnique({
+          where: {
+            id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_Departament_id
+          }
+        })
+        : null;
+  
+      const formattedTeacher = {
+        user_id: teacher.id,
+        avatar: teacher.avatar,
+        firstName: teacher.person.firstName,
+        middleName: teacher.person.middleName,
+        lastName: teacher.person.lastName,
+        secondLastName: teacher.person.secondLastName,
+        regionalCenter: regionalCenter ? regionalCenter.name : null,
+        departament: departament ? departament.name : null,
+        role: teacher.role.name,
+        dni: teacher.person.dni,
+        identificationCode: teacher.identificationCode
+      };
+  
+      res.status(200).json(formattedTeacher);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener el docente' });
+    }
+  };
