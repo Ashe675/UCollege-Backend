@@ -24,21 +24,16 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
 */
 /**
  * 
-router.post('/create-teacher',
-authenticate, 
-authorizeRole(['ADMIN']) ,
-validateTeacher, 
-isValidRegionalCenter,
-isValidDepartament, 
-createTeacher);
 */
-
 router.post('/create-teacher',
+  authenticate, 
+  authorizeRole(['ADMIN']) ,
   validateTeacher, 
   isValidRegionalCenter,
   isValidDepartament, 
   isDepartamentInRegionalCenter,
   createTeacher
-  );
+);
+
 
 export default router;
