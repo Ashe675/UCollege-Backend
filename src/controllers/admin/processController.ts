@@ -10,10 +10,10 @@ export const createProcessController = async (req: Request, res: Response) => {
   }
 
   try {
-    const process = await createProcess(req.body);
-    return res.status(201).json(process);
+    await createProcess(req.body);
+    return res.status(201).send("¡PROCESO CREADO CORRECTAMENTE!");
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(400).json({ error: error.message });
   }
 };
 
@@ -24,10 +24,10 @@ export const activateProcessController = async (req: Request, res: Response) => 
   }
 
   try {
-    const process = await activateProcess(id);
-    return res.status(200).json(process);
+    await activateProcess(id);
+    return res.status(200).send("¡PROCESO ACTIVADO CORRECTAMENTE!");
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -38,10 +38,10 @@ export const deactivateProcessController = async (req: Request, res: Response) =
   }
 
   try {
-    const process = await deactivateProcess(id);
-    return res.status(200).json(process);
+    await deactivateProcess(id);
+    return res.status(200).send("¡PROCESO DESACTIVADO CORRECTAMENTE!");
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -57,10 +57,10 @@ export const updateFinalDateController = async (req: Request, res: Response) => 
   }
 
   try {
-    const process = await updateFinalDate(id, new Date(finalDate));
-    return res.status(200).json(process);
+    await updateFinalDate(id, new Date(finalDate));
+    return res.status(200).json("¡FECHA FINAL ACTUALIZADA CORRECTAMENTE!");
   } catch (error) {
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -69,8 +69,7 @@ export const getAllProcessesController = async (req: Request, res: Response) => 
     const processes = await getAllProcesses();
     res.status(200).json(processes);
   } catch (error) {
-    console.error('Error fetching all processes:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({error: error.message });
   }
 };
 
@@ -79,8 +78,7 @@ export const getAllActiveProcessesController = async (req: Request, res: Respons
     const activeProcesses = await getAllActiveProcesses();
     res.status(200).json(activeProcesses);
   } catch (error) {
-    console.error('Error fetching active processes:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -89,8 +87,7 @@ export const getAllProcessTypeController = async (req: Request, res: Response) =
     const typeprocess = await getAllProcessType();
     res.status(200).json(typeprocess);
   } catch (error) {
-    console.error('Error fetching all processes', error);
-    res.status(500).json({ error: 'Internal Server Error'});
+    res.status(500).json({error: error.message});
   }
 }
 
