@@ -14,6 +14,7 @@ import regionalCenterRoutes from './routes/admission/regionalCenterRoutes';
 import admissionRoutes from './routes/admission/admissionRoutes'
 import inscriptionsByDni from './routes/admission/inscriptionRoutes';
 import teacherRoutes from './routes/teachers/teachersRoutes';
+import enrollRoutes from './routes/enroll/enrollRoutes'
 import processRoutes from './routes/admin/adminRoutes';
 
 import authRoutes from './routes/auth/authRoutes';
@@ -44,8 +45,9 @@ app.use('/api', inscriptionsByDni);
 app.use('/api/upload',uploadRouter)
 app.use('/api/inscriptions', inscriptionRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/enroll', enrollRoutes)
+
 app.use('/api/admin', processRoutes);
 app.use('/api/auth', authRoutes);
-
 
 export default app
