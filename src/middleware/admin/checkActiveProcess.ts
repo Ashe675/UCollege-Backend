@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../config/db';
 
 export const checkActiveProcess = async (req: Request, res: Response, next: NextFunction) => {
-  const { processTypeId, id, finalDate } = req.body;
+  let { processTypeId, id, finalDate } = req.body;
+  processTypeId= +processTypeId;
 
   // Verificación para creación de procesos (POST)
   if (req.method === 'POST') {
@@ -18,7 +19,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
       });
 
       if (!processType) {
-        return res.status(400).json({ error: `El tipo de proceso ${processTypeId} no existe.` });
+        return res.status(400).json({ error: `El tipo de proceso ${processType.name} no existe.` });
       }
 
       // Verificar si ya hay un proceso activo del mismo tipo
@@ -30,7 +31,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
       });
 
       if (activeProcess) {
-        return res.status(400).json({ error: `Un proceso de tipo ${activeProcess.processTypeId} ya se encuentra activo` });
+        return res.status(400).json({ error: `Un proceso de tipo ${processType.name} ya se encuentra activo` });
       }
 
       next();
