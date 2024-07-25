@@ -243,8 +243,12 @@ export default class InscriptionService {
     const csvStringifier = createObjectCsvStringifier({
       header: [
         { id: 'dni', title: 'DNI' },
-        { id: 'fullName', title: 'Nombre Completo' },
-        { id: 'email', title: 'Correo Electrónico' },
+        { id: 'firstName', title: 'Primer Nombre' },
+        { id: 'middleName', title: 'Segundo Nombre' },
+        { id: 'lastName', title: 'Primer Apellido' },
+        { id: 'secondLastName', title: 'Segundo Apellido' },
+        { id: 'email', title: 'Correo Electronico' },
+        { id: 'phoneNumber', title: 'Numero Telefonico' },
         { id: 'principalCareer', title: 'Carrera Principal' },
         { id: 'secondaryCareer', title: 'Carrera Secundaria' },
         { id: 'regionalCenter', title: 'Centro Regional' },
@@ -254,11 +258,15 @@ export default class InscriptionService {
     // Formateo de los datos para el CSV
     const records = approvedCandidates.map(candidate => ({
       dni: candidate.person.dni,
-      fullName: `${candidate.person.firstName} ${candidate.person.middleName ?? ''} ${candidate.person.lastName} ${candidate.person.secondLastName ?? ''}`.trim(),
+      firstName: candidate.person.firstName,
+      middleName :  candidate.person.middleName ? candidate.person.middleName : 'null',
+      lastName : candidate.person.lastName,
+      secondLastName : candidate.person.secondLastName ? candidate.person.secondLastName : 'null',
       email: candidate.person.email,
-      principalCareer: candidate.opinionId === 1 || candidate.opinionId === 2 ? candidate.principalCareer?.name : 'null',
-      secondaryCareer: candidate.opinionId ===3 || candidate.opinionId === 1  ? candidate.secondaryCareer.name : 'null',
-      regionalCenter: `${candidate.regionalCenter.name}`,
+      phoneNumber : candidate.person.phoneNumber,
+      principalCareer: candidate.opinionId === 1 || candidate.opinionId === 2 ? candidate.principalCareer?.code : 'null',
+      secondaryCareer: candidate.opinionId ===3 || candidate.opinionId === 1  ? candidate.secondaryCareer.code : 'null',
+      regionalCenter: `${candidate.regionalCenter.code}`,
     }));
 
     // Generación del CSV

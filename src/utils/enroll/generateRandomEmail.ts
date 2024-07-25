@@ -20,8 +20,7 @@ export function makeUserMethodSingle(partsName: string[]): string {
     const [firstElement] = partsName.splice(indexSelected, 1)
  
     newPartsName.push(firstElement)
-    console.log(partsName)
-    console.log(firstElement)
+   
 
     for (let i = 0; i < partsName.length; i++) {
         let element = Math.random() > 0.4 ? partsName[i].replace(/ /g, '')[0] : partsName[i].replace(/ /g, '')

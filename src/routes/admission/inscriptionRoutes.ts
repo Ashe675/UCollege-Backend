@@ -8,6 +8,8 @@ import { Request, Response, NextFunction } from 'express-serve-static-core';
 import { param } from 'express-validator';
 import handleInputErrors from '../../middleware/HandleInputError';
 import { checkActiveInscriptionProcess, checkActiveResultsProcess } from '../../middleware/admission/checkActiveResultProcess';
+import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+import { RoleEnum } from '@prisma/client';
 
 const router = express.Router();
 const inscriptionController = new InscriptionController();
@@ -51,6 +53,8 @@ router.post('/register',
 );
 
 router.get('/obtener/admitidos/CSV',
+  authenticate, 
+  authorizeRole([RoleEnum.ADMIN]),
   checkActiveResultsProcess,
   (req : Request, res : Response) => inscriptionController.getAproveCSV(req, res)
 );

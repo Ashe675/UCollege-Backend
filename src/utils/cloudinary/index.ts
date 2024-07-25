@@ -23,3 +23,4 @@ export async function deleteImageFromCloud(publicId : string) {
         throw new Error('Error al eliminar la imagen en Cloudinary');
     }
 }
+

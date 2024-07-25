@@ -6,11 +6,12 @@ interface IEmail {
     token: string
 }
 
-interface IEmail2 {
+
+export interface IEmail2 {
     email: string;
     password: string;
     name: string;
-    newEmail
+    newEmail : string;
   }
 
 export class AuthEmail {
@@ -114,7 +115,7 @@ export class AuthEmail {
                       Hola <span style="color: #730dd9; font-weight: 900">${user.name}</span>,
                   </p>
                   <p style="color: #444; font-size: 18px">
-                      Aquí están tus credenciales de acceso:
+                      bienvenido a UCollege, aquí están tus credenciales de acceso:
                   </p>
                   <p style="color: #444; font-size: 18px">
                       <b>Email:</b> ${user.newEmail}
@@ -124,6 +125,9 @@ export class AuthEmail {
                   </p>
                   <p style="color: #444; font-size: 18px">
                       ${isTeacher ? 'Recuerda cambiar tu contraseña después de iniciar sesión por primera vez.' : ''}
+                  </p>
+                  <p style="color: #444; font-size: 18px">
+                      Ingresa a nuestra plataforma dando click al enlace: ${process.env.FRONTEND_URL} 
                   </p>
               </div>
           </body>
@@ -143,4 +147,5 @@ export class AuthEmail {
             html: htmlContent,
         });
     };
+
 }
