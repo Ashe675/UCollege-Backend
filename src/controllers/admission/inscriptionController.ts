@@ -4,6 +4,7 @@ import InscriptionService from '../../services/inscription/inscriptionService';
 import InscriptionValidator from '../../validators/admission/InscriptionValidator';
 import deleteImage from '../../utils/admission/fileHandler';
 import { getInscriptionDetailsByDni } from '../../services/admission/getinscriptionsService';
+import { uploadImageAdmission } from '../../utils/cloudinary';
 
 
 /**
@@ -56,7 +57,10 @@ export default class InscriptionController {
       processId,
       regionalCenterId,
     } = req.body;
-    const photoCertificate = req.file.path;
+
+    const result = await uploadImageAdmission(req.file.path)
+    const photoCertificate = result.secure_url
+    deleteImage(req.file.path)
 
     const lowerEmail = email.toLowerCase()
 
