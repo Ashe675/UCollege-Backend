@@ -16,7 +16,7 @@ import { createTeacher,
 
 import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
-
+import upload from '../../middleware/admission/upload'; 
 
 
 const router = Router();
@@ -50,7 +50,8 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
 router.post('/create-teacher',
   authenticate, 
   authorizeRole(['ADMIN']) ,
-  validateTeacher, 
+  upload.single('avatar'),
+  validateTeacher,  
   isValidRegionalCenter,
   isValidDepartament, 
   isDepartamentInRegionalCenter,

@@ -216,13 +216,11 @@ model User {
   institutionalEmail String @unique @db.VarChar(100)
   password       String  @db.VarChar(100)
   verified       Boolean @default(false)
-  avatar        String? @db.VarChar(200)
-  img1          String? @db.VarChar(200)
-  img2          String? @db.VarChar(200)
-  img3          String? @db.VarChar(200)
+  
   description   String? @db.VarChar(200)
   roleId        Int
 
+  images      Image[]
   token       UserToken?
   student     Student?
   person      Person @relation(fields: [personId], references: [id], onDelete: Cascade)
@@ -236,6 +234,20 @@ model User {
 
   @@index([personId], name: "fk_User_Person_idx")
   @@index([roleId], name: "fk_User_Role_idx")
+}
+
+
+model Image {
+  idImage    Int      @id @default(autoincrement())
+  publicId   String   @db.VarChar(200)
+  url        String   @db.VarChar(250)
+  userId    Int
+  avatar     Boolean  @default(false)
+  createdAt  DateTime @default(now()) // Campo adicional para la fecha de creación
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "fk_Image_User1_idx")
 }
 
 
@@ -526,7 +538,7 @@ model RegionalCenter_Faculty_Career_Department_Teacher {
   regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id Int
   active Boolean @default(true)
 
-  teacher User @relation(fields: [teacherId], references: [id])
+  teacher User @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId], onDelete: Cascade)
 
   @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id])

@@ -4,7 +4,7 @@ import InscriptionService from '../../services/inscription/inscriptionService';
 import InscriptionValidator from '../../validators/admission/InscriptionValidator';
 import deleteImage from '../../utils/admission/fileHandler';
 import { getInscriptionDetailsByDni } from '../../services/admission/getinscriptionsService';
-import { uploadImageAdmission } from '../../utils/cloudinary';
+import { deleteImageFromCloud, uploadImageAdmission } from '../../utils/cloudinary';
 
 
 /**
@@ -58,9 +58,19 @@ export default class InscriptionController {
       regionalCenterId,
     } = req.body;
 
-    const result = await uploadImageAdmission(req.file.path)
+
+    // Verificar que el archivo es una imagen
+    const fileType = req.file.mimetype;
+    const allowedTypes = ['image/jpg', 'image/png', 'image/webp', 'image/jpeg'];
+
+    if (!allowedTypes.includes(fileType)) {
+      await deleteImage(req.file.path)
+      return res.status(400).send('El archivo subido tiene un formato de imagen válido.');
+    }
+
+    const result = await uploadImageAdmission(req.file.path, 'aspirantes_certificados')
     const photoCertificate = result.secure_url
-    deleteImage(req.file.path)
+    await deleteImage(req.file.path)
 
     const lowerEmail = email.toLowerCase()
 
@@ -72,25 +82,24 @@ export default class InscriptionController {
         lastName,
         secondLastName,
         phoneNumber,
-        email : lowerEmail,
+        email: lowerEmail,
       });
 
       const inscriptionProcess = await this.inscriptionService.validateProcessIdUnique(person.id, processId);
       if (inscriptionProcess) {
         throw new Error('¡No se puede inscribir en este proceso de inscripción por que ya se encuentra inscrito!');
       }
-      
+
       const validation = await InscriptionValidator.counterInscription(person.id);
       if (!validation.valid) {
         throw new Error(validation.message);
       }
-      
-      
+
       const inscription = await this.inscriptionService.createInscription(
-        person.id, 
-        parseInt(principalCareerId, 10), 
-        parseInt(secondaryCareerId, 10), 
-        processId ,
+        person.id,
+        parseInt(principalCareerId, 10),
+        parseInt(secondaryCareerId, 10),
+        processId,
         regionalCenterId,
         photoCertificate);
 
@@ -99,26 +108,23 @@ export default class InscriptionController {
       res.status(201).send("¡Felicidades! Se ha inscrito con éxito");
     } catch (error) {
       if (error.message) {
-        
-        //Eliminamos la imagen del servidor
-        deleteImage(photoCertificate);
-        
+        await deleteImageFromCloud(result.public_id)
+
         res.status(400).json({ error: error.message });
       } else {
-        
-        //Eliminamos la imagen del servidor
-        deleteImage(photoCertificate);
+        await deleteImageFromCloud(result.public_id)
+
         res.status(500).json({ error: 'Internal server error' });
       }
     }
 
   }
 
-  async getAproveCSV(req: Request, res: Response){
-    const processResultId = req.processResult.id 
+  async getAproveCSV(req: Request, res: Response) {
+    const processResultId = req.processResult.id
     try {
       const csv = await InscriptionService.getApprovedCSVService(processResultId);
-      
+
       // Configuración de la respuesta para retornar el archivo CSV
       res.header('Content-Type', 'text/csv');
       res.attachment('approved_candidates.csv');
@@ -131,11 +137,11 @@ export default class InscriptionController {
         res.status(500).json({ error: 'Ocurrió un error al obtener los candidatos aprobados' });
       }
     }
-  
+
   }
 
 
-  
+
 }
 
 export const getInscriptionDetails = async (req: Request, res: Response) => {

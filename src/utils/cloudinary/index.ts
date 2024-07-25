@@ -9,10 +9,18 @@ cloudinary.config({
 });
 
 
-export async function uploadImageAdmission(filePath : string) {
+export async function uploadImageAdmission(filePath : string, folder : string) {
     return await cloudinary.uploader.upload(filePath, {
         allowed_formats : ['png', 'webp', 'jpg'],
-        folder : 'aspirantes_certificados'  
+        folder : folder
     })
+}
+
+export async function deleteImageFromCloud(publicId : string) {
+    try {
+        return await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        throw new Error('Error al eliminar la imagen en Cloudinary');
+    }
 }
 

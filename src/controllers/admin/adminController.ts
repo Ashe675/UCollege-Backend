@@ -6,11 +6,26 @@ import { EnrollService } from '../../services/enroll/enrollService';
 import { generatePasswordUser } from '../../utils/admin/generatePassword';
 import { generateIdentificationCodeEmployee } from '../../utils/admin/generateIdentificationCode';
 import { prisma } from '../../config/db';
+import { deleteImageFromCloud, uploadImageAdmission } from '../../utils/cloudinary';
+import deleteImage from '../../utils/admission/fileHandler';
+import { createImage, ImageData } from '../../services/images/createImage';
 
 export const createTeacher = async (req: Request, res: Response) => {
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'Se requiere una foto del docente.' });
+  }
+
+  // Verificar que el archivo es una imagen
+  const fileType = req.file.mimetype;
+  const allowedTypes = ['image/jpg', 'image/png', 'image/webp', 'image/jpeg'];
+
+  if (!allowedTypes.includes(fileType)) {
+    await deleteImage(req.file.path)
+    return res.status(400).send('El archivo subido tiene un formato de imagen válido.');
+  }
+
   try {
-
-
     const roleSpecial = await prisma.role.findUnique({
       where: { id: parseInt(req.body.roleId) }
     });
@@ -20,6 +35,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         roleSpecial.name == 'COORDINATOR' ||
         roleSpecial.name == 'TEACHER')
     ) {
+      await deleteImage(req.file.path)
       return res.status(400).json({ error: "El roleId no es valido para crear un docente" });
     }
 
@@ -28,8 +44,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       const teacherRoleSpecial = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
         where: {
           active: true,
-          regionalCenter_Faculty_Career_Department_Departament_id: req.body.departamentId,
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: req.body.RegionalCenter_Faculty_Career_id,
+          regionalCenter_Faculty_Career_Department_Departament_id: parseInt(req.body.departamentId),
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id:parseInt(req.body.RegionalCenter_Faculty_Career_id),
           teacher: {
             role: {
               name: roleSpecial.name
@@ -39,6 +55,7 @@ export const createTeacher = async (req: Request, res: Response) => {
       });
 
       if (teacherRoleSpecial.length > 0) {
+        await deleteImage(req.file.path)
         return res.status(400).json({ error: `Ya esxite un usuario activo con el rol de ${roleSpecial.name} en el departamento.` });
       }
     }
@@ -53,12 +70,12 @@ export const createTeacher = async (req: Request, res: Response) => {
       secondLastName: req.body.secondLastName,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
-      roleId: req.body.roleId,
+      roleId: parseInt(req.body.roleId),
       identificationCode: "",
       institutionalEmail: "",
       password: "",
-      RegionalCenter_Faculty_Career_id: req.body.RegionalCenter_Faculty_Career_id,
-      departamentId: req.body.departamentId
+      RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
+      departamentId: parseInt(req.body.departamentId)
     };
 
     teacherData.identificationCode = await generateIdentificationCodeEmployee();
@@ -81,10 +98,13 @@ export const createTeacher = async (req: Request, res: Response) => {
     });
 
     if (personDNI != null && personEmail != null) {
+      await deleteImage(req.file.path)
       return res.status(400).json({ error: "El DNI y email ingresado ya existen en la base de datos" });
     } else if (personDNI != null) {
+      await deleteImage(req.file.path)
       return res.status(400).json({ error: "El DNI ingresado ya existe en la base de datos de una persona" });
     } else if (personEmail != null) {
+      await deleteImage(req.file.path)
       return res.status(400).json({ error: "El email ingresado ya existe en la base de datos de una persona" });
     }
 
@@ -104,15 +124,31 @@ export const createTeacher = async (req: Request, res: Response) => {
           name: teacherData.firstName,
           newEmail: teacherData.institutionalEmail,
         };
+        
+        const result = await uploadImageAdmission(req.file.path, 'userPhotos')
+        const url = result.secure_url
+
+        await deleteImage(req.file.path)
+
+        const newImage : ImageData = {
+          userId : newTeacher.id,
+          avatar : true,
+          url,
+          publicId: result.public_id
+        }
+
+        await createImage(newImage);
+
         AuthEmail.sendPasswordAndEmail(data, true);
+
       } else {
         await prisma.user.delete({ where: { id: newTeacher.id } });
         return res.status(400).json({ error: 'No se creó una relación entre el maestro, el departamento y el centro regional' });
       }
     }
-
     return res.status(201).json({ message: "Se ha creado un nuevo maestro" });
   } catch (error) {
+    await deleteImage(req.file.path)
     return res.status(500).json({ error: error.message });
   }
 };
@@ -131,6 +167,14 @@ export const getTeachers = async (req: Request, res: Response) => {
       include: {
         person: true,
         role: true,
+        images: {
+          where : {
+            avatar : true
+          },
+          select: {
+            url: true,
+          }
+        }
       }
     });
 
@@ -156,7 +200,7 @@ export const getTeachers = async (req: Request, res: Response) => {
 
       return {
         user_id: teacher.id,
-        avatar: teacher.avatar,
+        avatar: teacher.images[0] ? teacher.images[0] : null,
         firstName: teacher.person.firstName,
         middleName: teacher.person.middleName,
         lastName: teacher.person.lastName,
@@ -187,6 +231,7 @@ export const getTeacherById = async (req: Request, res: Response) => {
       include: {
         person: true,
         role: true,
+        images: true
       },
     });
 
@@ -214,7 +259,6 @@ export const getTeacherById = async (req: Request, res: Response) => {
 
     const formattedTeacher = {
       user_id: teacher.id,
-      avatar: teacher.avatar,
       firstName: teacher.person.firstName,
       middleName: teacher.person.middleName,
       lastName: teacher.person.lastName,
@@ -223,7 +267,8 @@ export const getTeacherById = async (req: Request, res: Response) => {
       departament: departament ? departament.name : null,
       role: teacher.role.name,
       dni: teacher.person.dni,
-      identificationCode: teacher.identificationCode
+      identificationCode: teacher.identificationCode,
+      images: teacher.images
     };
 
     res.status(200).json(formattedTeacher);
@@ -245,6 +290,7 @@ export const getTeacherByDni = async (req: Request, res: Response) => {
         user: {
           include: {
             role: true,
+            images: true
           }
         }
       }
@@ -276,7 +322,7 @@ export const getTeacherByDni = async (req: Request, res: Response) => {
 
     const formattedTeacher = {
       user_id: teacher.id,
-      avatar: teacher.avatar,
+      images: teacher.images,
       firstName: person.firstName,
       middleName: person.middleName,
       lastName: person.lastName,
@@ -306,6 +352,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
       include: {
         person: true,
         role: true,
+        images: true,
       }
     });
 
@@ -333,7 +380,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
 
     const formattedTeacher = {
       user_id: teacher.id,
-      avatar: teacher.avatar,
+      images: teacher.images,
       firstName: teacher.person.firstName,
       middleName: teacher.person.middleName,
       lastName: teacher.person.lastName,
@@ -371,7 +418,7 @@ export const updateTeacher = async (req: Request, res: Response) => {
       include: {
         person: true,
         role: true,
-        teacherDepartments : true
+        teacherDepartments: true
       }
     });
 
@@ -408,9 +455,9 @@ export const updateTeacher = async (req: Request, res: Response) => {
       const teacherRoleSpecial = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
         where: {
           active: true,
-          regionalCenter_Faculty_Career_Department_Departament_id: { in : teacher.teacherDepartments.map(department => department.regionalCenter_Faculty_Career_Department_Departament_id) },
+          regionalCenter_Faculty_Career_Department_Departament_id: { in: teacher.teacherDepartments.map(department => department.regionalCenter_Faculty_Career_Department_Departament_id) },
           teacher: {
-            id: { not : teacher.id },
+            id: { not: teacher.id },
             role: {
               name: roleSpecial.name
             }
@@ -423,7 +470,7 @@ export const updateTeacher = async (req: Request, res: Response) => {
       }
     }
 
-   
+
 
     // Actualizar la persona asociada
     await prisma.person.update({
@@ -483,49 +530,32 @@ export const deleteTeacher = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Docente no encontrado' });
     }
 
-    // Iniciar una transacción para eliminar de todas las tablas relevantes
-    await prisma.$transaction(async (transaction) => {
-      // Eliminar registros relacionados en RegionalCenter_Faculty_Career_Department_Teacher
-      await transaction.regionalCenter_Faculty_Career_Department_Teacher.deleteMany({
-        where: {
-          teacherId: teacher.id,
-        },
-      });
+     // Verificar si el registro en la tabla Person existe antes de eliminarlo
+     const personExists = await prisma.person.findUnique({
+      where: {
+        id: teacher.personId,
+      },
+    });
 
-      // Verificar si el registro en la tabla Person existe antes de eliminarlo
-      const personExists = await transaction.person.findUnique({
+    if (personExists) {
+
+      const images =  await prisma.image.findMany({ where : { userId : teacher.id } })
+
+      if (images.length){
+        for(const image of images){
+            const result = await deleteImageFromCloud(image.publicId)
+        }
+      }
+
+      await prisma.person.delete({
         where: {
           id: teacher.personId,
         },
       });
-
-      if (personExists) {
-        await transaction.person.delete({
-          where: {
-            id: teacher.personId,
-          },
-        });
-      } else {
-        console.warn(`No se encontró la persona con id: ${teacher.personId}`);
-      }
-
-      // Verificar si el registro en la tabla User existe antes de eliminarlo
-      const userExists = await transaction.user.findUnique({
-        where: {
-          id: teacher.id,
-        },
-      });
-
-      if (userExists) {
-        await transaction.user.delete({
-          where: {
-            id: teacher.id,
-          },
-        });
-      } else {
-        console.warn(`No se encontró el usuario con id: ${teacher.id}`);
-      }
-    });
+    } else {
+      throw new Error(`No se encontró la persona con id: ${teacher.personId}`);
+    }
+   
     res.status(200).json({ message: 'Docente eliminado exitosamente' });
   } catch (error) {
     console.error(error);
