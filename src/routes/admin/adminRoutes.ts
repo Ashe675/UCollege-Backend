@@ -5,8 +5,9 @@ import { createTeacher,
         getTeacherByDni,
         getTeacherByIdentificationCode,
         updateTeacher,
-        deleteTeacher
-       } from '../../controllers/admin/adminController';
+        deleteTeacher,
+        updateTeacherCenters
+       } from '../../controllers/admin/teacherAdminController';
 
 import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
@@ -98,5 +99,21 @@ authenticate,
 authorizeRole(['ADMIN']),
 deleteTeacher
 );
+
+/**
+ * Body de la peticion :
+ * {
+ *  regionalCenterId: number
+ *  departmentId: number
+ * }
+ */
+router.put('/teachers/update-centers/:id', 
+            //authenticate, 
+            //authorizeRole(['ADMIN']), 
+            isValidRegionalCenter,
+            isValidDepartament, 
+            isDepartamentInRegionalCenter,
+            updateTeacherCenters);
+
 
 export default router;
