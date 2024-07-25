@@ -64,7 +64,7 @@ model Inscription {
   regionalCenterId  Int
   processId         Int
   notificated       Boolean  @default(false)
-  process           Process  @relation(fields: [processId], references: [id])
+  process           Process  @relation(fields: [processId], references: [id], onDelete: Cascade)
   principalCareer   Career   @relation("principalCareer", fields: [principalCareerId], references: [id], onDelete: Cascade)
   secondaryCareer   Career   @relation("secondaryCareer", fields: [secondaryCareerId], references: [id], onDelete: Cascade)
   opinion           Opinion? @relation(fields: [opinionId], references: [id], onDelete: Cascade)
@@ -168,7 +168,7 @@ model RegionalCenter {
   id                    Int                     @id @default(autoincrement())
   name                  String                  @db.VarChar(100)
   date                  DateTime                @db.Date
-  code                  String                  @db.VarChar(45)
+  code                  String                  @db.VarChar(45) @unique
   finalDate             DateTime?               @db.Date
   townId                Int
   town                  Town                    @relation(fields: [townId], references: [id], onDelete: Cascade)
@@ -346,7 +346,7 @@ model Class {
 
 model Building {
   id          Int      @id @default(autoincrement())
-  code        String   @db.VarChar(4)
+  code        String   @db.VarChar(10)
   active      Boolean
   classrooms  Classroom[]
   regionalCenterId Int
@@ -396,12 +396,12 @@ model AcademicPeriod {
 }
 
 model Enrollment {
-  section      Section   @relation(fields: [sectionId], references: [id])
+  section      Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   sectionId   Int
   date         DateTime @db.Date @default(now())
   grade        Float?
   message      String?  @db.VarChar(45)
-  student      Student   @relation(fields: [studentId], references: [id])
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId   Int
   waitingList  WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
   waitingListId Int?
@@ -459,9 +459,9 @@ model RegionalCenter_Faculty_Career_User {
 
 model OptionCareer {
   id                             Int      @id @default(autoincrement())
-  regionalCenter_Faculty_Career  RegionalCenter_Faculty_Career @relation(fields: [regionalCenter_Faculty_CareerId], references: [id])
+  regionalCenter_Faculty_Career  RegionalCenter_Faculty_Career @relation(fields: [regionalCenter_Faculty_CareerId], references: [id], onDelete: Cascade)
   regionalCenter_Faculty_CareerId Int
-  user                           User     @relation(fields: [userId], references: [id])
+  user                           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                      Int
   date                      DateTime @db.Date @default(now())
 
@@ -475,7 +475,7 @@ model DayEnroll {
   startDate          DateTime @db.Date
   finalDate          DateTime @db.Date
   globalAvarage Float
-  process       Process  @relation(fields: [processId], references: [id])
+  process       Process  @relation(fields: [processId], references: [id], onDelete: Cascade)
   processId    Int
 
   @@index([processId], name: "fk_DayEnroll_Process1_idx")
@@ -514,8 +514,8 @@ model RegionalCenter_Faculty_Career_Department {
   active                                  Boolean  @default(true)
   RegionalCenterFacultyCareerDepartmentTeacher RegionalCenter_Faculty_Career_Department_Teacher[]
 
-  Departament      Departament  @relation(fields: [departmentId], references: [id])
-  RegionalCenterFacultyCareer  RegionalCenter_Faculty_Career  @relation(fields: [regionalCenter_Faculty_CareerId], references: [id])
+  Departament      Departament  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  RegionalCenterFacultyCareer  RegionalCenter_Faculty_Career  @relation(fields: [regionalCenter_Faculty_CareerId], references: [id], onDelete: Cascade)
 
   @@id([departmentId, regionalCenter_Faculty_CareerId])
 }
@@ -527,7 +527,7 @@ model RegionalCenter_Faculty_Career_Department_Teacher {
   active Boolean @default(true)
 
   teacher User @relation(fields: [teacherId], references: [id])
-  regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId])
+  regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId], onDelete: Cascade)
 
   @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id])
 }

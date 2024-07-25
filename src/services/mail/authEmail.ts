@@ -6,11 +6,12 @@ interface IEmail {
     token: string
 }
 
-interface IEmail2 {
+
+export interface IEmail2 {
     email: string;
     password: string;
     name: string;
-    newEmail
+    newEmail : string;
   }
 
 export class AuthEmail {
@@ -143,4 +144,5 @@ export class AuthEmail {
             html: htmlContent,
         });
     };
+
 }
