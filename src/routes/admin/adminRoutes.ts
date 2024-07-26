@@ -11,8 +11,11 @@ import { createTeacher,
   getTeacherByDni,
   getTeacherByIdentificationCode,
   updateTeacher,
-  deleteTeacher
- } from '../../controllers/admin/adminController';
+  deleteTeacher,
+  updateTeacherCenters
+ } from '../../controllers/admin/teacherAdminController';
+
+ import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
 import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
@@ -32,6 +35,8 @@ router.get('/processType/all',authenticate, authorizeRole([RoleEnum.ADMIN]), get
 
 /*
 Este es el JSON que se debe enviar para consumir la API de creación de profesores:
+
+form data -> para probar en postman
 {
   "dni": "9876543210987",
   "firstName": "Jane",
@@ -44,6 +49,8 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
   
   "RegionalCenter_Faculty_Career_id": 1,
   "departamentId" : 1,
+
+  "avata": file
 
 }
 */
@@ -119,17 +126,26 @@ deleteTeacher
 /**
  * Body de la peticion :
  * {
- *  regionalCenterId: number
+ *  regionalCenter_Faculty_Career_id: number
  *  departmentId: number
  * }
  */
 router.put('/teachers/update-centers/:id', 
-            //authenticate, 
-            //authorizeRole(['ADMIN']), 
+            authenticate, 
+            authorizeRole(['ADMIN']), 
             isValidRegionalCenter,
             isValidDepartament, 
             isDepartamentInRegionalCenter,
-            updateTeacherCenters);
+            updateTeacherCenters
+          );
+
+
+// obtener todos los departamentos por Centro regional
+router.get('/get-regional-centers', 
+            //authenticate, 
+            //authorizeRole(['ADMIN']), 
+            getAllRegionalCentersWithDepartments
+          );
 
 
 export default router;
