@@ -1,9 +1,11 @@
 
-import { prisma } from "../../config/db";
+import { prisma } from "../config/db";
 
 
 
 export const getAllRegionalCentersWithDepartments = async () => {
+    /**
+     * 
     let departaments = await prisma.departament.findMany({
         include:{
             regionalCenterFacultyCareer:{
@@ -22,13 +24,51 @@ export const getAllRegionalCentersWithDepartments = async () => {
             
         }
     })
+    */
 
-    return transformData(departaments);
+    let departaments = await prisma.regionalCenter.findMany({
+        include:{
+            regionalCenter_Faculties:{
+                include:{
+                    regionalCenter_Faculty_Careers:{
+                        include:{
+                            departments:{
+                                include:{
+                                    Departament:true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+
+    //return transformData(departaments);
     //return organizeRegionalCentersWithDepartments(departaments)
-    //return departaments;
+    return transformData2(departaments);
     
 };
 
+function transformData2(data) {
+    return data.map(center => ({
+      id: center.id,
+      name: center.name,
+      code: center.code,
+      departamentos: center.regionalCenter_Faculties.flatMap(faculty =>
+        faculty.regionalCenter_Faculty_Careers.flatMap(career =>
+          career.departments.map(department => ({
+            departmentId: department.departmentId,
+            regionalCenter_Faculty_CareerId: department.regionalCenter_Faculty_CareerId,
+            Departament: {
+              id: department.Departament.id,
+              name: department.Departament.name
+            }
+          }))
+        )
+      )
+    }));
+  }
 
 interface Department {
     id: number;

@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import * as regionalCenterService from '../../services/admin/regionalCenterService';
+import * as regionalCenterService from '../../middleware/regionalCenterService';
 
 export const getAllRegionalCentersWithDepartments = async (req: Request, res: Response) => {
   try {

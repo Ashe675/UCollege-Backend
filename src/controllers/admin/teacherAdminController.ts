@@ -563,10 +563,13 @@ export const deleteTeacher = async (req: Request, res: Response) => {
   }
 };
 
+
+//Actualizar centro o departamento del docente
 export const updateTeacherCenters = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { RegionalCenter_Faculty_Career_id, departamentId } = req.body;
+  const { RegionalCenter_Faculty_Career_id, departamentId, roleId } = req.body;
 
+  
   try {
     // Validar que el docente exista
     const teacher = await prisma.user.findUnique({
@@ -576,6 +579,43 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
 
     if (!teacher) {
       return res.status(404).json({ error: 'Docente no encontrado' });
+    }
+
+    let roleSpecial = await prisma.role.findUnique({
+      where:{
+        id: roleId,
+        
+      }
+    });
+
+    if (
+      !(roleSpecial.name == 'DEPARTMENT_HEAD' ||
+        roleSpecial.name == 'COORDINATOR' ||
+        roleSpecial.name == 'TEACHER')
+    ) {
+      //await deleteImage(req.file.path)
+      return res.status(400).json({ error: "El roleId no es valido para crear un docente" });
+    }
+
+    if (roleSpecial.name == 'DEPARTMENT_HEAD' || roleSpecial.name == 'COORDINATOR') {
+      const teacherRoleSpecial = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
+        where: {
+          active: true,
+          regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id:RegionalCenter_Faculty_Career_id,
+          teacher: {
+            role: {
+              name: roleSpecial.name
+            }
+          }
+        },
+      });
+
+      if (teacherRoleSpecial.length > 0) {
+        //await deleteImage(req.file.path)
+        return res.status(400).json({ error: `Ya esxite un usuario activo con el rol de ${roleSpecial.name} en el departamento.` });
+      }
+      
     }
 
 
@@ -603,6 +643,18 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
           data: {
             regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
             regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+          }
+        });
+        await transaction.user.update({
+          where: {
+            id: teacher.id
+          },
+          data: {
+            role: {
+              connect: {
+                id: roleId // Reemplaza roleId con el ID del rol que deseas asignar
+              }
+            }
           }
         });
       } else {

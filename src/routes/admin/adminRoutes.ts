@@ -17,7 +17,7 @@ import { createTeacher,
 
  import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
-import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
+import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterData } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
 import upload from '../../middleware/admission/upload'; 
 
@@ -128,11 +128,13 @@ deleteTeacher
  * {
  *  regionalCenter_Faculty_Career_id: number
  *  departmentId: number
+ *  roleId: number
  * }
  */
 router.put('/teachers/update-centers/:id', 
             authenticate, 
             authorizeRole(['ADMIN']), 
+            validateChangeRegionalCenterData,
             isValidRegionalCenter,
             isValidDepartament, 
             isDepartamentInRegionalCenter,
@@ -141,9 +143,9 @@ router.put('/teachers/update-centers/:id',
 
 
 // obtener todos los departamentos por Centro regional
-router.get('/get-regional-centers', 
-            //authenticate, 
-            //authorizeRole(['ADMIN']), 
+router.get('/center/department', 
+            authenticate, 
+            authorizeRole(['ADMIN']), 
             getAllRegionalCentersWithDepartments
           );
 
