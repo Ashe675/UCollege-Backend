@@ -45,7 +45,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         where: {
           active: true,
           regionalCenter_Faculty_Career_Department_Departament_id: parseInt(req.body.departamentId),
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id:parseInt(req.body.RegionalCenter_Faculty_Career_id),
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
           teacher: {
             role: {
               name: roleSpecial.name
@@ -124,15 +124,15 @@ export const createTeacher = async (req: Request, res: Response) => {
           name: teacherData.firstName,
           newEmail: teacherData.institutionalEmail,
         };
-        
+
         const result = await uploadImageAdmission(req.file.path, 'userPhotos')
         const url = result.secure_url
 
         await deleteImage(req.file.path)
 
-        const newImage : ImageData = {
-          userId : newTeacher.id,
-          avatar : true,
+        const newImage: ImageData = {
+          userId: newTeacher.id,
+          avatar: true,
           url,
           publicId: result.public_id
         }
@@ -168,8 +168,8 @@ export const getTeachers = async (req: Request, res: Response) => {
         person: true,
         role: true,
         images: {
-          where : {
-            avatar : true
+          where: {
+            avatar: true
           },
           select: {
             url: true,
@@ -385,11 +385,22 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
       middleName: teacher.person.middleName,
       lastName: teacher.person.lastName,
       secondLastName: teacher.person.secondLastName,
-      regionalCenter: regionalCenter ? regionalCenter.name : null,
-      departament: departament ? departament.name : null,
-      role: teacher.role.name,
+      regionalCenterFacultyCareer: {
+        id : RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
+        name : regionalCenter.name
+      },
+      departament: {
+        id : departament.id,
+        name : departament.name 
+      },
+      role: {
+        id: teacher.roleId,
+        name : teacher.role.name
+      },
       dni: teacher.person.dni,
-      identificationCode: teacher.identificationCode
+      identificationCode: teacher.identificationCode,
+      phoneNumber: teacher.person.phoneNumber,
+      email: teacher.person.email
     };
 
     res.status(200).json(formattedTeacher);
@@ -530,8 +541,8 @@ export const deleteTeacher = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Docente no encontrado' });
     }
 
-     // Verificar si el registro en la tabla Person existe antes de eliminarlo
-     const personExists = await prisma.person.findUnique({
+    // Verificar si el registro en la tabla Person existe antes de eliminarlo
+    const personExists = await prisma.person.findUnique({
       where: {
         id: teacher.personId,
       },
@@ -539,11 +550,11 @@ export const deleteTeacher = async (req: Request, res: Response) => {
 
     if (personExists) {
 
-      const images =  await prisma.image.findMany({ where : { userId : teacher.id } })
+      const images = await prisma.image.findMany({ where: { userId: teacher.id } })
 
-      if (images.length){
-        for(const image of images){
-            const result = await deleteImageFromCloud(image.publicId)
+      if (images.length) {
+        for (const image of images) {
+          const result = await deleteImageFromCloud(image.publicId)
         }
       }
 
@@ -555,7 +566,7 @@ export const deleteTeacher = async (req: Request, res: Response) => {
     } else {
       throw new Error(`No se encontró la persona con id: ${teacher.personId}`);
     }
-   
+
     res.status(200).json({ message: 'Docente eliminado exitosamente' });
   } catch (error) {
     console.error(error);
