@@ -18,7 +18,7 @@ import { createTeacher,
  import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
 import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterData } from '../../validators/admin/teacherValidator';
-import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
+import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../middleware/validateRegionalCenter';
 import upload from '../../middleware/admission/upload'; 
 
 
