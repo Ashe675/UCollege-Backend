@@ -23,3 +23,20 @@ export const validateTeacherUpdate = [
     
     handleInputErrors,
 ]
+
+
+export const validateChangeRegionalCenterData = [
+    check('RegionalCenter_Faculty_Career_id')
+        .isInt()
+        .withMessage('El id de carrera de la facultad del centro regional debe ser un entero positivo'),
+
+    check('departamentId')
+        .isInt()
+        .withMessage('El id del departamento debe ser un entero positivo'),
+
+    check('roleId')
+        .isInt()
+        .withMessage('El id del rol debe ser un entero positivo'),
+
+    handleInputErrors,
+];

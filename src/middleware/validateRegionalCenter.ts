@@ -28,7 +28,7 @@ export const isValidRegionalCenter = async (req: Request, res: Response, next: N
     try {
         const regionalCenterFacultyCareer = await prisma.regionalCenter_Faculty_Career.findUnique({
             where: {
-                id: parseInt(RegionalCenter_Faculty_Career_id, 10),
+                id: parseInt(RegionalCenter_Faculty_Career_id),
             },
         });
 

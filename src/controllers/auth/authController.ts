@@ -29,7 +29,7 @@ export class AuthController {
 
             res.json({ jwtoken, user: { verified: userFound.verified, id: userFound.id } })
         } catch (error) {
-            res.status(500).json({ error: 'Server internal error' })
+            res.status(500).json({ error: error.message })
         }
     }
 

@@ -573,3 +573,116 @@ export const deleteTeacher = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al eliminar el docente' });
   }
 };
+
+
+//Actualizar centro o departamento del docente
+export const updateTeacherCenters = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { RegionalCenter_Faculty_Career_id, departamentId, roleId } = req.body;
+
+  
+  try {
+    // Validar que el docente exista
+    const teacher = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+      include: { teacherDepartments: true }
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Docente no encontrado' });
+    }
+
+    let roleSpecial = await prisma.role.findUnique({
+      where:{
+        id: roleId,
+        
+      }
+    });
+
+    if (
+      !(roleSpecial.name == 'DEPARTMENT_HEAD' ||
+        roleSpecial.name == 'COORDINATOR' ||
+        roleSpecial.name == 'TEACHER')
+    ) {
+      //await deleteImage(req.file.path)
+      return res.status(400).json({ error: "El roleId no es valido para crear un docente" });
+    }
+
+    if (roleSpecial.name == 'DEPARTMENT_HEAD' || roleSpecial.name == 'COORDINATOR') {
+      const teacherRoleSpecial = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
+        where: {
+          active: true,
+          regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id:RegionalCenter_Faculty_Career_id,
+          teacher: {
+            role: {
+              name: roleSpecial.name
+            }
+          }
+        },
+      });
+
+      if (teacherRoleSpecial.length > 0) {
+        //await deleteImage(req.file.path)
+        return res.status(400).json({ error: `Ya esxite un usuario activo con el rol de ${roleSpecial.name} en el departamento.` });
+      }
+      
+    }
+
+
+    // Actualizar las relaciones en la tabla RegionalCenter_Faculty_Career_Department_Teacher
+    await prisma.$transaction(async (transaction) => {
+      // Verifica si ya existe una relación para el docente
+      const existingRelation = await transaction.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: {
+          teacherId: teacher.id,
+          regionalCenter_Faculty_Career_Department_Departament_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_Departament_id,
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+        }
+      });
+
+      if (existingRelation) {
+        // Actualizar la relación existente
+        await transaction.regionalCenter_Faculty_Career_Department_Teacher.update({
+          where: {
+            teacherId_regionalCenter_Faculty_Career_Department_Departament_id_regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: {
+              teacherId: teacher.id,
+              regionalCenter_Faculty_Career_Department_Departament_id: existingRelation.regionalCenter_Faculty_Career_Department_Departament_id,
+              regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: existingRelation.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+            }
+          },
+          data: {
+            regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
+            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+          }
+        });
+        await transaction.user.update({
+          where: {
+            id: teacher.id
+          },
+          data: {
+            role: {
+              connect: {
+                id: roleId // Reemplaza roleId con el ID del rol que deseas asignar
+              }
+            }
+          }
+        });
+      } else {
+        // Crear una nueva relación si no existe
+        await transaction.regionalCenter_Faculty_Career_Department_Teacher.create({
+          data: {
+            teacherId: teacher.id,
+            regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
+            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+          }
+        });
+      }
+    });
+
+    res.status(200).json({ message: 'Centro regional/facultad/carrera y departamento actualizados exitosamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar el centro regional/facultad/carrera y departamento' });
+  }
+};

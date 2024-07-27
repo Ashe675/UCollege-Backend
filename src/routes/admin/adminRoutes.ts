@@ -14,11 +14,14 @@ import {
   getTeacherByDni,
   getTeacherByIdentificationCode,
   updateTeacher,
-  deleteTeacher
-} from '../../controllers/admin/adminController';
+  deleteTeacher,
+  updateTeacherCenters
+ } from '../../controllers/admin/teacherAdminController';
 
-import { validateTeacher, validateTeacherUpdate } from '../../validators/admin/teacherValidator';
-import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
+ import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
+
+import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterData } from '../../validators/admin/teacherValidator';
+import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../middleware/validateRegionalCenter';
 import upload from '../../middleware/admission/upload';
 import { getTeacherRolesController } from '../../controllers/teachers/getTeachers';
 
@@ -36,6 +39,8 @@ router.get('/processType/all', authenticate, authorizeRole([RoleEnum.ADMIN]), ge
 
 /*
 Este es el JSON que se debe enviar para consumir la API de creación de profesores:
+
+form data -> para probar en postman
 {
   "dni": "9876543210987",
   "firstName": "Jane",
@@ -48,6 +53,8 @@ Este es el JSON que se debe enviar para consumir la API de creación de profesor
   
   "RegionalCenter_Faculty_Career_id": 1,
   "departamentId" : 1,
+
+  "avata": file
 
 }
 */
@@ -119,6 +126,33 @@ router.delete('/teacher-delete/:id',
   authorizeRole(['ADMIN']),
   deleteTeacher
 );
+
+/**
+ * Body de la peticion :
+ * {
+ *  regionalCenter_Faculty_Career_id: number
+ *  departmentId: number
+ *  roleId: number
+ * }
+ */
+router.put('/teachers/update-centers/:id', 
+            authenticate, 
+            authorizeRole(['ADMIN']), 
+            validateChangeRegionalCenterData,
+            isValidRegionalCenter,
+            isValidDepartament, 
+            isDepartamentInRegionalCenter,
+            updateTeacherCenters
+          );
+
+
+// obtener todos los departamentos por Centro regional
+router.get('/center/department', 
+            authenticate, 
+            authorizeRole(['ADMIN']), 
+            getAllRegionalCentersWithDepartments
+          );
+
 
 router.get('/teacher/roles',
   authenticate,
