@@ -56,7 +56,16 @@ export const createSectionValidators = [
   body('classroomId')
     .isInt().withMessage('Classroom ID debe ser un entero')
     .notEmpty().withMessage('Classroom ID es requerido'),
-    handleInputErrors,
+  body('days')
+    .isArray({ min: 1 }).withMessage('Days debe ser un arreglo con al menos un día')
+    .custom((days) => {
+      if (days.some(day => !Number.isInteger(day) || day < 1 || day > 7)) {
+        throw new Error('Cada día debe ser un número entero entre 1 y 7');
+      }
+      return true;
+    })
+    .withMessage('Días son requeridos y deben ser números enteros entre 1 y 7'),
+  handleInputErrors,
 ];
 
 export const checkSectionExists = async (req: Request, res: Response, next: NextFunction) => {

@@ -79,37 +79,48 @@ export const checkClassCareerandCenterandTeacher = async (req: Request, res: Res
 };
 
 export const checkClassroomAvailability = async (req: Request, res: Response, next: NextFunction) => {
-    const { IH, FH, classroomId } = req.body;
-    try {
-      const conflictingSections = await prisma.section.findMany({
-        where: {
-          classroomId,
-          OR: [
-            {
-              IH: { lte: IH },
-              FH: { gt: IH },
-            },
-            {
-              IH: { lt: FH },
-              FH: { gte: FH },
-            },
-            {
-              IH: { gte: IH },
-              FH: { lte: FH },
-            },
-          ],
+  const { IH, FH, classroomId, days } = req.body;
+
+  try {
+    // Obtener las secciones conflictivas
+    const conflictingSections = await prisma.section.findMany({
+      where: {
+        classroomId,
+        section_Day: {
+          some: {
+            dayId: { in: days }
+          }
         },
-      });
-  
-      if (conflictingSections.length > 0) {
-        return res.status(400).json({ error: 'El aula ya esta ocupada dentro de esas horas' });
-      }
-  
-      next();
-    } catch (error) {
-      res.status(500).json({ error: 'Internal server error' });
+        OR: [
+          {
+            IH: { lte: IH },
+            FH: { gt: IH },
+          },
+          {
+            IH: { lt: FH },
+            FH: { gte: FH },
+          },
+          {
+            IH: { gte: IH },
+            FH: { lte: FH },
+          },
+        ],
+      },
+      include: {
+        section_Day: true,
+      },
+    });
+
+    if (conflictingSections.length > 0) {
+      return res.status(400).json({ error: 'El aula ya está ocupada dentro de esas horas y días.' });
     }
-  };
+
+    next();
+  } catch (error) {
+    console.error('Error checking classroom availability:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
   export const checkRegionalCenterFacultyCareerExistsAndActive = async (req: Request, res: Response, next: NextFunction) => {
     const { regionalCenter_Faculty_CareerId } = req.body;
     try {
@@ -224,11 +235,17 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
     }
   }; 
   export const checkTeacherScheduleConflict = async (req: Request, res: Response, next: NextFunction) => {
-    const { teacherId, IH, FH } = req.body;
+    const { teacherId, IH, FH, days } = req.body;
+  
     try {
       const conflictingSections = await prisma.section.findMany({
         where: {
           teacherId,
+          section_Day: {
+            some: {
+              dayId: { in: days }
+            }
+          },
           OR: [
             {
               IH: { lte: IH },
@@ -244,14 +261,18 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
             },
           ],
         },
+        include: {
+          section_Day: true,
+        },
       });
   
       if (conflictingSections.length > 0) {
-        return res.status(400).json({ error: 'El maestro tiene otra sección programada durante estas horas' });
+        return res.status(400).json({ error: 'El maestro tiene otra sección programada durante estas horas y días.' });
       }
   
       next();
     } catch (error) {
+      console.error('Error checking teacher schedule conflict:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
@@ -307,7 +328,7 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
     }
   };
   export const checkTeacherScheduleConflictUpdate = async (req: Request, res: Response, next: NextFunction) => {
-  const { teacherId, IH, FH } = req.body;
+  const { teacherId, IH, FH, days } = req.body;
   const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
   
   try {
@@ -325,7 +346,12 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
       const conflictingSections = await prisma.section.findMany({
         where: {
           teacherId,
-          id: { not: Number(sectionId) }, // Excluir la sección actual de la validación
+          id: { not: Number(sectionId) },
+          section_Day: {
+            some: {
+              dayId: { in: days }
+            }
+          }, // Excluir la sección actual de la validación
           OR: [
             {
               IH: { lte: IH },
@@ -355,7 +381,7 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
   }
 };
   export const checkClassroomAvailabilityUpdate = async (req: Request, res: Response, next: NextFunction) => {
-    const { IH, FH, classroomId } = req.body;
+    const { IH, FH, classroomId, days } = req.body;
     const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
     
     try {
@@ -373,7 +399,12 @@ export const checkClassroomAvailability = async (req: Request, res: Response, ne
         const conflictingSections = await prisma.section.findMany({
           where: {
             classroomId,
-            id: { not: Number(sectionId) }, // Excluir la sección actual de la validación
+            id: { not: Number(sectionId) },
+            section_Day: {
+              some: {
+                dayId: { in: days }
+              }
+            }, // Excluir la sección actual de la validación
             OR: [
               {
                 IH: { lte: IH },

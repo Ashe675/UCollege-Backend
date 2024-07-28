@@ -8,10 +8,11 @@ interface CreateSectionInput {
   classId: number;
   teacherId: number;
   classroomId: number;
+  days: number[]; // Array de IDs de días
 }
 export const createSection = async (data: CreateSectionInput, req: Request) => {
   const userlogged = req.user?.id;
-  const { IH, FH, classId, teacherId, classroomId, } = data;
+  const { IH, FH, classId, teacherId, classroomId, days } = data;
 
   try {
     // Obtener el código de la clase
@@ -46,6 +47,10 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
       select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
 
+    if (!Department_Head) {
+      throw new Error('Department head not found');
+    }
+
     const rcfcID = Department_Head.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
 
     const academicPeriod = await prisma.process.findFirst({
@@ -53,21 +58,23 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
       select: { academicPeriod: { select: { id: true } } },
     });
 
+    if (!academicPeriod) {
+      throw new Error('Academic period not found');
+    }
+
     const idPeriodo = academicPeriod.academicPeriod.id;
 
     // Contar secciones existentes con el mismo código de clase, hora de inicio y academicPeriodId
     const existingSectionsCount = await prisma.section.count({
       where: {
         academicPeriodId: idPeriodo,
-        IH, // Usar IH como número aquí
+        IH,
         classId,
       },
     });
 
     // Generar el código de la sección
     const sectionCode = `${classCode}-${formattedIH}${existingSectionsCount.toString().padStart(2, '0')}`;
-    console.log(sectionCode);
-
 
     // Crear la sección con el código generado y la capacidad obtenida
     const newSection = await prisma.section.create({
@@ -81,13 +88,28 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
         teacherId,
         classroomId,
         academicPeriodId: idPeriodo,
+        section_Day: {
+          create: days.map(dayId => ({
+            dayId
+          }))
+        }
       },
+      include: {
+        section_Day: {select : { day : {  select : { name : true}}}}
+      }
+    });
+
+    await prisma.waitingList.create({
+      data: {
+        sectionId: newSection.id,
+        top: 0,
+      }
     });
 
     return newSection;
   } catch (error) {
     console.error('Error creating section:', error);
-    throw new Error('Internal Server Erroreee');
+    throw new Error('Internal Server Error');
   }
 };
 interface UpdateSectionInput {
@@ -97,14 +119,16 @@ interface UpdateSectionInput {
   teacherId: number;
   classroomId: number;
   active: boolean;
+  days: number[]; // Array de días a actualizar
 }
 export const updateSection = async (id: number, data: UpdateSectionInput, req: Request) => {
-  const { IH, FH, classId, teacherId, classroomId, active } = data;
+  const { IH, FH, classId, teacherId, classroomId, active, days } = data;
 
   try {
     // Verificar si la sección existe
     const section = await prisma.section.findUnique({
       where: { id },
+      include: { section_Day: true },
     });
 
     if (!section) {
@@ -121,7 +145,12 @@ export const updateSection = async (id: number, data: UpdateSectionInput, req: R
         teacherId,
         classroomId,
         active,
+        section_Day: {
+          deleteMany: {}, // Eliminar los días actuales
+          create: days.map(dayId => ({ dayId })), // Crear los nuevos días
+        },
       },
+      include: { section_Day: {select: {day: { select: {name :  true}}}} },
     });
 
     return updatedSection;
@@ -183,11 +212,15 @@ const getDepartmentIdByClassId = async (classId: number) => {
   return classData.departamentId;
 };
 export const getAllSections = async () => {
-  return await prisma.section.findMany();
+  return await prisma.section.findMany({
+    include: { section_Day : {select : {day : {select : {name : true}}}}, waitingList : true},
+  }
+  );
 };
 export const getSectionById = async (id: number) => {
   return await prisma.section.findUnique({
     where: { id },
+    include : { section_Day: { select : {day : {select : {name : true}}}}, waitingList: true}
   });
 };
 export const getSectionByDepartment = async (req: Request) => {
@@ -201,7 +234,8 @@ export const getSectionByDepartment = async (req: Request) => {
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
 
   const sections = await prisma.section.findMany({
-    where: { class: { departamentId: userdepartmentid } }
+    where: { class: { departamentId: userdepartmentid } },
+    include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
   });
 
   return { departmentname, sections };
@@ -220,6 +254,7 @@ export const sectionExists = async (id: number) => {
 export const getSectionsByTeacherId = async (teacherId: number) => {
   return await prisma.section.findMany({
     where: { teacherId },
+    include : { section_Day: {select : { day : {select : {name : true}}}}, waitingList: true}
   });
 };
 export const getTeachersByDepartment = async (req: Request) => {
