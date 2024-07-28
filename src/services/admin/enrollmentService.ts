@@ -1,8 +1,26 @@
 import { prisma } from "../../config/db";
+import { DateTime } from 'luxon';
+
+const validateDates = (startDate: Date, finalDate: Date) => {
+    
+    if (startDate >= finalDate) {
+      throw new Error('La fecha inicial debe ser menor que la fecha final.');
+    }
+  };
+
+  const isInRangeDate = (startDate: Date, finalDate: Date): boolean => {
+    const timeNow = DateTime.now().toUTC().toJSDate();
+    return timeNow >= startDate && timeNow <= finalDate;
+};
 
 export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date, processTypeId: number) => {
     try {
-      // Validar fechas
+        const isInrage = isInRangeDate(startDate, finalDate);
+        let activeValue = true;
+        if(!isInrage){
+            activeValue = false;
+        }
+        // Validar fechas
       if (!startDate || !finalDate || isNaN(new Date(startDate).getTime()) || isNaN(new Date(finalDate).getTime())) {
         throw new Error('Fechas no válidas.');
       }
@@ -10,7 +28,7 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
       // Validar que no haya procesos superpuestos activos para el mismo tipo de proceso
       const overlappingProcesses = await prisma.process.findMany({
         where: {
-          processTypeId: processTypeId,
+          processTypeId,
           active: true,
           OR: [
             {
@@ -38,7 +56,7 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
         data: {
           startDate,
           finalDate,
-          active: true,
+          active: activeValue,
           processTypeId,
         },
       });
@@ -49,7 +67,6 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
       throw new Error('Error al activar el proceso de matrícula.');
     }
   };
-
 
   export const generateDayEnroll = async (processId: number, days: { startDate: Date, finalDate: Date, globalAvarage: number }[]) => {
     try {
@@ -77,3 +94,5 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
       throw new Error('Error al generar los DayEnrolls');
     }
   };
+
+  

@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 import { startCronJobs } from './utils/auth/cronToken';
+import '../src/utils/jobs/desactiveProcess'
 
 import inscriptionRoutes from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
