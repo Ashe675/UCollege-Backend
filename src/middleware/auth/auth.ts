@@ -14,7 +14,8 @@ declare global {
                 person: {
                     firstName: Person['firstName'];
                     lastName: Person['lastName'];
-                }; 
+                };
+                avatar : string | null 
             }
         }
     }
@@ -32,9 +33,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         if (typeof decoded === 'object' && decoded.id) {
-            const user = await prisma.user.findUnique({ where: { id: decoded.id, verified : true }, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } } } })
+            const user = await prisma.user.findUnique({ where: { id: decoded.id, verified : true }, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
             if (user) {
-                req.user = user
+                const avatar = user.images.length ? user.images[0].url : null
+                const userWithAvatar = {...user, avatar }
+                req.user = userWithAvatar
                 next()
             } else {
                 return res.status(400).json({ error: 'Invalid Token' })
@@ -68,12 +71,14 @@ export const authenticateVerifiedLess = async (req: Request, res: Response, next
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         if (typeof decoded === 'object' && decoded.id) {
-            const user = await prisma.user.findUnique({ where: { id: decoded.id}, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } } } })
+            const user = await prisma.user.findUnique({ where: { id: decoded.id}, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
             if (user) {
                 if(user.verified){
                     return res.status(400).json({ error: 'No permitido' })
                 }
-                req.user = user
+                const avatar = user.images.length ? user.images[0].url : null
+                const userWithAvatar = {...user, avatar }
+                req.user = userWithAvatar
                 next()
             } else {
                 return res.status(400).json({ error: 'Invalid Token' })

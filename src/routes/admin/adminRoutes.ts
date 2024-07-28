@@ -16,9 +16,9 @@ import {
   updateTeacher,
   deleteTeacher,
   updateTeacherCenters
- } from '../../controllers/admin/teacherAdminController';
+} from '../../controllers/admin/teacherAdminController';
 
- import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
+import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
 import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterData } from '../../validators/admin/teacherValidator';
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../middleware/validateRegionalCenter';
@@ -51,7 +51,7 @@ form data -> para probar en postman
   "email": "jane.elizabeth@example.com",
   "roleId" : 4
   
-  "RegionalCenter_Faculty_Career_id": 1,
+  "regionalCenter": 1,
   "departamentId" : 1,
 
   "avata": file
@@ -63,8 +63,8 @@ router.post('/create-teacher',
   authorizeRole(['ADMIN']),
   upload.single('avatar'),
   validateTeacher,
-  isValidRegionalCenter,
   isValidDepartament,
+  isValidRegionalCenter,
   isDepartamentInRegionalCenter,
   createTeacher
 );
@@ -130,28 +130,28 @@ router.delete('/teacher-delete/:id',
 /**
  * Body de la peticion :
  * {
- *  regionalCenter_Faculty_Career_id: number
+ *  regionalCenterId: number
  *  departmentId: number
  *  roleId: number
  * }
  */
-router.put('/teachers/update-centers/:id', 
-            authenticate, 
-            authorizeRole(['ADMIN']), 
-            validateChangeRegionalCenterData,
-            isValidRegionalCenter,
-            isValidDepartament, 
-            isDepartamentInRegionalCenter,
-            updateTeacherCenters
-          );
+router.put('/teachers/update-centers/:teacherCode',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  validateChangeRegionalCenterData,
+  isValidDepartament,
+  isValidRegionalCenter,
+  isDepartamentInRegionalCenter,
+  updateTeacherCenters
+);
 
 
 // obtener todos los departamentos por Centro regional
-router.get('/center/department', 
-            authenticate, 
-            authorizeRole(['ADMIN']), 
-            getAllRegionalCentersWithDepartments
-          );
+router.get('/center/department',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  getAllRegionalCentersWithDepartments
+);
 
 
 router.get('/teacher/roles',

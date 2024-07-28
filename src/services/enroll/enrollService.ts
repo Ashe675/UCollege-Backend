@@ -72,6 +72,7 @@ export class EnrollService {
                 username = makeUserMethodSingle(randomParts);
             }
 
+            username.replace(/[ñÑ]/g, 'n')
 
             // Check if the username already exists
             const userExists = await prisma.user.findUnique({ where: { institutionalEmail: username + domain } });
@@ -81,7 +82,7 @@ export class EnrollService {
             }
         }
 
-        return username.toLowerCase() + domain;
+        return username.replace(/[ñÑ]/g, 'n').toLowerCase() + domain;
     }
 
 

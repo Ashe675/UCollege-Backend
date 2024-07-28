@@ -9,10 +9,11 @@ cloudinary.config({
 });
 
 
-export async function uploadImageAdmission(filePath : string, folder : string) {
+export async function uploadImageAdmission(filePath : string, folder : string, isSquare : boolean) {
     return await cloudinary.uploader.upload(filePath, {
         allowed_formats : ['png', 'webp', 'jpg'],
-        folder : folder
+        folder : folder,
+        transformation: isSquare ? [{ width: 600, height: 600, crop: 'fill' }] : []
     })
 }
 

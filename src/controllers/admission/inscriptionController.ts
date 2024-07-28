@@ -68,7 +68,7 @@ export default class InscriptionController {
       return res.status(400).send('El archivo subido tiene un formato de imagen válido.');
     }
 
-    const result = await uploadImageAdmission(req.file.path, 'aspirantes_certificados')
+    const result = await uploadImageAdmission(req.file.path, 'aspirantes_certificados', false)
     const photoCertificate = result.secure_url
     await deleteImage(req.file.path)
 
