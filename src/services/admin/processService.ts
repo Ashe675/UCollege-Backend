@@ -29,7 +29,7 @@ export const createProcess = async (data: ProcessData) => {
 
     // Si no se encuentra un proceso de inscripción activo, retornar un error
     if (!lastActiveInscriptionProcess) {
-      return { error: 'No se encontro ningún proceso de inscripción activo.' };
+      throw new Error('No se encontro ningún proceso de inscripción activo.')
     }
 
     // Verificar si ya existe un proceso de resultados asociado a este proceso de inscripción
@@ -42,7 +42,7 @@ export const createProcess = async (data: ProcessData) => {
 
     // Si ya existe un proceso de resultados asociado, retornar un error
     if (existingResultProcess) {
-      return { error: 'Ya hay un proceso de resultados asociado al ultimo proceso de inscripción' };
+      throw new Error('Ya hay un proceso de resultados asociado al ultimo proceso de inscripción')
     }
 
     // Asignar el id del proceso de inscripción encontrado al nuevo proceso de resultados
@@ -53,7 +53,9 @@ export const createProcess = async (data: ProcessData) => {
   // Crear el proceso
   const process = await prisma.process.create({
     data: {
-      ...restData,
+      startDate:  new Date(restData.startDate),
+      finalDate:  new Date(restData.finalDate),
+      processId: restData.processId,
       processTypeId,
       active: true,
     },
@@ -121,6 +123,9 @@ export const getAllProcesses = async () => {
             name: true
           }
         }
+      },
+      orderBy : {
+        id : 'desc'
       }
     }
   );

@@ -19,7 +19,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
       });
 
       if (!processType) {
-        return res.status(400).json({ error: `El tipo de proceso ${processType.name} no existe.` });
+        return res.status(400).json({ error: `El tipo de proceso ${processTypeId} no existe.` });
       }
 
       // Verificar si ya hay un proceso activo del mismo tipo
@@ -36,8 +36,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
 
       next();
     } catch (error) {
-      console.error('Error verificando proceso activo:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ error: error.message });
     }
   } 
 
@@ -90,8 +89,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
 
       next();
     } catch (error) {
-      console.error('Error verificando el estado del proceso:', error);
-      return res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ error: error.message });
     }
   } else {
     next();
