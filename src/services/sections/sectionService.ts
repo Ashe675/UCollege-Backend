@@ -106,7 +106,10 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
       }
     });
 
-    return newSection;
+    return {
+      message: 'Sección creada correctamente',
+      section: newSection
+    };
   } catch (error) {
     console.error('Error creating section:', error);
     throw new Error('Internal Server Error');
