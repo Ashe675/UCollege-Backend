@@ -4,7 +4,7 @@ import { DateTime } from 'luxon';
 
 // Definir el trabajo que se ejecutará cada minuto
 cron.schedule('* * * * *', async () => {
-  console.log('Ejecutando trabajo de verificación de fechas...');
+  //console.log('Ejecutando trabajo de verificación de fechas...');
 
   // Obtener la fecha y hora actual en UTC
   const now = DateTime.now().toUTC().toJSDate();
@@ -54,10 +54,10 @@ cron.schedule('* * * * *', async () => {
     // Ejecutar todas las actualizaciones en paralelo
     await Promise.all(activatePromises);
 
-    console.log('Procesos activados exitosamente.');
+    //console.log('Procesos activados exitosamente.');
     
 
-    console.log('Trabajo de verificación de fechas completado.');
+    //console.log('Trabajo de verificación de fechas completado.');
   } catch (error) {
     console.error('Error al ejecutar el trabajo de verificación de fechas:', error);
   }

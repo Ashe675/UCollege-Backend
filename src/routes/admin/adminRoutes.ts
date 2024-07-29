@@ -16,6 +16,8 @@ import { createTeacher,
   updateTeacherCenters
  } from '../../controllers/admin/teacherAdminController';
 
+ import {getAllDepartments} from '../../services/admin/getAllDepartent'
+
  import { activateEnrollment } from '../../controllers/admin/enrollmentController';
 
  import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
@@ -160,4 +162,8 @@ router.post('/activate-enrollment',
               activateEnrollmentValidator, 
                
               activateEnrollment);
+
+router.get('/getAllDataDepartment',
+            getAllDepartments,
+)
 export default router;
