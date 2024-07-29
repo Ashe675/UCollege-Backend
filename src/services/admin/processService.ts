@@ -52,8 +52,8 @@ export const createProcess = async (data: ProcessData) => {
   // Crear el proceso
   const process = await prisma.process.create({
     data: {
-      startDate:  new Date(restData.startDate),
-      finalDate:  new Date(restData.finalDate),
+      startDate: new Date(restData.startDate),
+      finalDate: new Date(restData.finalDate),
       processId: restData.processId,
       processTypeId,
       active: true,
@@ -98,8 +98,8 @@ export const getAllProcesses = async () => {
           }
         }
       },
-      orderBy : {
-        id : 'desc'
+      orderBy: {
+        id: 'desc'
       }
     }
   );
@@ -109,6 +109,9 @@ export const getAllActiveProcesses = async () => {
   return await prisma.process.findMany({
     where: {
       active: true,
+      finalDate: {
+        gte: new Date()
+      }
     },
     include:
     {
@@ -117,8 +120,9 @@ export const getAllActiveProcesses = async () => {
           name: true
         }
       }
+    }, orderBy: {
+      id: 'desc'
     }
-
   });
 };
 

@@ -27,6 +27,12 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
         where: {
           processTypeId: processTypeId,
           active: true,
+          startDate : {
+            lte : new Date()
+          },
+          finalDate : {
+            gte : new Date()
+          }
         },
       });
 
@@ -60,8 +66,8 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
         if (process.active) {
           return res.status(400).json({ error: 'Este proceso ya se encuentra activo.' });
         }
-        if (finalDate && new Date(finalDate) < new Date()) {
-          return res.status(400).json({ error: 'Este proceso no se puede activar porque su fecha final ya expiro.' });
+        if (process.finalDate < new Date()) {
+          return res.status(400).json({ error: 'Este proceso no se puede activar porque su fecha final ya expiró.' });
         }
       }
 
@@ -84,8 +90,6 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
           }
         }
       }
-
-     
 
       next();
     } catch (error) {
