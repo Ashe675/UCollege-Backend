@@ -49,6 +49,7 @@ export const createProcess = async (data: ProcessData) => {
     restData.processId = lastActiveInscriptionProcess.id;
   }
 
+
   // Crear el proceso
   const process = await prisma.process.create({
     data: {
@@ -59,6 +60,31 @@ export const createProcess = async (data: ProcessData) => {
       active: true,
     },
   });
+
+
+
+  if (processTypeId === 5) {
+    const currentYear = new Date().getFullYear();
+    const numerop = await prisma.academicPeriod.count({
+      where: {
+        process: {
+          startDate: {
+            gte: new Date(`${currentYear}-01-01T00:00:00Z`),
+            lt: new Date(`${currentYear + 1}-01-01T00:00:00Z`),
+          },
+        },
+      },
+    });
+    if (numerop >= 3) {
+      throw new Error("No se puede crear otro periodo academico");
+    }
+    await prisma.academicPeriod.create({
+      data: {
+        number: numerop + 1,
+        processId: process.id
+      }
+    });
+  }
 
   return process;
 };
