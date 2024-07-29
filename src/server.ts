@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 import { startCronJobs } from './utils/auth/cronToken';
+import '../src/utils/jobs/desactiveProcess'
 
 import inscriptionRoutes from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
@@ -18,7 +19,9 @@ import enrollRoutes from './routes/enroll/enrollRoutes'
 
 
 import authRoutes from './routes/auth/authRoutes';
-import adminRoutes from './routes/admin/adminRoutes'
+import adminRoutes from './routes/admin/adminRoutes';
+
+import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
 import { corsConfig } from './config/cors';
 
@@ -50,5 +53,7 @@ app.use('/api/enroll', enrollRoutes)
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
+
+app.use('/api/enroll-student', enrollStudentRoutes);
 
 export default app
