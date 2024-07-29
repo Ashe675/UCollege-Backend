@@ -289,10 +289,6 @@ export const getTeachersByDepartment = async (req: Request) => {
           active: true,
           institutionalEmail: true,
           verified: true,
-          avatar: true,
-          img1: true,
-          img2: true,
-          img3: true,
           description: true,
           roleId: true,
           person: {
