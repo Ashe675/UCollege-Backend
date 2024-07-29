@@ -3,7 +3,7 @@ import { prisma } from '../../config/db'; // Asegúrate de que la ruta sea corre
 import { DateTime } from 'luxon';
 
 // Definir el trabajo que se ejecutará cada minuto
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
   //console.log('Ejecutando trabajo de verificación de fechas...');
 
   // Obtener la fecha y hora actual en UTC

@@ -23,12 +23,21 @@ export const existSection = async (req: Request, res: Response, next: NextFuncti
 
 // Verifica si el estudiante existe
 export const existStudent = async (req: Request, res: Response, next: NextFunction) => {
-    const { studentId, sectionId } = req.body;
+  const  {id: userId} = req.user;  
+  const {sectionId } = req.body;
   
     try {
+      const user = await prisma.user.findUnique({
+        where:{
+          id: userId
+        }
+      })
+      let studentId = user.id ;
+      
       // Verificar si el estudiante existe
+
       const student = await prisma.student.findUnique({
-        where: { id: studentId }
+        where: { id: userId }
       });
   
       if (!student) {
@@ -77,9 +86,21 @@ export const existStudent = async (req: Request, res: Response, next: NextFuncti
 
 // Verifica si el estudiante ya está matriculado en la sección
 export const notAlreadyEnrolled = async (req: Request, res: Response, next: NextFunction) => {
-    const { studentId, sectionId } = req.body;
+  const  {id: userId} = req.user;  
+  const {sectionId } = req.body;
+
+  
   
     try {
+
+      const user = await prisma.user.findUnique({
+        where:{
+          id: userId
+        }
+      })
+
+      let studentId = user.id
+
       const enrollment = await prisma.enrollment.findUnique({
         where: {
           sectionId_studentId: {
@@ -135,17 +156,30 @@ export const validEnrollmentProcess = async (req: Request, res: Response, next: 
 
   // Función para validar el período de matrícula del estudiante por su calificacion
 export const validateStudentEnrollmentPeriod = async (req: Request, res: Response, next: NextFunction) => {
-    const { studentId } = req.body;
+    const  {id: userId} = req.user;
+
     const { sectionId } = req.body;
     //const { process } = req.body;
   
     try {
 
+      const student_user = await prisma.user.findUnique({
+        where: {
+            id: userId,        
+        },include:{
+          role: true
+        }
+        
+       });
+
+        if(!(student_user.role.name == "STUDENT")){
+          return res.status(400).json({ message: 'El rol del usuario no es de estudinate' });
+        }
         //return false
 
         const student = await prisma.student.findUnique({
             where:{
-                id: studentId
+                userId: student_user.id,
             }
         })
 
