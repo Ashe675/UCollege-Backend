@@ -5,6 +5,7 @@ import {
 } from '../../controllers/admin/processController'
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { createProcessValidator, processIdValidator, finalDateValidator } from '../../validators/admin/processValidator';
+import { activateEnrollmentValidator } from '../../validators/admin/enrollmentValidator';
 import { checkActiveProcess } from '../../middleware/admin/checkActiveProcess';
 import { RoleEnum } from '@prisma/client';
 import {
@@ -16,7 +17,11 @@ import {
   updateTeacher,
   deleteTeacher,
   updateTeacherCenters
-} from '../../controllers/admin/teacherAdminController';
+ } from '../../controllers/admin/teacherAdminController';
+
+ import {getAllDepartments} from '../../services/admin/getAllDepartent'
+
+ import { activateEnrollment } from '../../controllers/admin/enrollmentController';
 
 import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
@@ -160,4 +165,21 @@ router.get('/teacher/roles',
   getTeacherRolesController,
 )
 
+router.get('/teacher/roles',
+  authenticate,
+  authorizeRole([RoleEnum.ADMIN]),
+  getTeacherRolesController,
+)
+
+//
+router.post('/activate-enrollment', 
+              authenticate, 
+              authorizeRole(['ADMIN']),
+              activateEnrollmentValidator, 
+               
+              activateEnrollment);
+
+router.get('/getAllDataDepartment',
+            getAllDepartments,
+)
 export default router;
