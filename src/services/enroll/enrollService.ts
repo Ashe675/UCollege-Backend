@@ -72,6 +72,8 @@ export class EnrollService {
                 username = makeUserMethodSingle(randomParts);
             }
 
+            username.replace(/[ñÑ]/g, 'n')
+            username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
             // Check if the username already exists
             const userExists = await prisma.user.findUnique({ where: { institutionalEmail: username + domain } });
@@ -81,12 +83,15 @@ export class EnrollService {
             }
         }
 
-        return username.toLowerCase() + domain;
+        username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        return username.replace(/[ñÑ]/g, 'n').toLowerCase() + domain;
     }
 
 
     static async createUsersStudents(students: StudentData[]) {
         let index = 0;
+        let countIdentification = 0 
         const users: IEmail2[] = []
         await prisma.$transaction(async tx => {
             for (const student of students) {
@@ -184,8 +189,8 @@ export class EnrollService {
                     const middleName = student.segundo_nombre.toUpperCase() === 'NULL' ? null : student.segundo_nombre
                     const secondLastName = student.segundo_apellido.toUpperCase() === 'NULL' ? null : student.segundo_apellido
                     const userName = await EnrollService.generateUniqueUsername(student.primer_nombre, middleName, student.primer_apellido, secondLastName)
-                    const identificationCode = await generateIdentificationCodeStudent()
-
+                    const identificationCode = parseInt(await generateIdentificationCodeStudent()) + countIdentification
+                  
                     const passwordGenerate = await generatePasswordUser()
                     const passwordHashed = await hashPassword(passwordGenerate)
 
@@ -202,7 +207,7 @@ export class EnrollService {
 
                     userFound = await tx.user.create({
                         data: {
-                            identificationCode,
+                            identificationCode : identificationCode.toString(),
                             institutionalEmail: userName,
                             password: passwordHashed,
                             verified: false,
@@ -261,8 +266,6 @@ export class EnrollService {
                 } else {
                     career = principalCareerFound?.id ? principalCareerFound : secondaryCareerFound
                     regionalCenterFactultyCareer = regionalCenterFacultyPrincipalCareer?.id ? regionalCenterFacultyPrincipalCareer : regionalCenterFacultySecondaryCareer
-                    console.log(regionalCenterFactultyCareer)
-                    console.log(career)
 
                     await tx.regionalCenter_Faculty_Career_User.create({
                         data: {
@@ -277,7 +280,7 @@ export class EnrollService {
 
                     
                 }
-
+                countIdentification++;
             }
         }, {
             maxWait: 20000, // Aumenta el tiempo máximo de espera a 10 segundos

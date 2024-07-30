@@ -189,8 +189,8 @@ model ProcessType {
 
 model Process {
   id            Int           @id @default(autoincrement())
-  startDate     DateTime      @db.Date
-  finalDate     DateTime      @db.Date
+  startDate     DateTime      
+  finalDate     DateTime      
   active        Boolean       @default(true)
   processTypeId Int
   processId     Int?          

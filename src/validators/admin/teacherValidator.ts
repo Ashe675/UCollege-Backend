@@ -8,7 +8,7 @@ export const validateTeacher = [
     check('phoneNumber').isString().withMessage('Phone number is required'),
     check('email').isEmail().withMessage('Valid email is required'),
     check('roleId').isInt().withMessage('El id del rol debe ser un entero'),
-    check('RegionalCenter_Faculty_Career_id').isInt().withMessage('El id del centro regional faculta carrera debe ser entero'),
+    check('regionalCenterId').isInt().withMessage('El id del centro regional debe ser entero'),
     check('departamentId').isInt().withMessage("el id del departamento debe ser entero"),
     handleInputErrors,
 ];
@@ -26,9 +26,9 @@ export const validateTeacherUpdate = [
 
 
 export const validateChangeRegionalCenterData = [
-    check('RegionalCenter_Faculty_Career_id')
+    check('regionalCenterId')
         .isInt()
-        .withMessage('El id de carrera de la facultad del centro regional debe ser un entero positivo'),
+        .withMessage('El id del regional debe ser un entero positivo'),
 
     check('departamentId')
         .isInt()

@@ -1,14 +1,17 @@
 import { Router } from 'express';
-import { createProcessController, activateProcessController, deactivateProcessController, updateFinalDateController, getAllProcessesController,
-    getAllActiveProcessesController, getAllProcessTypeController} from '../../controllers/admin/processController'
+import {
+  createProcessController, activateProcessController, deactivateProcessController, updateFinalDateController, getAllProcessesController,
+  getAllActiveProcessesController, getAllProcessTypeController
+} from '../../controllers/admin/processController'
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { createProcessValidator, processIdValidator, finalDateValidator } from '../../validators/admin/processValidator';
 import { activateEnrollmentValidator } from '../../validators/admin/enrollmentValidator';
 import { checkActiveProcess } from '../../middleware/admin/checkActiveProcess';
 import { RoleEnum } from '@prisma/client';
-import { createTeacher, 
-  getTeachers, 
-  getTeacherById, 
+import {
+  createTeacher,
+  getTeachers,
+  getTeacherById,
   getTeacherByDni,
   getTeacherByIdentificationCode,
   updateTeacher,
@@ -20,22 +23,23 @@ import { createTeacher,
 
  import { activateEnrollment } from '../../controllers/admin/enrollmentController';
 
- import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
+import { getAllRegionalCentersWithDepartments } from '../../controllers/admin/departmentController';
 
 import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterData } from '../../validators/admin/teacherValidator';
-import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../validators/validateRegionalCenter';
-import upload from '../../middleware/admission/upload'; 
+import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../middleware/validateRegionalCenter';
+import upload from '../../middleware/admission/upload';
+import { getTeacherRolesController } from '../../controllers/teachers/getTeachers';
 
 
 const router = Router();
 
-router.post('/process',authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator,checkActiveProcess, createProcessController);
-router.put('/process/activate',authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator,checkActiveProcess, activateProcessController);
-router.put('/process/deactivate',authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator,checkActiveProcess, deactivateProcessController);
-router.put('/process/updateFinalDate',authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, checkActiveProcess, updateFinalDateController);
-router.get('/process/all',authenticate, authorizeRole([RoleEnum.ADMIN]), getAllProcessesController);
-router.get('/process/active',authenticate,authorizeRole([RoleEnum.ADMIN]), getAllActiveProcessesController);
-router.get('/processType/all',authenticate, authorizeRole([RoleEnum.ADMIN]), getAllProcessTypeController);
+router.post('/process', authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator, checkActiveProcess, createProcessController);
+router.put('/process/activate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, activateProcessController);
+router.put('/process/deactivate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, deactivateProcessController);
+router.put('/process/updateFinalDate', authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, checkActiveProcess, updateFinalDateController);
+router.get('/process/all', authenticate, authorizeRole([RoleEnum.ADMIN]), getAllProcessesController);
+router.get('/process/active', authenticate, authorizeRole([RoleEnum.ADMIN]), getAllActiveProcessesController);
+router.get('/processType/all', authenticate, authorizeRole([RoleEnum.ADMIN]), getAllProcessTypeController);
 
 
 /*
@@ -52,7 +56,7 @@ form data -> para probar en postman
   "email": "jane.elizabeth@example.com",
   "roleId" : 4
   
-  "RegionalCenter_Faculty_Career_id": 1,
+  "regionalCenter": 1,
   "departamentId" : 1,
 
   "avata": file
@@ -60,38 +64,38 @@ form data -> para probar en postman
 }
 */
 router.post('/create-teacher',
-  authenticate, 
-  authorizeRole(['ADMIN']) ,
+  authenticate,
+  authorizeRole(['ADMIN']),
   upload.single('avatar'),
-  validateTeacher,  
+  validateTeacher,
+  isValidDepartament,
   isValidRegionalCenter,
-  isValidDepartament, 
   isDepartamentInRegionalCenter,
   createTeacher
 );
 
 // Ruta para obtener todos los docentes
-router.get('/teachers', 
-  authenticate, 
+router.get('/teachers',
+  authenticate,
   authorizeRole(['ADMIN']),
   getTeachers
 );
 
 // Ruta para obtener un docente por ID
-router.get('/teacher-by-id/:id', 
-  authenticate, 
+router.get('/teacher-by-id/:id',
+  authenticate,
   authorizeRole(['ADMIN']),
   getTeacherById
 );
 
 router.get('/teacher-by-dni/:dni',
-  authenticate, 
+  authenticate,
   authorizeRole(['ADMIN']),
   getTeacherByDni
 )
 
 router.get('/teacher-by-code/:identificationCode',
-  authenticate, 
+  authenticate,
   authorizeRole(['ADMIN']),
   getTeacherByIdentificationCode
 )
@@ -112,47 +116,47 @@ router.get('/teacher-by-code/:identificationCode',
 }
 
  */
-router.put('/teacher-update/:identificationCode', 
-  authenticate, 
-  authorizeRole(['ADMIN']) ,
-  validateTeacherUpdate, 
-  
+router.put('/teacher-update/:identificationCode',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  validateTeacherUpdate,
+
   updateTeacher
-  );
-  
- 
+);
+
+
 // Ruta para eliminar un docente
-router.delete('/teacher-delete/:id', 
-authenticate, 
-authorizeRole(['ADMIN']),
-deleteTeacher
+router.delete('/teacher-delete/:id',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  deleteTeacher
 );
 
 /**
  * Body de la peticion :
  * {
- *  regionalCenter_Faculty_Career_id: number
+ *  regionalCenterId: number
  *  departmentId: number
  *  roleId: number
  * }
  */
-router.put('/teachers/update-centers/:id', 
-            authenticate, 
-            authorizeRole(['ADMIN']), 
-            validateChangeRegionalCenterData,
-            isValidRegionalCenter,
-            isValidDepartament, 
-            isDepartamentInRegionalCenter,
-            updateTeacherCenters
-          );
+router.put('/teachers/update-centers/:teacherCode',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  validateChangeRegionalCenterData,
+  isValidDepartament,
+  isValidRegionalCenter,
+  isDepartamentInRegionalCenter,
+  updateTeacherCenters
+);
 
 
 // obtener todos los departamentos por Centro regional
-router.get('/center/department', 
-            authenticate, 
-            authorizeRole(['ADMIN']), 
-            getAllRegionalCentersWithDepartments
-          );
+router.get('/center/department',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  getAllRegionalCentersWithDepartments
+);
 
 
 //
