@@ -98,3 +98,102 @@ const checkScheduleConflicts = async (studentId: number, IH: number, FH: number)
     return !(FH <= existingIH || IH >= existingFH);
   });
 };
+
+ export const getAvailableSectionsForStudent = async (studentId: number) => {
+  // Obtener la información del estudiante
+  const estu = await prisma.student.findFirst({
+    where: { id: studentId },
+    select: { userId: true }
+  });
+
+  const idusuario = estu.userId;
+
+  // Obtener la carrera y el centro regional del usuario
+  const usuario = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+    where: { userId: idusuario },
+    select: {
+      regionalCenter_Faculty_Career: {
+        select: {
+          careerId: true,
+          regionalCenter_Faculty: {
+            select: { regionalCenterId: true }
+          }
+        }
+      }
+    }
+  });
+
+  const carreraEstudiante = usuario.regionalCenter_Faculty_Career.careerId;
+  const centroEstudiante = usuario.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenterId;
+
+  // Obtener todas las clases que el estudiante ha aprobado
+  const approvedClasses = await prisma.enrollment.findMany({
+    where: {
+      studentId: studentId,
+      grade: { gte: 65 }
+    },
+    select: {
+      section: {
+        select: {
+          classId: true
+        }
+      }
+    }
+  });
+
+  const approvedClassIds = approvedClasses.map(enrollment => enrollment.section.classId);
+
+  // Obtener todas las secciones disponibles en ese centro y carrera
+  const allSections = await prisma.section.findMany({
+    where: {
+      classroom: {
+        building: {
+          regionalCenterId: centroEstudiante
+        }
+      },
+      class: {
+        studyPlan: {
+          some: {
+            studyPlan: { careerId: carreraEstudiante }
+          }
+        },
+        id: { notIn: approvedClassIds } // Excluir las clases ya aprobadas
+      }
+    },
+    include: {
+      class: {
+        include: {
+          studyPlan: {
+            select: {
+              prerequisiteClassId: true // Incluir los IDs de los requisitos previos
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Filtrar las secciones basadas en los requisitos previos
+  const availableSections: any[] = [];
+
+  for (const section of allSections) {
+    const studyPlanClasses = section.class.studyPlan;
+
+    let hasCompletedPrerequisites = true; // Asumimos que el estudiante cumple con los requisitos por defecto
+
+    for (const planClass of studyPlanClasses) {
+      if (planClass.prerequisiteClassId) {
+        if (!approvedClassIds.includes(planClass.prerequisiteClassId)) {
+          hasCompletedPrerequisites = false;
+          break; // Salir del loop si no cumple con un requisito
+        }
+      }
+    }
+
+    if (hasCompletedPrerequisites) {
+      availableSections.push(section);
+    }
+  }
+  
+  return availableSections;
+};
