@@ -159,6 +159,18 @@ router.get('/center/department',
 );
 
 
+router.get('/teacher/roles',
+  authenticate,
+  authorizeRole([RoleEnum.ADMIN]),
+  getTeacherRolesController,
+)
+
+router.get('/teacher/roles',
+  authenticate,
+  authorizeRole([RoleEnum.ADMIN]),
+  getTeacherRolesController,
+)
+
 //
 router.post('/activate-enrollment', 
               authenticate, 
@@ -170,12 +182,4 @@ router.post('/activate-enrollment',
 router.get('/getAllDataDepartment',
             getAllDepartments,
 )
-
-
-router.get('/teacher/roles',
-  authenticate,
-  authorizeRole([RoleEnum.ADMIN]),
-  getTeacherRolesController,
-)
-
 export default router;
