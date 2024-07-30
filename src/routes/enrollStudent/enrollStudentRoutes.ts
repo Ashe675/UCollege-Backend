@@ -45,8 +45,8 @@ router.delete('/enroll/:sectionId',
         removeEnrollment
         );
 
-router.post('/test01',
-        enrollStudent2,
-        )
+// router.post('/test01',
+//         enrollStudent2,
+//         )
 
 export default router;

@@ -68,8 +68,8 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       return 'time conflict';
     }
 
-    /**
-     * 
+    
+     
     await prisma.waitingList.upsert({
       where: { sectionId },
       update: {
@@ -90,13 +90,12 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
         },
       },
     });
-    */
+    
     
     return 'added to waiting list';
   }
 
-  /**
-   * 
+  
   // Matricular al estudiante en la sección
   await prisma.enrollment.create({
     data: {
@@ -104,7 +103,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       sectionId,
     },
   });
-  */
+  
 
   return 'success';
 };
