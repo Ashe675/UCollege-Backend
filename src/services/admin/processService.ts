@@ -14,8 +14,12 @@ export const createProcess = async (data: ProcessData) => {
   let { processTypeId, ...restData } = data;
   processTypeId = +processTypeId;
 
-  if(new Date(restData.startDate) < new Date){
+  if (new Date(restData.startDate) < new Date) {
     throw new Error('La fecha inicial debe de ser mayor o igual a la actual.')
+  }
+
+  if (restData.startDate === restData.finalDate) {
+    throw new Error('La fecha inicial debe de ser distinta a la fecha final.')
   }
 
   // Verificar si es un proceso de tipo "resultados" (id 2)
@@ -53,23 +57,11 @@ export const createProcess = async (data: ProcessData) => {
     restData.processId = lastActiveInscriptionProcess.id;
   }
 
-
-  // Crear el proceso
-  const process = await prisma.process.create({
-    data: {
-      startDate: new Date(restData.startDate),
-      finalDate: new Date(restData.finalDate),
-      processId: restData.processId,
-      processTypeId,
-      active: true,
-    },
-  });
-
-
+  let numerop = 0
 
   if (processTypeId === 5) {
     const currentYear = new Date().getFullYear();
-    const numerop = await prisma.academicPeriod.count({
+    numerop = await prisma.academicPeriod.count({
       where: {
         process: {
           startDate: {
@@ -82,13 +74,25 @@ export const createProcess = async (data: ProcessData) => {
     if (numerop >= 3) {
       throw new Error("No se puede crear otro periodo academico");
     }
-    await prisma.academicPeriod.create({
-      data: {
-        number: numerop + 1,
-        processId: process.id
-      }
-    });
   }
+
+  // Crear el proceso
+  const process = await prisma.process.create({
+    data: {
+      startDate: new Date(restData.startDate),
+      finalDate: new Date(restData.finalDate),
+      processId: restData.processId,
+      processTypeId,
+      active: true,
+    },
+  });
+
+  await prisma.academicPeriod.create({
+    data: {
+      number: numerop + 1,
+      processId: process.id
+    }
+  });
 
   return process;
 };
