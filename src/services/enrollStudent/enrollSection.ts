@@ -15,31 +15,47 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
     where: { id: sectionId },
     include: {
       enrollments: true,
-      class: { // Asumiendo que la sección tiene una relación con la clase
-        include: {
-          prerequisiteClasses:true
-        },
-      },
+      class: true
     },
   });
 
+  
+
+  
   if (!section) {
     throw new Error('Section not found');
   }
-
+  
   // Verificar si el estudiante ha aprobado los requisitos de la clase
-  const prerequisites = section.class.prerequisiteClasses;
+  const prerequisites = await prisma.studyPlan_Class.findMany({
+    where: {classId: section.class.id}
+  });
+  
   if (prerequisites.length > 0) {
-    const completedClasses = await prisma.enrollment.findMany({
-      where: {
-        studentId: studentId,
-        sectionId: { in: prerequisites.map(req => req.prerequisiteClassId) }, // Corregir aquí para usar la propiedad correcta
-        grade: { gte: 65 }, // Verificar que la nota sea mayor o igual a 65 // Verificar que el promedio global sea mayor o igual a 65
-      },
-    });
+    
+    const prerequisiteClassIds = prerequisites
+    .map(req => req.prerequisiteClassId)
+    .filter(id => id !== null && id !== undefined); // Filtrar valores nulos o indefinidos
+    
+    console.log(prerequisiteClassIds)
+    if (prerequisiteClassIds.length > 0) {
+      // Verificar las clases completadas por el estudiante
+      const completedClasses = await prisma.enrollment.findMany({
+        where: {
+          studentId: studentId,
+          sectionId: { in: prerequisiteClassIds },
+          grade: { gte: 65 }
+        },
+      });
 
-    if (completedClasses.length < prerequisites.length) {
-      return  'prerequisites not met';
+      console.log(completedClasses);
+
+      if (completedClasses.length < prerequisiteClassIds.length) {
+        return 'prerequisites not met';
+      }
+    } else {
+      // Si no hay requisitos previos válidos
+      return 'prerequisites not found';
     }
   }
 
@@ -52,6 +68,8 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       return 'time conflict';
     }
 
+    /**
+     * 
     await prisma.waitingList.upsert({
       where: { sectionId },
       update: {
@@ -72,10 +90,13 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
         },
       },
     });
-
+    */
+    
     return 'added to waiting list';
   }
 
+  /**
+   * 
   // Matricular al estudiante en la sección
   await prisma.enrollment.create({
     data: {
@@ -83,6 +104,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       sectionId,
     },
   });
+  */
 
   return 'success';
 };

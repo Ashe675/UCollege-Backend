@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { enrollStudent } from '../../controllers/enrollStudent/enrollStudentController';
+import { enrollStudent, enrollStudent2 } from '../../controllers/enrollStudent/enrollStudentController';
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
@@ -44,4 +44,9 @@ router.delete('/enroll/:sectionId',
         existStudent,
         removeEnrollment
         );
+
+router.post('/test01',
+        enrollStudent2,
+        )
+
 export default router;
