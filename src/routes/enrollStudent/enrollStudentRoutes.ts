@@ -35,7 +35,7 @@ router.post('/enroll',
         enrollStudentValidatorData,
         enrollStudent);
 
-router.delete('/enroll/:sectionId',
+router.delete('br:sectionId',
         authenticate,
         authorizeRole(['STUDENT']),
         validEnrollmentProcess,
