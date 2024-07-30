@@ -143,6 +143,8 @@ export class CSVService {
 
             if (!dniValid || !primerNombreValid || !segundoNombreValid || !primerApellidoValid || !segundoApellidoValid || !correoElectronicoValid || !phoneNumberValid || !carreraPrincipalValid || !carreraSecundariaValid || !centroRegionalValid) {
                 errors.push(`Datos inválidos en la fila: ${count}`);
+                
+                
                 return;
             }
 
