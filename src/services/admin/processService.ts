@@ -14,6 +14,10 @@ export const createProcess = async (data: ProcessData) => {
   let { processTypeId, ...restData } = data;
   processTypeId = +processTypeId;
 
+  if(new Date(restData.startDate) < new Date){
+    throw new Error('La fecha inicial debe de ser mayor o igual a la actual.')
+  }
+
   // Verificar si es un proceso de tipo "resultados" (id 2)
   if (processTypeId === 2) {
     // Buscar el último proceso de tipo "inscripción" (id 1) que esté activo

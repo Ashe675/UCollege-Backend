@@ -6,6 +6,8 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
   let { processTypeId, id, finalDate } = req.body;
   processTypeId= +processTypeId;
 
+  if(processTypeId === 3) return res.status(400).json({ error: 'Proceso matricula no es válido para la operación que se desea realizar' });
+
   // Verificación para creación de procesos (POST)
   if (req.method === 'POST') {
     if (!processTypeId) {
