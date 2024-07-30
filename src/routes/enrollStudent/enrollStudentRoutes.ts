@@ -31,11 +31,11 @@ router.post('/enroll',
         validEnrollmentProcess, 
         existSection,
         existStudent,
-        notAlreadyEnrolled,
+        //notAlreadyEnrolled,
         enrollStudentValidatorData,
         enrollStudent);
 
-router.delete('br:sectionId',
+router.delete('/enroll-delete/:sectionId',
         authenticate,
         authorizeRole(['STUDENT']),
         validEnrollmentProcess,

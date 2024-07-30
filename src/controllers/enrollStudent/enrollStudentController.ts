@@ -31,6 +31,8 @@ export const enrollStudent = async (req: Request, res: Response) => {
 
     if (result === 'already enrolled') {
       return res.status(400).json({ message: 'El estudiante ya está matriculado en esta sección.' });
+    }if (result === 'success'){
+      return res.status(200).json({ message: 'El estudiante está matriculado en esta sección existosamente.' });
     }
   } catch (error) {
     console.error('Error al matricular al estudiante:', error);

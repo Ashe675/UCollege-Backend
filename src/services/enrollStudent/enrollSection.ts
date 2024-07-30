@@ -33,11 +33,12 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
   
   if (prerequisites.length > 0) {
     
+    
     const prerequisiteClassIds = prerequisites
     .map(req => req.prerequisiteClassId)
     .filter(id => id !== null && id !== undefined); // Filtrar valores nulos o indefinidos
     
-    console.log(prerequisiteClassIds)
+    
     if (prerequisiteClassIds.length > 0) {
       // Verificar las clases completadas por el estudiante
       const completedClasses = await prisma.enrollment.findMany({
@@ -47,29 +48,30 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
           grade: { gte: 65 }
         },
       });
-
-      console.log(completedClasses);
-
+      
+      
+      //
+      
       if (completedClasses.length < prerequisiteClassIds.length) {
         return 'prerequisites not met';
       }
-    } else {
-      // Si no hay requisitos previos válidos
-      return 'prerequisites not found';
-    }
+    } 
   }
-
+  
+  
+  
   // Verificar si hay cupos disponibles
   if (section.enrollments.length >= section.capacity) {
     // Verificar conflictos de horarios con otras secciones
     const conflicts = await checkScheduleConflicts(studentId, section.IH, section.FH);
 
+    
     if (conflicts.length > 0) {
       return 'time conflict';
     }
 
     
-     
+    
     await prisma.waitingList.upsert({
       where: { sectionId },
       update: {
@@ -96,6 +98,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
   }
 
   
+  
   // Matricular al estudiante en la sección
   await prisma.enrollment.create({
     data: {
@@ -103,19 +106,23 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       sectionId,
     },
   });
+
+  
   
 
   return 'success';
 };
 
 const checkScheduleConflicts = async (studentId: number, IH: number, FH: number) => {
+  
   const enrollments = await prisma.enrollment.findMany({
     where: { studentId },
     include: { section: true },
   });
-
+  
   return enrollments.filter(enrollment => {
     const { IH: existingIH, FH: existingFH } = enrollment.section;
+    
     return !(FH <= existingIH || IH >= existingFH);
   });
 };

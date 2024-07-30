@@ -17,7 +17,7 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         });
 
         if (!existingEnrollment) {
-            return res.status(404).json({ error: 'Enrollment not found' });
+            return res.status(404).json({ error: 'Matricula no funaciono' });
         }
 
         // Eliminar la matrícula
@@ -27,9 +27,9 @@ export const removeEnrollment = async (req: Request, res: Response) => {
             },
         });
 
-        return res.status(200).json({ message: 'Enrollment removed successfully' });
+        return res.status(200).json({ message: `Estudiante Elimino clase exitosamente en la seccion con id ${sectionId}` });
     } catch (error) {
-        console.error('Error removing enrollment:', error);
+        console.error('Error Al eliminar seccion:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
