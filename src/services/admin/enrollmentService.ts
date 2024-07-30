@@ -29,8 +29,10 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
     const overlappingProcesses = await prisma.process.findMany({
       where: {
         processTypeId,
-        active: true,
         OR: [
+          {
+            active: true
+          },
           {
             startDate: { lte: new Date(finalDate) },
             finalDate: { gte: new Date(startDate) }

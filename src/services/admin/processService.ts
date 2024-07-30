@@ -83,6 +83,33 @@ export const createProcess = async (data: ProcessData) => {
     }
   }
 
+
+  // Validar que no haya procesos superpuestos activos para el mismo tipo de proceso
+  const overlappingProcesses = await prisma.process.findMany({
+    where: {
+      processTypeId,
+      OR: [
+        { active: true },
+        {
+          startDate: { lte: new Date(restData.finalDate) },
+          finalDate: { gte: new Date(restData.startDate) }
+        },
+        {
+          startDate: { gte: new Date(restData.startDate) },
+          finalDate: { lte: new Date(restData.finalDate) }
+        },
+        {
+          startDate: { lte: new Date(restData.finalDate) },
+          finalDate: { gte: new Date(restData.finalDate) }
+        }
+      ]
+    }
+  });
+
+  if (overlappingProcesses.length > 0) {
+    throw new Error('Se encontraron procesos superpuestos.');
+  }
+
   // Crear el proceso
   const process = await prisma.process.create({
     data: {
