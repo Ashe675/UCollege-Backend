@@ -1,5 +1,6 @@
 // src/services/admin/processService.ts
 import { prisma } from "../../config/db"
+import { isInRangeDate } from "./enrollmentService";
 
 
 type ProcessData = {
@@ -49,14 +50,20 @@ export const createProcess = async (data: ProcessData) => {
     restData.processId = lastActiveInscriptionProcess.id;
   }
 
+  const isInrage = isInRangeDate(restData.startDate, restData.finalDate);
+  let activeValue = true;
+  if (!isInrage) {
+    activeValue = false;
+  }
+
   // Crear el proceso
   const process = await prisma.process.create({
     data: {
-      startDate:  new Date(restData.startDate),
-      finalDate:  new Date(restData.finalDate),
+      startDate: new Date(restData.startDate),
+      finalDate: new Date(restData.finalDate),
       processId: restData.processId,
       processTypeId,
-      active: true,
+      active: activeValue,
     },
   });
 
@@ -98,8 +105,8 @@ export const getAllProcesses = async () => {
           }
         }
       },
-      orderBy : {
-        id : 'desc'
+      orderBy: {
+        id: 'desc'
       }
     }
   );
