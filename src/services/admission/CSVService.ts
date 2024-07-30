@@ -96,7 +96,7 @@ export class CSVService {
 
         // Expresiones regulares para validación
         const dniRegex = /^[0-9-\s]+$/
-        const nombreRegex = /^[a-zA-Z]+$/
+        const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+$/
         const correoElectronicoRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
         const phoneNumberRegex = /^([0-9]{8})|([0-9]{4}(\-|\s)[0-9]{4})$/
         const carreraPrincipalRegex = /^[a-zA-Z]+$/
@@ -143,6 +143,8 @@ export class CSVService {
 
             if (!dniValid || !primerNombreValid || !segundoNombreValid || !primerApellidoValid || !segundoApellidoValid || !correoElectronicoValid || !phoneNumberValid || !carreraPrincipalValid || !carreraSecundariaValid || !centroRegionalValid) {
                 errors.push(`Datos inválidos en la fila: ${count}`);
+                
+                
                 return;
             }
 

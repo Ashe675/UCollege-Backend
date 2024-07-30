@@ -6,7 +6,7 @@ import connectDB from './config/db';
 import { startCronJobs } from './utils/auth/cronToken';
 import '../src/utils/jobs/desactiveProcess'
 
-import inscriptionRoutes from './routes/admission/inscriptionRoutes';
+import inscriptionRoutes  from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
 
 import resultRoutes from './routes/admission/resultRoutes';
@@ -17,6 +17,8 @@ import inscriptionsByDni from './routes/admission/inscriptionRoutes';
 import teacherRoutes from './routes/teachers/teachersRoutes';
 import enrollRoutes from './routes/enroll/enrollRoutes'
 
+import processRoutes from './routes/admin/adminRoutes';
+import sectionRoutes from './routes/sections/sectionRoutes';
 
 import authRoutes from './routes/auth/authRoutes';
 import adminRoutes from './routes/admin/adminRoutes';
@@ -49,7 +51,8 @@ app.use('/api', inscriptionsByDni);
 app.use('/api/upload',uploadRouter)
 app.use('/api/inscriptions', inscriptionRoutes);
 app.use('/api/teacher', teacherRoutes);
-app.use('/api/enroll', enrollRoutes)
+app.use('/api/enroll', enrollRoutes);
+app.use('/api/section', sectionRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);

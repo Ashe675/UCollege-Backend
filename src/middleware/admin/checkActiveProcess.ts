@@ -4,7 +4,9 @@ import { prisma } from '../../config/db';
 
 export const checkActiveProcess = async (req: Request, res: Response, next: NextFunction) => {
   let { processTypeId, id, finalDate } = req.body;
-  processTypeId= +processTypeId;
+  processTypeId = +processTypeId;
+
+  if (processTypeId === 3) return res.status(400).json({ error: 'Proceso matricula no es válido para la operación que se desea realizar' });
 
   // Verificación para creación de procesos (POST)
   if (req.method === 'POST') {
@@ -26,7 +28,19 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
       const activeProcess = await prisma.process.findFirst({
         where: {
           processTypeId: processTypeId,
-          active: true,
+          OR: [
+            {
+              active: true
+            },
+            {
+              startDate: {
+                lte: new Date()
+              },
+              finalDate: {
+                gte: new Date()
+              }
+            }
+          ]
         },
       });
 
@@ -38,7 +52,7 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
-  } 
+  }
 
   // Verificación para activar/desactivar procesos (PUT)
   else if (req.method === 'PUT') {
@@ -60,8 +74,8 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
         if (process.active) {
           return res.status(400).json({ error: 'Este proceso ya se encuentra activo.' });
         }
-        if (finalDate && new Date(finalDate) < new Date()) {
-          return res.status(400).json({ error: 'Este proceso no se puede activar porque su fecha final ya expiro.' });
+        if (process.finalDate < new Date()) {
+          return res.status(400).json({ error: 'Este proceso no se puede activar porque su fecha final ya expiró.' });
         }
       }
 
@@ -71,12 +85,12 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
           return res.status(400).json({ error: 'Este proceso ya se encuentra desactivado.' });
         }
       }
-       // Verificación para actualizar la fecha final
-       if (req.originalUrl.includes('/updateFinalDate')) {
-        
+      // Verificación para actualizar la fecha final
+      if (req.originalUrl.includes('/updateFinalDate')) {
+
         if (finalDate) {
           const finalDateParsed = new Date(finalDate);
-          if (finalDateParsed < process.startDate ) {
+          if (finalDateParsed < process.startDate) {
             return res.status(400).json({ error: 'La fecha final no puede ser anterior a la fecha de inicio' });
           }
           if (!process.active) {
@@ -84,8 +98,6 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
           }
         }
       }
-
-     
 
       next();
     } catch (error) {

@@ -32,11 +32,10 @@ export class EnrollController {
         }
 
         const csvText = req.files[0].buffer.toString('utf8')
-        console.log(csvText)
 
         try {
             const {results, errors} =  await CSVService.processCSVAdmitteds(csvText)
-
+            console.log(errors)
             if (errors.length > 0) {
                 throw new Error(errors[0])
             }

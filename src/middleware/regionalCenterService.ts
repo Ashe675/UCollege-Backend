@@ -26,54 +26,28 @@ export const getAllRegionalCentersWithDepartments = async () => {
     })
     */
 
-    // let departaments = await prisma.regionalCenter.findMany({
-    //     include:{
-    //         regionalCenter_Faculties:{
-    //             include:{
-    //                 regionalCenter_Faculty_Careers:{
-    //                     include:{
-    //                         departments:{
-    //                             include:{
-    //                                 Departament:true
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // })
-
-    // //return transformData(departaments);
-    // //return organizeRegionalCentersWithDepartments(departaments)
-    // return transformData2(departaments);
-
-    const regionalCentersFacultyCareers = await prisma.regionalCenter_Faculty_Career.findMany({
-        select : {
-            id : true,
-            regionalCenter_Faculty : {
-                select : {
-                    regionalCenter : {
-                        select : {
-                            name : true
-                        }
-                    }
-                }
-            },
-            departments : {
-                select : {
-                    Departament : {
-                        select : {
-                            id : true,
-                            name : true
+    let departaments = await prisma.regionalCenter.findMany({
+        include:{
+            regionalCenter_Faculties:{
+                include:{
+                    regionalCenter_Faculty_Careers:{
+                        include:{
+                            departments:{
+                                include:{
+                                    Departament:true
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     })
+
+    //return transformData(departaments);
+    //return organizeRegionalCentersWithDepartments(departaments)
+    return transformData2(departaments);
     
-    return regionalCentersFacultyCareers
 };
 
 function transformData2(data) {
