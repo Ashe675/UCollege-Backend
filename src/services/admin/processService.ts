@@ -81,6 +81,7 @@ export const createProcess = async (data: ProcessData) => {
     if (numerop >= 3) {
       throw new Error("No se puede crear otro periodo academico");
     }
+<<<<<<< HEAD
   }
 
 
@@ -108,6 +109,8 @@ export const createProcess = async (data: ProcessData) => {
 
   if (overlappingProcesses.length > 0) {
     throw new Error('Se encontraron procesos superpuestos.');
+=======
+>>>>>>> cesar_backend
   }
 
   // Crear el proceso

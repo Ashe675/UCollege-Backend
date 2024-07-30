@@ -21,7 +21,7 @@ router.post('/student/upload-admitteds',
     authenticate, 
     authorizeRole([RoleEnum.ADMIN]),
     upload.array('estudiantes_admitidos'),
-    checkActiveProcessByTypeIdMiddleware(2),
+    checkActiveProcessByTypeIdMiddleware(1),
     EnrollController.readCSVStudentsAdmitteds )
 
 export default router
