@@ -50,7 +50,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       });
       
       
-      //
+      
       
       if (completedClasses.length < prerequisiteClassIds.length) {
         return 'prerequisites not met';

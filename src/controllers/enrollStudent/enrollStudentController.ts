@@ -6,6 +6,8 @@ export const enrollStudent = async (req: Request, res: Response) => {
   const {sectionId } = req.body;
   const {id:userId} = req.user;
 
+
+
   
 
   if (!sectionId) {
@@ -13,6 +15,7 @@ export const enrollStudent = async (req: Request, res: Response) => {
   }
 
   try {
+
     const studentId = (await prisma.student.findUnique({where: {userId: userId}})).id;
 
     const result = await enrollInSection(studentId, sectionId);

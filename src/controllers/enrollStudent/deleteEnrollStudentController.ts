@@ -3,8 +3,9 @@ import { prisma } from '../../config/db';
 
 // Controlador para eliminar una matrícula
 export const removeEnrollment = async (req: Request, res: Response) => {
-    const { sectionId } = req.params;
+    let sectionId = parseInt(req.params.sectionId);
     const { id: userId } = req.user;
+    
 
     try {
 
@@ -12,7 +13,7 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         // Verificar si el estudiante está matriculado en la sección
         const existingEnrollment = await prisma.enrollment.findUnique({
             where: {
-                sectionId_studentId: { studentId, sectionId: parseInt(sectionId) },
+                sectionId_studentId: { studentId, sectionId: sectionId },
             },
         });
 
@@ -21,11 +22,22 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         }
 
         // Eliminar la matrícula
-        await prisma.enrollment.delete({
-            where: {
-                sectionId_studentId: { studentId, sectionId: parseInt(sectionId) },
-            },
-        });
+        await prisma.$transaction(async (prisma) => {
+            // Eliminar registros relacionados en waitingList
+            await prisma.waitingList.deleteMany({
+              where: {
+                id: studentId,
+                sectionId: sectionId,
+              },
+            });
+        
+            // Eliminar el registro en enrollment
+            await prisma.enrollment.delete({
+              where: {
+                sectionId_studentId: { studentId, sectionId },
+              },
+            });
+          });
 
         return res.status(200).json({ message: `Estudiante Elimino clase exitosamente en la seccion con id ${sectionId}` });
     } catch (error) {
