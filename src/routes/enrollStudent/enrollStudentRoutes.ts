@@ -1,6 +1,8 @@
 import express from 'express';
 
 import { enrollStudent } from '../../controllers/enrollStudent/enrollStudentController';
+import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
+
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
 import {existSection, 
         existStudent, 
@@ -9,19 +11,22 @@ import {existSection,
         validateStudentEnrollmentPeriod
 } from '../../middleware/enrollStudent/existEntity'
 
+import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+
 const router = express.Router();
 
 /**
  * De la tabal Student el id del estudiante
  * De el id de la tabla section
   {
-  "studentId": 5,
   "sectionId": 4
    }
  * 
  */
 
 router.post('/enroll',
+        authenticate, 
+        authorizeRole(['STUDENT']), 
         validateStudentEnrollmentPeriod,
         validEnrollmentProcess, 
         existSection,
@@ -30,4 +35,13 @@ router.post('/enroll',
         enrollStudentValidatorData,
         enrollStudent);
 
+router.delete('/enroll/:sectionId',
+        authenticate,
+        authorizeRole(['STUDENT']),
+        validEnrollmentProcess,
+        validateStudentEnrollmentPeriod,
+        existSection,
+        existStudent,
+        removeEnrollment
+        );
 export default router;
