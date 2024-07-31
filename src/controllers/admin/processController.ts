@@ -24,7 +24,12 @@ export const activateProcessController = async (req: Request, res: Response) => 
   }
 
   try {
-    await activateProcess(id);
+    const processes = await activateProcess(id);
+
+    if (processes.count <= 0) {
+      return res.status(400).json({ error: 'No se puede activar este proceso ya que no cumple con las fechas permitidas.' });
+    }
+
     return res.status(200).send("¡PROCESO ACTIVADO CORRECTAMENTE!");
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -38,7 +43,11 @@ export const deactivateProcessController = async (req: Request, res: Response) =
   }
 
   try {
-    await deactivateProcess(id);
+    const processes = await deactivateProcess(id);
+    if (processes.count <= 0) {
+      return res.status(400).json({ error: 'No se puede desactivar este proceso ya que no cumple con las fechas permitidas.' });
+    }
+
     return res.status(200).send("¡PROCESO DESACTIVADO CORRECTAMENTE!");
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -69,7 +78,7 @@ export const getAllProcessesController = async (req: Request, res: Response) => 
     const processes = await getAllProcesses();
     res.status(200).json(processes);
   } catch (error) {
-    res.status(500).json({error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -83,11 +92,11 @@ export const getAllActiveProcessesController = async (req: Request, res: Respons
 };
 
 export const getAllProcessTypeController = async (req: Request, res: Response) => {
-  try{
+  try {
     const typeprocess = await getAllProcessType();
     res.status(200).json(typeprocess);
   } catch (error) {
-    res.status(500).json({error: error.message});
+    res.status(500).json({ error: error.message });
   }
 }
 

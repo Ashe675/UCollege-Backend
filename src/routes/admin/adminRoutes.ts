@@ -29,11 +29,13 @@ import { validateTeacher, validateTeacherUpdate, validateChangeRegionalCenterDat
 import { isValidDepartament, isValidRegionalCenter, isDepartamentInRegionalCenter } from '../../middleware/validateRegionalCenter';
 import upload from '../../middleware/admission/upload';
 import { getTeacherRolesController } from '../../controllers/teachers/getTeachers';
+import { checkDaysComplete, isActiveProcessByProcessTypeIdGeneric } from '../../middleware/enroll/enrollMiddlewares';
+import { checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkActiveProcessGeneric';
 
 
 const router = Router();
 
-router.post('/process', authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator, checkActiveProcess, createProcessController);
+router.post('/process', authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator, checkActiveProcess,isActiveProcessByProcessTypeIdGeneric ,createProcessController);
 router.put('/process/activate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, activateProcessController);
 router.put('/process/deactivate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, deactivateProcessController);
 router.put('/process/updateFinalDate', authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, checkActiveProcess, updateFinalDateController);
@@ -172,11 +174,13 @@ router.get('/teacher/roles',
 )
 
 //
-router.post('/activate-enrollment', 
+router.post('/enroll/activate', 
               authenticate, 
               authorizeRole(['ADMIN']),
-              activateEnrollmentValidator, 
-               
+              activateEnrollmentValidator,
+              checkActiveProcessByTypeIdMiddleware(5),
+              isActiveProcessByProcessTypeIdGeneric, 
+              checkDaysComplete,
               activateEnrollment);
 
 router.get('/getAllDataDepartment',
