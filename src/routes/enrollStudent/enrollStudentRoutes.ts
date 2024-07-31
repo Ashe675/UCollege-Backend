@@ -31,7 +31,7 @@ router.post('/enroll',
         validEnrollmentProcess, 
         existSection,
         existStudent,
-        //notAlreadyEnrolled,
+        notAlreadyEnrolled,
         enrollStudentValidatorData,
         enrollStudent);
 

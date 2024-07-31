@@ -111,7 +111,8 @@ export const notAlreadyEnrolled = async (req: Request, res: Response, next: Next
         }
       })
 
-      let studentId = user.id
+      let studentId = (await prisma.student.findUnique({where:{userId: user.id}})).id
+
 
       const enrollment = await prisma.enrollment.findUnique({
         where: {
