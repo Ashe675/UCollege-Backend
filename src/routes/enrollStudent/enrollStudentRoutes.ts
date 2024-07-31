@@ -38,6 +38,7 @@ router.post('/enroll',
 router.delete('/enroll-delete/:sectionId',
         authenticate,
         authorizeRole(['STUDENT']),
+        
         validEnrollmentProcess,
         validateStudentEnrollmentPeriod,
         existSection,
