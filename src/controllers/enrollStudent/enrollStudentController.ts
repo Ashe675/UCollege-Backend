@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { enrollInSection } from '../../services/enrollStudent/enrollSection';
+import { enrollInSection, getAvailableSectionsForStudent, getEnrolledClassesForStudent } from '../../services/enrollStudent/enrollSection';
 import { prisma } from '../../config/db';
 
 export const enrollStudent = async (req: Request, res: Response) => {
@@ -75,3 +75,60 @@ export const enrollStudent2 = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Error interno del servidor.' });
   }
 };
+
+export const getAvailableSectionsController = async (req: Request, res: Response) => {
+  const userId = req.user.id;
+  const student = await prisma.student.findUnique({
+    where: { userId : userId},
+    select: {id : true}
+  })
+  if (!student) {
+    return res.status(400).json({ error: 'Este usuario no es un estudiante'})
+    
+  }
+  const studentId = student.id;
+  
+  if (isNaN(studentId)) {
+    return res.status(400).json({ error: 'Invalid student ID' });
+  }
+
+  try {
+    const sections = await getAvailableSectionsForStudent(studentId);
+    if (sections.length<=0) {
+      return res.status(400).json( { error: 'No tienes ninguna sección disponible'})
+      
+    }
+    return res.status(200).json(sections);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const getEnrolledClassesForStudentController = async (req: Request, res: Response) => {
+  const userId = req.user.id;
+  const student = await prisma.student.findUnique({
+    where: { userId : userId},
+    select: {id : true}
+  })
+  if (!student) {
+    return res.status(400).json({ error: 'Este usuario no es un estudiante'})
+    
+  }
+  const studentId = student.id;
+  
+  if (isNaN(studentId)) {
+    return res.status(400).json({ error: 'Invalid student ID' });
+  }
+
+  try {
+    const sections = await getEnrolledClassesForStudent(studentId);
+    if (sections.length<=0) {
+      return res.status(400).json( { error: 'No tienes ninguna sección disponible'})
+      
+    }
+    return res.status(200).json(sections);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+

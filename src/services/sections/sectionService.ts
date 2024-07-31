@@ -243,6 +243,40 @@ export const getSectionByDepartment = async (req: Request) => {
 
   return { departmentname, sections };
 };
+
+export const getSectionByDepartmentActual = async (req: Request) => {
+  const userid = req.user?.id;
+  const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+    where: { teacherId: userid },
+    select: { regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } } }
+  });
+
+  const periodoActual = await prisma.academicPeriod.findFirst({
+    where: {
+      process: {
+        active: true,
+        startDate: { lte: new Date() },
+        finalDate: { gte: new Date() }
+      }
+    }
+  });
+
+  if (!periodoActual) {
+    throw new Error('No hay un periodo acadmico activo todavia');
+  }
+
+  const idPeriodo =  periodoActual.id;
+  const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
+  const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
+
+  const sections = await prisma.section.findMany({
+    where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo },
+    include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
+  });
+
+  return { departmentname, sections };
+};
+
 export const deleteSection = async (id: number) => {
   return await prisma.section.delete({
     where: { id },

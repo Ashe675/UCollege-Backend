@@ -14,14 +14,15 @@ import {
   getUserData,
   getSectionByDepartmentController,
   updateSectionCapacityController,
-  getTeachersByDepartmentController
+  getTeachersByDepartmentController,
+  getTeachersByDepartmentAcademicPeriodController
 } from '../../controllers/sections/sectionController';
 import { 
   validateSectionId, 
   createSectionValidators, 
   checkSectionExists, 
   checkSectionExistsUpdate,
-  validateSectionCapacity
+  validateSectionCapacity,
 } from '../../validators/sections/sectionValidator';
 import { 
   checkAcademicPeriodValid,
@@ -79,6 +80,11 @@ router.get('/department',
   authenticate, 
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getSectionByDepartmentController)
+//OBTENER SECCIONES POR DEPARTAMENTO AUTENTICADO
+router.get('/department/actual', 
+  authenticate, 
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  getTeachersByDepartmentAcademicPeriodController)
 //OBTENER SECCION POR ID
 router.get('/:id', 
   authenticate,

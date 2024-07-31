@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { enrollStudent, enrollStudent2 } from '../../controllers/enrollStudent/enrollStudentController';
+import { enrollStudent, getAvailableSectionsController, getEnrolledClassesForStudentController } from '../../controllers/enrollStudent/enrollStudentController';
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
@@ -12,6 +12,7 @@ import {existSection,
 } from '../../middleware/enrollStudent/existEntity'
 
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+import { checkActiveProcessByTypeIdMiddleware } from "../../middleware/checkActiveProcessGeneric";
 
 const router = express.Router();
 
@@ -23,6 +24,20 @@ const router = express.Router();
    }
  * 
  */
+
+router.get('/student',
+        authenticate,
+        authorizeRole(['STUDENT']),
+        checkActiveProcessByTypeIdMiddleware(3),
+        getAvailableSectionsController
+);
+
+router.get('/student/enroll',
+        authenticate,
+        authorizeRole(['STUDENT']),
+        checkActiveProcessByTypeIdMiddleware(5),
+        getEnrolledClassesForStudentController
+);
 
 router.post('/enroll',
         authenticate, 
