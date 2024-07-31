@@ -12,7 +12,7 @@ export const activateEnrollment = async (req: Request, res: Response) => {
       await generateDayEnroll(process.id , days);
     }
 
-    res.status(200).json({ message: 'Proceso de matrícula activado y calendario generado' });
+    res.status(200).json({ message: '¡Proceso de matrícula creado exitosamente!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
