@@ -8,7 +8,8 @@ import {existSection,
         existStudent, 
         notAlreadyEnrolled, 
         validEnrollmentProcess,
-        validateStudentEnrollmentPeriod
+        validateStudentEnrollmentPeriod,
+        isSameClass
 } from '../../middleware/enrollStudent/existEntity'
 
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -45,6 +46,7 @@ router.post('/enroll',
         validateStudentEnrollmentPeriod,
         validEnrollmentProcess, 
         existSection,
+        isSameClass,
         existStudent,
         notAlreadyEnrolled,
         enrollStudentValidatorData,
