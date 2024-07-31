@@ -9,7 +9,8 @@ import {
   getSectionsByTeacherId,
   getSectionByDepartment,
   updateSectionCapacity,
-  getTeachersByDepartment
+  getTeachersByDepartment,
+  getSectionByDepartmentActual
 } from '../../services/sections/sectionService';
 
 export const createSectionController = async (req: Request, res: Response) => {
@@ -128,6 +129,16 @@ export const updateSectionCapacityController = async (req: Request, res: Respons
 export const getTeachersByDepartmentController = async (req: Request, res: Response) => {
   try {
     const result = await getTeachersByDepartment(req);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error getting teachers by department:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getTeachersByDepartmentAcademicPeriodController = async (req: Request, res: Response) => {
+  try {
+    const result = await getSectionByDepartmentActual(req);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);

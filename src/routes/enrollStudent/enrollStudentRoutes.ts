@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { enrollStudent, getAvailableSectionsController } from '../../controllers/enrollStudent/enrollStudentController';
+import { enrollStudent, getAvailableSectionsController, getEnrolledClassesForStudentController } from '../../controllers/enrollStudent/enrollStudentController';
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
@@ -30,6 +30,13 @@ router.get('/student',
         authorizeRole(['STUDENT']),
         checkActiveProcessByTypeIdMiddleware(3),
         getAvailableSectionsController
+);
+
+router.get('/student/enroll',
+        authenticate,
+        authorizeRole(['STUDENT']),
+        checkActiveProcessByTypeIdMiddleware(5),
+        getEnrolledClassesForStudentController
 );
 
 router.post('/enroll',
