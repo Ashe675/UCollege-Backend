@@ -127,7 +127,7 @@ const checkScheduleConflicts = async (studentId: number, IH: number, FH: number)
   });
 };
 
- export const getAvailableSectionsForStudent = async (studentId: number) => {
+export const getAvailableSectionsForStudent = async (studentId: number) => {
   // Obtener la información del estudiante
   const estu = await prisma.student.findFirst({
     where: { id: studentId },
@@ -190,24 +190,32 @@ const checkScheduleConflicts = async (studentId: number, IH: number, FH: number)
     },
     include: {
       class: {
-        include: {
+        select: {
+          id: true,
+          name: true,
+          UV: true,
+          code: true,
           studyPlan: {
             select: {
               prerequisiteClassId: true // Incluir los IDs de los requisitos previos
             }
           }
         }
-      }
+      },
+      section_Day : {select:{day:{select:{name :true}}}},
+      teacher : {include : {person : {select: {firstName: true, middleName:true, lastName:true,secondLastName:true}}}}
     }
   });
 
-  // Filtrar las secciones basadas en los requisitos previos
-  const availableSections: any[] = [];
+  // Filtrar las clases basadas en los requisitos previos
+  const availableClassesMap: { [key: number]: any } = {};
 
   for (const section of allSections) {
     const studyPlanClasses = section.class.studyPlan;
+    const classId = section.class.id;
 
     let hasCompletedPrerequisites = true; // Asumimos que el estudiante cumple con los requisitos por defecto
+
 
     for (const planClass of studyPlanClasses) {
       if (planClass.prerequisiteClassId) {
@@ -219,12 +227,49 @@ const checkScheduleConflicts = async (studentId: number, IH: number, FH: number)
     }
 
     if (hasCompletedPrerequisites) {
-      availableSections.push(section);
+
+      const matriculados = await prisma.enrollment.count({
+        where: { 
+          sectionId: section.id,
+          waitingListId: null 
+        }
+      });
+  
+      // Obtener el número de cupos disponibles
+      const cupos = section.capacity - matriculados;
+      if (!availableClassesMap[classId]) {
+        availableClassesMap[classId] = {
+          id: classId,
+          name: section.class.name,
+          uv: section.class.UV,
+          code: section.class.code,
+          sections: []
+        };
+      }
+      availableClassesMap[classId].sections.push({
+        id: section.id,
+        code: section.code,
+        IH: section.IH,
+        FH: section.FH,
+        quotes: cupos,
+        teacher: { 
+          firstName:section.teacher.person.firstName,
+          middleName:section.teacher.person.middleName,
+          lastName:section.teacher.person.lastName,
+          secondLastName:section.teacher.person.secondLastName,
+        },
+        days : section.section_Day.map(days=>days.day.name),
+      });
     }
   }
-  
-  return availableSections;
+
+  // Convertir el mapa a una lista
+  const availableClasses = Object.values(availableClassesMap);
+
+  return availableClasses;
 };
+
+
 
 export const getEnrolledClassesForStudent = async (studentId: number) => {
   // Obtener la información del estudiante
