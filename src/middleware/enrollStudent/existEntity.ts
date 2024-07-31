@@ -3,7 +3,14 @@ import { Request, Response, NextFunction } from 'express';
 
 // Verifica si la sección existe
 export const existSection = async (req: Request, res: Response, next: NextFunction) => {
-  const { sectionId } = req.body;
+  
+  
+  let { sectionId } = req.body;
+  
+
+  if (sectionId === undefined) {
+      sectionId = parseInt(req.params.sectionId);
+  }
 
   try {
     const section = await prisma.section.findUnique({
@@ -24,7 +31,12 @@ export const existSection = async (req: Request, res: Response, next: NextFuncti
 // Verifica si el estudiante existe
 export const existStudent = async (req: Request, res: Response, next: NextFunction) => {
   const  {id: userId} = req.user;  
-  const {sectionId } = req.body;
+  let { sectionId } = req.body;
+  
+
+  if (sectionId === undefined) {
+      sectionId = parseInt(req.params.sectionId);
+  }
   
     try {
       const user = await prisma.user.findUnique({
@@ -37,7 +49,7 @@ export const existStudent = async (req: Request, res: Response, next: NextFuncti
       // Verificar si el estudiante existe
 
       const student = await prisma.student.findUnique({
-        where: { id: userId }
+        where: { userId: userId }
       });
   
       if (!student) {
@@ -99,7 +111,8 @@ export const notAlreadyEnrolled = async (req: Request, res: Response, next: Next
         }
       })
 
-      let studentId = user.id
+      let studentId = (await prisma.student.findUnique({where:{userId: user.id}})).id
+
 
       const enrollment = await prisma.enrollment.findUnique({
         where: {
@@ -123,7 +136,13 @@ export const notAlreadyEnrolled = async (req: Request, res: Response, next: Next
 
   // Función para verificar si el proceso de matrícula está activo en el período académico
 export const validEnrollmentProcess = async (req: Request, res: Response, next: NextFunction) => {
-    const { sectionId } = req.body;
+  let { sectionId } = req.body;
+  
+  
+
+  if (sectionId === undefined) {
+      sectionId = parseInt(req.params.sectionId);
+  }
   
     try {
         const section = await prisma.section.findUnique({
@@ -158,7 +177,12 @@ export const validEnrollmentProcess = async (req: Request, res: Response, next: 
 export const validateStudentEnrollmentPeriod = async (req: Request, res: Response, next: NextFunction) => {
     const  {id: userId} = req.user;
 
-    const { sectionId } = req.body;
+    let { sectionId } = req.body;
+    
+
+    if (sectionId === undefined) {
+        sectionId = parseInt(req.params.sectionId);
+    }
     //const { process } = req.body;
   
     try {

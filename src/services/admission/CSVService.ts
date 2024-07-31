@@ -143,16 +143,7 @@ export class CSVService {
 
             if (!dniValid || !primerNombreValid || !segundoNombreValid || !primerApellidoValid || !segundoApellidoValid || !correoElectronicoValid || !phoneNumberValid || !carreraPrincipalValid || !carreraSecundariaValid || !centroRegionalValid) {
                 errors.push(`Datos inválidos en la fila: ${count}`);
-                console.log(dniValid)
-                console.log(primerNombreValid)
-                console.log(segundoNombreValid)
-                console.log(primerApellidoValid)
-                console.log(segundoApellidoValid)
-                console.log(correoElectronicoValid)
-                console.log(phoneNumberValid)
-                console.log(carreraPrincipalValid)
-                console.log(carreraSecundariaValid)
-                console.log(centroRegionalValid)
+                
                 return;
             }
 
