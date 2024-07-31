@@ -70,29 +70,29 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       return 'time conflict';
     }
 
-    
-    
-    await prisma.waitingList.upsert({
-      where: { sectionId },
-      update: {
-        enrollments: {
-          create: {
-            studentId,
-            sectionId,
-          },
-        },
+     // Contar el número de registros actuales en la lista de espera para la sección
+    const count = await prisma.waitingList.count({
+      where: {
+        sectionId: sectionId,
       },
-      create: {
-        sectionId,
+    });
+
+    // Calcular el nuevo valor para el campo top
+    const newTop = count + 1;
+    
+    // Insertar el nuevo registro en la lista de espera con el valor calculado para top
+    await prisma.waitingList.create({
+      data: {
+        sectionId: sectionId,
+        top: newTop,
         enrollments: {
           create: {
-            studentId,
-            sectionId,
+            studentId: studentId,
+            sectionId: sectionId,
           },
         },
       },
     });
-    
     
     return 'added to waiting list';
   }
