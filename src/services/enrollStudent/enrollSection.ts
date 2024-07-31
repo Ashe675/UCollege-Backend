@@ -294,7 +294,7 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
             regionalCenterId: centroEstudiante
           }
         }
-      }
+      }, waitingListId : null,
     },
     include: {
       section: {

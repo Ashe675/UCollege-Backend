@@ -167,6 +167,13 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     // Verificar si la sección existe
     const section = await prisma.section.findUnique({
       where: { id },
+      include: {
+        waitingList: {
+          include: {
+            enrollments: true
+          }
+        }
+      }
     });
 
     if (!section) {
@@ -184,12 +191,55 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       },
     });
 
+    // Obtener el número de matriculados actuales (sin waitingListId)
+    const matriculados = await prisma.enrollment.count({
+      where: { 
+        sectionId: section.id,
+        waitingListId: null 
+      }
+    });
+
+    // Obtener el número de cupos disponibles
+    const availableSlots = newCapacity - matriculados;
+
+    if (availableSlots > 0 && section.waitingList) {
+      // Obtener los estudiantes en la lista de espera, ordenados por 'top' para inscribir a los primeros en la lista
+      const waitingListEntries = await prisma.waitingList.findUnique({
+        where: { id: section.waitingList.id },
+        include: {
+          enrollments: true
+        }
+      });
+
+      // Seleccionar los primeros en la lista de espera según el número de cupos disponibles
+      const waitingListEnrollments = waitingListEntries.enrollments
+        .filter(enrollment => enrollment.waitingListId !== null) // Filtrar solo los que están en lista de espera
+        .slice(0, availableSlots);
+
+      for (const enrollment of waitingListEnrollments) {
+        // Actualizar la inscripción para quitar el waitingListId
+        await prisma.enrollment.update({
+          where: {
+            sectionId_studentId: {
+              sectionId: enrollment.sectionId,
+              studentId: enrollment.studentId
+            }
+          },
+          data: {
+            waitingListId: null
+          }
+        });
+      }
+    }
+
     return updatedSection;
   } catch (error) {
     console.error('Error updating section capacity:', error);
     throw new Error('Internal Server Error');
   }
 };
+
+
 const getCareerIdByDepartmentId = async (departmentId: number) => {
   const departmentData = await prisma.departament.findUnique({
     where: { id: departmentId },
