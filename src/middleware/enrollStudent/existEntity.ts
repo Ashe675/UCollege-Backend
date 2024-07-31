@@ -276,3 +276,54 @@ export const validateStudentEnrollmentPeriod = async (req: Request, res: Respons
       return res.status(500).json({ message: 'Error interno del servidor.' });
     }
   };
+
+export const isSameClass = async (req: Request, res: Response, next: NextFunction) => {
+  const  {id: userId} = req.user;
+  let { sectionId } = req.body;
+    
+
+  if (sectionId === undefined) {
+      sectionId = parseInt(req.params.sectionId);
+      
+  }
+
+  try {
+
+    const studentId = (await prisma.student.findUnique({where:{userId: userId}})).id
+
+    const newSection = await prisma.section.findUnique({
+        where:{
+            id: sectionId,
+        }, 
+        include:{
+          class: true
+        }
+    });
+
+    const enrollmentdSections = await prisma.enrollment.findMany({
+      where:{
+        studentId: studentId
+      },
+      include:{
+        section: {
+          include: {
+            class: true
+          }
+        },
+      }
+    });
+
+    enrollmentdSections.forEach(element => {
+      if(newSection.class.id == element.section.class.id){
+        return res.status(400).json({ message: 'Ya existe una clase matriculada en otra seccion.' });
+      }
+    });
+
+    next();
+  } catch (error) {
+    console.error('Error al verificar que la clase ya esta matriculada en otra secion:', error);
+    return res.status(500).json({ message: 'Error interno del servidor.' });
+  }
+
+
+}

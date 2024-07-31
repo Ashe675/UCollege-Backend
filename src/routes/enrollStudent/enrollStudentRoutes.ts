@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { enrollStudent, enrollStudent2 } from '../../controllers/enrollStudent/enrollStudentController';
+import { enrollStudent } from '../../controllers/enrollStudent/enrollStudentController';
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
@@ -8,7 +8,8 @@ import {existSection,
         existStudent, 
         notAlreadyEnrolled, 
         validEnrollmentProcess,
-        validateStudentEnrollmentPeriod
+        validateStudentEnrollmentPeriod,
+        isSameClass
 } from '../../middleware/enrollStudent/existEntity'
 
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -30,6 +31,7 @@ router.post('/enroll',
         validateStudentEnrollmentPeriod,
         validEnrollmentProcess, 
         existSection,
+        isSameClass,
         existStudent,
         notAlreadyEnrolled,
         enrollStudentValidatorData,
