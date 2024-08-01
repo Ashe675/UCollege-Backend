@@ -25,7 +25,7 @@ export const existSection = async (req: Request, res: Response, next: NextFuncti
     // Si la sección existe, pasar al siguiente middleware o controlador
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Error al verificar la sección', error });
+    return res.status(500).json({ message: 'Error al verificar la sección', error });
   }
 };
 
@@ -92,7 +92,7 @@ export const existStudent = async (req: Request, res: Response, next: NextFuncti
     // Si el estudiante no está matriculado ni en lista de espera, pasar al siguiente middleware o controlador
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Error al verificar el estudiante', error });
+    return res.status(500).json({ message: 'Error al verificar el estudiante', error });
   }
 };
 
@@ -131,7 +131,7 @@ export const notAlreadyEnrolled = async (req: Request, res: Response, next: Next
     // Si no está matriculado, pasar al siguiente middleware o controlador
     next();
   } catch (error) {
-    res.status(500).json({ message: 'Error al verificar la matrícula', error });
+    return res.status(500).json({ message: 'Error al verificar la matrícula', error });
   }
 };
 
@@ -299,9 +299,14 @@ export const isSameClass = async (req: Request, res: Response, next: NextFunctio
       }
     });
 
-    const enrollmentdSections = await prisma.enrollment.findMany({
+    const enrollmentdSections = await prisma.enrollment.findFirst({
       where: {
-        studentId: studentId
+        studentId: studentId,
+        section: {
+          class: {
+            id: newSection.classId
+          }
+        }
       },
       include: {
         section: {
@@ -312,11 +317,10 @@ export const isSameClass = async (req: Request, res: Response, next: NextFunctio
       }
     });
 
-    enrollmentdSections.forEach(element => {
-      if (newSection.class.id == element.section.class.id) {
-        return res.status(400).json({ message: 'Ya existe una clase matriculada en otra seccion.' });
-      }
-    });
+    if (enrollmentdSections) {
+      return res.status(400).json({ message: 'Ya tienes la clase matriculada en otra seccion.' });
+    }
+
 
     next();
   } catch (error) {
