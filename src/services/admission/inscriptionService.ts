@@ -1,7 +1,7 @@
 import { prisma } from "../../config/db";
 
 export const getAllInscriptions = async (processResultId : number) => {
-  return prisma.inscription.findMany({
+  return await prisma.inscription.findMany({
     where: {
       opinionId : null,
       results: {
@@ -10,7 +10,7 @@ export const getAllInscriptions = async (processResultId : number) => {
         }
       }
     },
-    select: {
+    include: {
       person: {
         select: {
           dni: true,

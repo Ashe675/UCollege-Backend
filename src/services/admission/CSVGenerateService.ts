@@ -16,6 +16,7 @@ export const prepareCsvRecords = async (inscriptions: any[]) => {
     const existingResults = await prisma.result.findMany({
       where: {
         inscriptionId: inscription.id,
+        score : { not : null }
       },
     });
 
