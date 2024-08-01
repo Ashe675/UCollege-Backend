@@ -20,7 +20,7 @@ export const getUserData = async (userId: number) => {
   });
 
   if (!user) {
-    throw new Error('User not found');
+    throw new Error('Usuario no encontrado');
   }
 
   return user;
