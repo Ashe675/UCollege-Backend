@@ -123,7 +123,7 @@ export const getEnrolledClassesForStudentController = async (req: Request, res: 
   try {
     const sections = await getEnrolledClassesForStudent(studentId);
     if (sections.length<=0) {
-      return res.status(400).json( { error: 'No tienes ninguna sección disponible'})
+      return res.status(400).json( { error: 'No tienes ninguna sección matriculada'})
       
     }
     return res.status(200).json(sections);
