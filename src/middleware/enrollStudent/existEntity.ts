@@ -200,6 +200,11 @@ export const validateStudentEnrollmentPeriod = async (req: Request, res: Respons
     }
     //return false
 
+    if (req.originalUrl.includes('enroll-delete')) {
+      return next()
+    }
+
+
     const student = await prisma.student.findUnique({
       where: {
         userId: student_user.id,
@@ -219,39 +224,35 @@ export const validateStudentEnrollmentPeriod = async (req: Request, res: Respons
       }
     })
 
-    const process = await prisma.process.findUnique({
+    const process = await prisma.process.findFirst({
       where: {
-        id: section.academicPeriod.process.id,
-        active: true
+        processId: section.academicPeriod.process.id,
+        active: true,
+        processTypeId: 3
       }
     })
 
+    const currentDate = new Date();
+
+    // Convertir currentDate a UTC
+    const currentUtcDate = new Date(
+      currentDate.getUTCFullYear(),
+      currentDate.getUTCMonth(),
+      currentDate.getUTCDate(),
+      currentDate.getUTCHours(),
+      currentDate.getUTCMinutes(),
+      currentDate.getUTCSeconds()
+    );
+
+
+
     if (student.globalAverage === null || student.globalAverage === 0) {
-      // Si el estudiante no tiene promedio global, se asume que es la primera vez que se matricula
-      next();
-    } else {
-
-
-      const currentDate = new Date();
-
-      // Convertir currentDate a UTC
-      const currentUtcDate = new Date(
-        currentDate.getUTCFullYear(),
-        currentDate.getUTCMonth(),
-        currentDate.getUTCDate(),
-        currentDate.getUTCHours(),
-        currentDate.getUTCMinutes(),
-        currentDate.getUTCSeconds()
-      );
-
       const dayEnrolls = await prisma.dayEnroll.findMany({
         where: {
           processId: process.id,
-          startDate: { lte: currentUtcDate },
-          finalDate: { gte: currentUtcDate },
         },
         orderBy: {
-          globalAvarage: 'asc',
+          startDate: 'asc',
         },
       });
 
@@ -259,17 +260,52 @@ export const validateStudentEnrollmentPeriod = async (req: Request, res: Respons
         return res.status(400).json({ message: 'No hay fechas de matrícula disponibles para este estudiante en este momento.' });
       }
 
+
+      // Verifica si la fecha actual coincide con el primer día de matrícula
+      const firstDayEnroll = dayEnrolls[0];
+
+      if (currentUtcDate < firstDayEnroll.startDate || currentUtcDate > firstDayEnroll.finalDate) {
+        return res.status(400).json({ message: "No cumples con los requisitos de promedio global para matricularse en este momento" });
+      }
+    } else {
+      const dayEnrolls = await prisma.dayEnroll.findMany({
+        where: {
+          processId: process.id,
+          startDate: {
+            lte: currentDate,
+          },
+          finalDate: {
+            gte: currentDate
+          }
+        },
+        orderBy: {
+          startDate: 'asc',
+        },
+      });
+
+      if (dayEnrolls.length === 0) {
+        return res.status(400).json({ message: 'No hay fechas de matrícula disponibles para este estudiante en este momento.' });
+      }
+
+
       const validEnroll = dayEnrolls.find((dayEnroll, index) => {
         const nextDayEnroll = dayEnrolls[index + 1];
-        return student.globalAverage >= dayEnroll.globalAvarage && (!nextDayEnroll || student.globalAverage < nextDayEnroll.globalAvarage);
+        // Si no hay un día de matrícula siguiente, solo verifica el límite inferior
+        if (!nextDayEnroll) {
+          return student.globalAverage >= dayEnroll.globalAvarage;
+        }
+
+        // Verificar si el promedio global está dentro del rango para el día de matrícula actual
+        return student.globalAverage >= dayEnroll.globalAvarage && student.globalAverage < nextDayEnroll.globalAvarage;
+
       });
 
       if (!validEnroll) {
-        return res.status(400).json({ message: 'El estudiante no cumple con los requisitos de promedio global para matricularse en este momento.' });
+        return res.status(400).json({ message: 'No cumples con los requisitos de promedio global para matricularse en este momento.' });
       }
-
-      next();
     }
+
+    next();
   } catch (error) {
     console.error('Error al validar el período de matrícula del estudiante:', error);
     return res.status(500).json({ message: 'Error interno del servidor.' });

@@ -10,6 +10,7 @@ import { deleteImageFromCloud, uploadImageAdmission } from '../../utils/cloudina
 import deleteImage from '../../utils/admission/fileHandler';
 import { createImage, ImageData } from '../../services/images/createImage';
 import { RoleEnum } from '@prisma/client';
+import { checkActiveProcessByTypeId } from '../../middleware/checkActiveProcessGeneric';
 
 export const createTeacher = async (req: Request, res: Response) => {
 
@@ -146,7 +147,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         await prisma.user.delete({ where: { id: newTeacher.id } });
         return res.status(400).json({ error: 'No se creó una relación entre el maestro, el departamento y el centro regional' });
       }
-      
+
     }
     return res.status(201).json({ message: "Se ha creado un nuevo maestro" });
   } catch (error) {
@@ -189,10 +190,10 @@ export const getTeachers = async (req: Request, res: Response) => {
       const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
         ? await prisma.regionalCenter_Faculty_Career.findUnique({
           where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id },
-          include : {
-            regionalCenter_Faculty : {
-              include : {
-                regionalCenter : true
+          include: {
+            regionalCenter_Faculty: {
+              include: {
+                regionalCenter: true
               }
             }
           }
@@ -376,10 +377,10 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
     const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
       ? await prisma.regionalCenter_Faculty_Career.findUnique({
         where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id },
-        include : {
-          regionalCenter_Faculty : {
-            include : {
-              regionalCenter : true
+        include: {
+          regionalCenter_Faculty: {
+            include: {
+              regionalCenter: true
             }
           }
         }
@@ -402,20 +403,20 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
       lastName: teacher.person.lastName,
       secondLastName: teacher.person.secondLastName,
       regionalCenterFacultyCareer: {
-        id : RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
-        name : regionalCenter.regionalCenter_Faculty.regionalCenter.name
+        id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
+        name: regionalCenter.regionalCenter_Faculty.regionalCenter.name
       },
-      regionalCenter : {
-        id : regionalCenter.regionalCenter_Faculty_RegionalCenterId,
-        name : regionalCenter.regionalCenter_Faculty.regionalCenter.name
+      regionalCenter: {
+        id: regionalCenter.regionalCenter_Faculty_RegionalCenterId,
+        name: regionalCenter.regionalCenter_Faculty.regionalCenter.name
       },
       departament: {
-        id : departament.id,
-        name : departament.name 
+        id: departament.id,
+        name: departament.name
       },
       role: {
         id: teacher.roleId,
-        name : teacher.role.name
+        name: teacher.role.name
       },
       dni: teacher.person.dni,
       identificationCode: teacher.identificationCode,
@@ -495,6 +496,11 @@ export const deleteTeacher = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
+    const process = await checkActiveProcessByTypeId(5);
+    if (process) {
+      return res.status(400).json({ error: `No se puede cambiar de centro ya que hay un periodo académico activo.` });
+    }
+
     // Buscar el docente por su código de identificación
     const teacher = await prisma.user.findUnique({
       where: {
@@ -554,11 +560,18 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
   const { teacherCode } = req.params;
   const { RegionalCenter_Faculty_Career_id, departamentId, roleId } = req.body;
 
-  
+
   try {
+
+    const process = await checkActiveProcessByTypeId(5);
+    if (process) {
+      return res.status(400).json({ error: `No se puede cambiar de centro ya que hay un periodo académico activo.` });
+    }
+
+
     // Validar que el docente exista
     const teacher = await prisma.user.findUnique({
-      where: { identificationCode : teacherCode },
+      where: { identificationCode: teacherCode },
       include: { teacherDepartments: true }
     });
 
@@ -567,7 +580,7 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
     }
 
     let roleSpecial = await prisma.role.findUnique({
-      where:{
+      where: {
         id: parseInt(roleId),
       }
     });
@@ -578,7 +591,7 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
         roleSpecial.name == 'TEACHER')
     ) {
       //await deleteImage(req.file.path)
-      return res.status(400).json({ error: "El role no es valido para crear un docente" });
+      return res.status(400).json({ error: "El role no es valido para editar a un docente" });
     }
 
     if (roleSpecial.name == 'DEPARTMENT_HEAD' || roleSpecial.name == 'COORDINATOR') {
@@ -597,9 +610,9 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
       });
       if (teacherRoleSpecial.length > 0) {
         //await deleteImage(req.file.path)
-        return res.status(400).json({ error: `Ya existe un docente asignado a ${roleSpecial.name === RoleEnum.DEPARTMENT_HEAD ? 'Jefe de Departametno' : 'Coordinador de Carrera' } en el departamento.` });
+        return res.status(400).json({ error: `Ya existe un docente asignado a ${roleSpecial.name === RoleEnum.DEPARTMENT_HEAD ? 'Jefe de Departametno' : 'Coordinador de Carrera'} en el departamento.` });
       }
-      
+
     }
 
 
