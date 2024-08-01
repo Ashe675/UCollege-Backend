@@ -9,7 +9,8 @@ import {existSection,
         notAlreadyEnrolled, 
         validEnrollmentProcess,
         validateStudentEnrollmentPeriod,
-        isSameClass
+        isSameClass,
+        isStudentOfSectionRegion
 } from '../../middleware/enrollStudent/existEntity'
 
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -35,6 +36,7 @@ router.post('/enroll',
         existStudent,
         notAlreadyEnrolled,
         enrollStudentValidatorData,
+        isStudentOfSectionRegion,
         enrollStudent);
 
 router.delete('/enroll-delete/:sectionId',

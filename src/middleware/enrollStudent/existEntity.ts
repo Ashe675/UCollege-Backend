@@ -1,3 +1,4 @@
+import { stdin } from 'process';
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 
@@ -326,4 +327,35 @@ export const isSameClass = async (req: Request, res: Response, next: NextFunctio
   }
 
 
+}
+
+export const isStudentOfSectionRegion = async (req: Request, res: Response, next: NextFunction)=>{
+  const  {id: userId} = req.user;
+
+    let { sectionId } = req.body;
+    
+
+    if (sectionId === undefined) {
+        sectionId = parseInt(req.params.sectionId);
+    }
+    try{
+      const section = await prisma.section.findUnique({where:{id: sectionId}, include:{regionalCenter_Faculty_Career:true}});
+      const studnet = await prisma.user.findUnique({where:{id: userId}});
+
+      const regionalCenter_Faculty_Career_user = await prisma.regionalCenter_Faculty_Career_User.findMany({
+        where:{
+          regionalCenter_Faculty_CareerId: section.regionalCenter_Faculty_CareerId,
+          userId: studnet.id
+        }
+      });
+
+      if(regionalCenter_Faculty_Career_user.length === 0 ){
+        return  res.status(400).json({ message: 'El estudiente no es de este centro regional o facultad' });
+      }
+      next();
+      
+    }catch(error){
+      console.error('Error al verificar que el setudiante pertenece a este centro y facultad:', error);
+      return res.status(500).json({ message: 'Error interno del servidor.' });
+    }
 }
