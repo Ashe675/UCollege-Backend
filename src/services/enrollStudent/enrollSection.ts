@@ -222,6 +222,29 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
 
     if (hasCompletedPrerequisites) {
 
+      let inEnroll = false;
+      let inWaitingList = false;
+      let allReadyClassEnroll = false;
+
+      let enrollData = await prisma.enrollment.findFirst({
+        where: {
+          studentId: studentId,
+          sectionId: section.id,
+        }, include:{
+          section:true,
+        }
+      })
+      if (enrollData){
+        inEnroll=true;
+        if(enrollData.waitingListId){
+          inWaitingList=true;
+        }
+      }
+
+      if(enrollData.section.classId == section.classId){
+        allReadyClassEnroll = true
+      }
+
       const matriculados = await prisma.enrollment.count({
         where: { 
           sectionId: section.id,
@@ -244,7 +267,8 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           name: section.class.name,
           uv: section.class.UV,
           code: section.class.code,
-          sections: []
+          sections: [],
+          allReadyClassEnroll: allReadyClassEnroll,
         };
       }
       availableClassesMap[classId].sections.push({
@@ -261,6 +285,9 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           secondLastName:section.teacher.person.secondLastName,
         },
         days : section.section_Day.map(days=>days.day.name),
+        inEnrollment: inEnroll,
+        inWaitingList: inWaitingList,
+
       });
     }
   }
