@@ -12,7 +12,7 @@ export const checkActiveProcessPeriod = async (req: Request, res: Response, next
     req.body.processAcademicPeriod = process;
     next();
   } catch (error) {
-    res.status(500).json({ error: 'Internal server erroree' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 
 };

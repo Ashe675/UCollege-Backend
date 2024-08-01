@@ -27,7 +27,7 @@ export const getAllTeachers = async () => {
       fullName: formatFullName(teacher.person),
     }));
   } catch (error) {
-    throw new Error(`Error fetching teachers: ${error.message}`);
+    throw new Error(`Error obteniendo maestros: ${error.message}`);
   }
 };
 
@@ -42,6 +42,6 @@ export const getTeacherRolesService = async () => {
     const roles = await prisma.role.findMany({where : { name : { in : [RoleEnum.COORDINATOR, RoleEnum.DEPARTMENT_HEAD, RoleEnum.TEACHER] } }})
     return roles
   } catch (error) {
-    throw new Error(`Error fetching teachers: ${error.message}`);
+    throw new Error(`Error obteniendo maestros: ${error.message}`);
   }
 }

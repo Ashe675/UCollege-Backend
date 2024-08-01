@@ -24,7 +24,7 @@ declare global {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
     const bearer = req.headers.authorization
     if (!bearer) {
-        const error = new Error('Not authorized')
+        const error = new Error('No autorizado')
         return res.status(401).json({ error: error.message })
     }
 
@@ -40,11 +40,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
                 req.user = userWithAvatar
                 next()
             } else {
-                return res.status(400).json({ error: 'Invalid Token' })
+                return res.status(400).json({ error: 'Sesión expirada' })
             }
         }
     } catch (error) {
-        res.status(400).json({ error: 'Invalid Token' })
+        res.status(400).json({ error: 'Sesión expirada' })
     }
 
 }
@@ -62,7 +62,7 @@ export const authorizeRole = (roleNames: string[]) => {
 export const authenticateVerifiedLess = async (req: Request, res: Response, next: NextFunction) => {
     const bearer = req.headers.authorization
     if (!bearer) {
-        const error = new Error('Not authorized')
+        const error = new Error('No autorizado')
         return res.status(401).json({ error: error.message })
     }
 
@@ -81,11 +81,11 @@ export const authenticateVerifiedLess = async (req: Request, res: Response, next
                 req.user = userWithAvatar
                 next()
             } else {
-                return res.status(400).json({ error: 'Invalid Token' })
+                return res.status(400).json({ error: 'Sesión expirada' })
             }
         }
     } catch (error) {
-        res.status(400).json({ error: 'Invalid Token' })
+        res.status(400).json({ error: 'Sesión expirada' })
     }
 
 }

@@ -22,7 +22,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     });
 
     if (!classData) {
-      throw new Error('Class not found');
+      throw new Error('Clase no encontrada');
     }
 
     const classCode = classData.code;
@@ -34,7 +34,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     });
 
     if (!classroomData) {
-      throw new Error('Classroom not found');
+      throw new Error('El aula de clases no ha sido encontrada');
     }
 
     const capacity = classroomData.capacity;
@@ -48,7 +48,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     });
 
     if (!Department_Head) {
-      throw new Error('Department head not found');
+      throw new Error('Jefe de Departamento no ha sido encontrado');
     }
 
     const rcfcID = Department_Head.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
@@ -59,7 +59,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     });
 
     if (!academicPeriod) {
-      throw new Error('Academic period not found');
+      throw new Error('Periodo academico no ha podido ser contrado');
     }
 
     const idPeriodo = academicPeriod.academicPeriod.id;
@@ -177,7 +177,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     });
 
     if (!section) {
-      throw new Error('Section not found');
+      throw new Error('Seccion no encontrada');
     }
 
     // Calcular la nueva capacidad
@@ -247,7 +247,7 @@ const getCareerIdByDepartmentId = async (departmentId: number) => {
   });
 
   if (!departmentData) {
-    throw new Error('Department not found');
+    throw new Error('El departamento no ha podido ser encontrado');
   }
 
   return departmentData.careerId;
@@ -259,7 +259,7 @@ const getDepartmentIdByClassId = async (classId: number) => {
   });
 
   if (!classData) {
-    throw new Error('Class not found');
+    throw new Error('La clase no se ha encontrado');
   }
 
   return classData.departamentId;
@@ -342,7 +342,7 @@ export const getSectionsByTeacherId = async (req: Request) => {
   const userId = req.user?.id;
 
   if (!userId) {
-    throw new Error('User ID is required');
+    throw new Error('El id del usuario es necesario');
   }
 
   const periodoActual = await prisma.academicPeriod.findFirst({
@@ -356,7 +356,7 @@ export const getSectionsByTeacherId = async (req: Request) => {
   });
 
   if (!periodoActual) {
-    throw new Error('No active academic period found');
+    throw new Error('No hay un periodo academico activo actualmente');
   }
 
   const idPeriodo = periodoActual.id;

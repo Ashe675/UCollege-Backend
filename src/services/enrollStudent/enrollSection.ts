@@ -7,7 +7,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
   });
 
   if (existingEnrollment) {
-    return 'already enrolled';
+    return 'Ya se encuentra matriculado en esta seccion';
   }
 
   // Obtener los detalles de la sección
@@ -23,7 +23,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
 
   
   if (!section) {
-    throw new Error('Section not found');
+    throw new Error('Section no encontrada');
   }
   
   // Verificar si el estudiante ha aprobado los requisitos de la clase
@@ -53,7 +53,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       
       
       if (completedClasses.length < prerequisiteClassIds.length) {
-        return 'prerequisites not met';
+        return 'Requisitos previos no cumplidos';
       }
     } 
   }
@@ -67,7 +67,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
 
     
     if (conflicts.length > 0) {
-      return 'time conflict';
+      return 'Hay conflictos en los horarios con otras secciones';
     }
 
      // Contar el número de registros actuales en la lista de espera para la sección
@@ -94,7 +94,7 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       },
     });
     
-    return 'added to waiting list';
+    return 'Seccion matriculada en lista de espera';
   }
 
   
@@ -286,7 +286,7 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
   });
 
   if (!estu) {
-    throw new Error('Student not found');
+    throw new Error('Estudiante no encontrado');
   }
 
   const idusuario = estu.userId;
@@ -307,7 +307,7 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
   });
 
   if (!usuario) {
-    throw new Error('User not found in regional center and faculty career');
+    throw new Error('Usuario no encontrado en el centro regional y la carrera de la facultad');
   }
 
   const carreraEstudiante = usuario.regionalCenter_Faculty_Career.careerId;

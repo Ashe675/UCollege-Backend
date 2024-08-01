@@ -47,7 +47,7 @@ export const createProcess = async (data: ProcessData) => {
   });
 
   if (overlappingProcesses.length > 0) {
-    throw new Error('Ya exist un proceso activo o se encontraron procesos superpuestos.');
+    throw new Error('Ya existe un proceso activo o se encontraron procesos superpuestos.');
   }
 
   const isInrage = isInRangeDate(new Date(restData.startDate), new Date(restData.finalDate));
