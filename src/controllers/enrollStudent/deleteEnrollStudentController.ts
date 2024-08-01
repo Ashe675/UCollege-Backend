@@ -19,19 +19,12 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         });
 
         if (!existingEnrollment) {
-            return res.status(404).json({ error: 'Matricula no funaciono' });
+            return res.status(404).json({ error: 'Matricula no funciono' });
         }
 
         // Eliminar la matrícula
         await prisma.$transaction(async (prisma) => {
-            // Eliminar registros relacionados en waitingList
-            let wlist = await prisma.waitingList.deleteMany({
-              where: {
-                id: existingEnrollment.waitingListId,
-                sectionId: sectionId,
-              },
-            });
-        
+            
             // Eliminar el registro en enrollment
             await prisma.enrollment.delete({
               where: {
@@ -39,18 +32,30 @@ export const removeEnrollment = async (req: Request, res: Response) => {
               },
             });
 
-            if(wlist.count === 0 ){
-              let section = await prisma.section.findUnique({
-                where:{id: sectionId}
-              });
-              await prisma.section.update({
-                where:{id: sectionId},
-                data:{
-                  capacity: section.capacity+1
-                }
-              });
+            let enrollment = await prisma.enrollment.findFirst({
+              where:{
+                sectionId : sectionId,
+                waitingListId: {not: null},
+                
+              },
+              orderBy:{
+                date:"asc"
+              }
+              
+            });
 
+            if(enrollment){
+                await prisma.enrollment.update({
+                  where:{
+                    sectionId_studentId:{sectionId, studentId}
+                  },
+                  data:{
+                    waitingListId: null
+                  }
+                });
             }
+
+            
           });
 
         return res.status(200).json({ message: `Estudiante Elimino clase exitosamente en la seccion con id ${sectionId}` });

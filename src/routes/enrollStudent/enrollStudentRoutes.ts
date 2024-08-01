@@ -29,13 +29,13 @@ const router = express.Router();
 router.post('/enroll',
         authenticate, 
         authorizeRole(['STUDENT']), 
+        enrollStudentValidatorData,
         validateStudentEnrollmentPeriod,
         validEnrollmentProcess, 
         existSection,
         isSameClass,
         existStudent,
         notAlreadyEnrolled,
-        enrollStudentValidatorData,
         isStudentOfSectionRegion,
         enrollStudent);
 
