@@ -21,7 +21,7 @@ export const enrollStudent = async (req: Request, res: Response) => {
     const result = await enrollInSection(studentId, sectionId);
 
     if (result === 'added to waiting list') {
-      return res.status(200).json({ message: 'No hay cupos disponibles. El estudiante fue añadido a la lista de espera.' });
+      return res.status(200).json({ message: 'No hay cupos disponibles. Fue añadido a la lista de espera.' });
     }
 
     if (result === 'time conflict') {
@@ -33,9 +33,9 @@ export const enrollStudent = async (req: Request, res: Response) => {
     }
 
     if (result === 'already enrolled') {
-      return res.status(400).json({ message: 'El estudiante ya está matriculado en esta sección.' });
+      return res.status(400).json({ message: 'Ya está matriculado en esta sección.' });
     }if (result === 'success'){
-      return res.status(200).json({ message: 'El estudiante está matriculado en esta sección existosamente.' });
+      return res.status(200).json({ message: 'Se matriculó exitosamente en la sección.' });
     }
   } catch (error) {
     console.error('Error al matricular al estudiante:', error);

@@ -234,14 +234,16 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           section:true,
         }
       })
-      if (enrollData){
+
+      if (enrollData && !enrollData.waitingListId){
         inEnroll=true;
-        if(enrollData.waitingListId){
-          inWaitingList=true;
-        }
       }
 
-      if(enrollData.section.classId == section.classId){
+      if(enrollData && enrollData.waitingListId){
+        inWaitingList=true;
+      }
+
+      if(enrollData && enrollData.section.classId == section.classId){
         allReadyClassEnroll = true
       }
 
@@ -371,7 +373,21 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
     include: {
       section: {
         include: {
-          class: true
+          class: true,
+          teacher : {
+            include : { 
+              person : true
+            }
+          },
+          section_Day : {
+            include : {
+              day : {
+                select : {
+                  name : true
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -382,8 +398,16 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
     classId: enrollment.section.class.id,
     className: enrollment.section.class.name,
     sectionCode: enrollment.section.code,
-    Hora_Incio: enrollment.section.IH,
-    Hora_Final: enrollment.section.FH
+    HI: enrollment.section.IH,
+    HF: enrollment.section.FH,
+    teacher: {
+      firstName : enrollment.section.teacher.person.firstName, 
+      middleName : enrollment.section.teacher.person.middleName, 
+      lastName : enrollment.section.teacher.person.lastName, 
+      secondLastName : enrollment.section.teacher.person.secondLastName, 
+    },
+    days : enrollment.section.section_Day.map(days=>days.day.name),
+    sectionId: enrollment.section.id
   }));
 
   return enrolledClassDetails;
