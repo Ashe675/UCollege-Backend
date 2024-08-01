@@ -8,8 +8,9 @@ export const removeEnrollment = async (req: Request, res: Response) => {
     
 
     try {
-
-        const studentId = (await prisma.student.findUnique({where:{userId: userId}})).id;
+        const student = await prisma.student.findUnique({where:{userId: userId}})
+        const studentId = (student).id;
+        
         // Verificar si el estudiante está matriculado en la sección
         const existingEnrollment = await prisma.enrollment.findUnique({
             where: {
@@ -18,25 +19,43 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         });
 
         if (!existingEnrollment) {
-            return res.status(404).json({ error: 'Matricula no funaciono' });
+            return res.status(404).json({ error: 'Matricula no funciono' });
         }
 
         // Eliminar la matrícula
         await prisma.$transaction(async (prisma) => {
-            // Eliminar registros relacionados en waitingList
-            await prisma.waitingList.deleteMany({
-              where: {
-                id: studentId,
-                sectionId: sectionId,
-              },
-            });
-        
+            
             // Eliminar el registro en enrollment
             await prisma.enrollment.delete({
               where: {
                 sectionId_studentId: { studentId, sectionId },
               },
             });
+
+            let enrollment = await prisma.enrollment.findFirst({
+              where:{
+                sectionId : sectionId,
+                waitingListId: {not: null},
+                
+              },
+              orderBy:{
+                date:"asc"
+              }
+              
+            });
+
+            if(enrollment){
+                await prisma.enrollment.update({
+                  where:{
+                    sectionId_studentId:{sectionId, studentId}
+                  },
+                  data:{
+                    waitingListId: null
+                  }
+                });
+            }
+
+            
           });
 
         return res.status(200).json({ message: `Estudiante Elimino clase exitosamente en la seccion con id ${sectionId}` });

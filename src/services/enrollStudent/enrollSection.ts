@@ -70,27 +70,20 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
       return 'time conflict';
     }
 
-     // Contar el número de registros actuales en la lista de espera para la sección
-    const count = await prisma.waitingList.count({
-      where: {
-        sectionId: sectionId,
-      },
-    });
 
-    // Calcular el nuevo valor para el campo top
-    const newTop = count + 1;
-    
-    // Insertar el nuevo registro en la lista de espera con el valor calculado para top
-    await prisma.waitingList.create({
+    let waitingList = await prisma.waitingList.findFirst({
+      where: {
+        sectionId: sectionId
+      }
+    })
+
+    let waitingListId = waitingList.id
+
+    await prisma.enrollment.create({
       data: {
-        sectionId: sectionId,
-        top: newTop,
-        enrollments: {
-          create: {
-            studentId: studentId,
-            sectionId: sectionId,
-          },
-        },
+        studentId,
+        sectionId,
+        waitingListId
       },
     });
     
@@ -229,6 +222,29 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
 
     if (hasCompletedPrerequisites) {
 
+      let inEnroll = false;
+      let inWaitingList = false;
+      let allReadyClassEnroll = false;
+
+      let enrollData = await prisma.enrollment.findFirst({
+        where: {
+          studentId: studentId,
+          sectionId: section.id,
+        }, include:{
+          section:true,
+        }
+      })
+      if (enrollData){
+        inEnroll=true;
+        if(enrollData.waitingListId){
+          inWaitingList=true;
+        }
+      }
+
+      if(enrollData.section.classId == section.classId){
+        allReadyClassEnroll = true
+      }
+
       const matriculados = await prisma.enrollment.count({
         where: { 
           sectionId: section.id,
@@ -251,7 +267,8 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           name: section.class.name,
           uv: section.class.UV,
           code: section.class.code,
-          sections: []
+          sections: [],
+          allReadyClassEnroll: allReadyClassEnroll,
         };
       }
       availableClassesMap[classId].sections.push({
@@ -268,6 +285,9 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           secondLastName:section.teacher.person.secondLastName,
         },
         days : section.section_Day.map(days=>days.day.name),
+        inEnrollment: inEnroll,
+        inWaitingList: inWaitingList,
+
       });
     }
   }
