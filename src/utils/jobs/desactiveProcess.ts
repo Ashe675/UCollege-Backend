@@ -57,7 +57,6 @@ cron.schedule('0 * * * *', async () => {
     });
     // Ejecutar todas las activaciones en paralelo
     await Promise.all(activatePromises);
-    console.log('se ejecuto un job de procesos')
 
   } catch (error) {
     console.error('Error al ejecutar el trabajo de verificación de fechas:', error);
