@@ -1,16 +1,31 @@
 import { prisma } from "../../config/db";
 import { DateTime } from 'luxon';
 
-const validateDates = (startDate: Date, finalDate: Date) => {
+export const validateDates = (startDate: Date, finalDate: Date) => {
+  if (startDate < new Date()) {
+    throw new Error('La fecha inicial debe de ser mayor o igual a la actual.')
+  }
+
+  if (startDate === finalDate) {
+    throw new Error('La fecha inicial debe de ser distinta a la fecha final.')
+  }
 
   if (startDate >= finalDate) {
     throw new Error('La fecha inicial debe ser menor que la fecha final.');
   }
+
 };
 
 export const isInRangeDate = (startDate: Date, finalDate: Date): boolean => {
-  const timeNow = DateTime.now().toUTC().toJSDate();
-  return timeNow >= startDate && timeNow <= finalDate;
+  // Obtener la fecha actual en UTC
+  const now = DateTime.now().toUTC()
+
+  // Convertir startDate y finalDate a DateTime
+  const start = DateTime.fromJSDate(startDate).toUTC()
+  const end = DateTime.fromJSDate(finalDate).toUTC()
+  
+  // Verificar si la fecha actual está dentro del rango
+  return now >= start && now <= end;
 };
 
 export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date, processTypeId: number) => {
@@ -24,6 +39,8 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
     if (!startDate || !finalDate || isNaN(new Date(startDate).getTime()) || isNaN(new Date(finalDate).getTime())) {
       throw new Error('Fechas no válidas.');
     }
+
+    validateDates(new Date(startDate), new Date(finalDate))
 
     // Validar que no haya procesos superpuestos activos para el mismo tipo de proceso
     const overlappingProcesses = await prisma.process.findMany({
@@ -53,6 +70,12 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
       throw new Error('Se encontraron procesos superpuestos.');
     }
 
+    // obteniendo el Id del periodo academico
+    const academicPeriod = await prisma.process.findFirst({
+      where: { processTypeId : 5 , active: true, finalDate: { gte: new Date() }, startDate: { lte: new Date() } }
+    })
+
+
     // Crear un nuevo proceso de matrícula
     const newProcess = await prisma.process.create({
       data: {
@@ -60,13 +83,14 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
         finalDate,
         active: activeValue,
         processTypeId,
+        processId : academicPeriod.id,
       },
     });
 
     return newProcess;
   } catch (error) {
     console.error('Error al activar el proceso de matrícula:', error);
-    throw new Error('Error al activar el proceso de matrícula.');
+    throw new Error(error.message);
   }
 };
 
@@ -85,6 +109,8 @@ export const generateDayEnroll = async (processId: number, days: { startDate: Da
     const dayEnrolls = await prisma.dayEnroll.createMany({
       data: days.map(day => ({
         ...day,
+        startDate : DateTime.fromJSDate(new Date(day.startDate)).toUTC().toJSDate(),
+        finalDate : DateTime.fromJSDate(new Date(day.finalDate)).toUTC().toJSDate(),
         processId
       })),
       skipDuplicates: true // Omitir registros duplicados si existen

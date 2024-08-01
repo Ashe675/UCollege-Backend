@@ -24,30 +24,6 @@ export const checkActiveProcess = async (req: Request, res: Response, next: Next
         return res.status(400).json({ error: `El tipo de proceso ${processTypeId} no existe.` });
       }
 
-      // Verificar si ya hay un proceso activo del mismo tipo
-      const activeProcess = await prisma.process.findFirst({
-        where: {
-          processTypeId: processTypeId,
-          OR: [
-            {
-              active: true
-            },
-            {
-              startDate: {
-                lte: new Date()
-              },
-              finalDate: {
-                gte: new Date()
-              }
-            }
-          ]
-        },
-      });
-
-      if (activeProcess) {
-        return res.status(400).json({ error: `Un proceso de tipo ${processType.name} ya se encuentra activo` });
-      }
-
       next();
     } catch (error) {
       return res.status(500).json({ error: error.message });

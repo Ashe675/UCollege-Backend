@@ -66,9 +66,9 @@ export const createTeacher = async (req: Request, res: Response) => {
     const teacherData = {
       dni: req.body.dni,
       firstName: req.body.firstName,
-      middleName: req.body.middleName,
+      middleName: req.body.middleName ? req.body.middleName : null,
       lastName: req.body.lastName,
-      secondLastName: req.body.secondLastName,
+      secondLastName: req.body.secondLastName ? req.body.secondLastName : null,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
       roleId: parseInt(req.body.roleId),

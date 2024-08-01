@@ -484,8 +484,8 @@ model OptionCareer {
 
 model DayEnroll {
   id            Int      @id @default(autoincrement())
-  startDate          DateTime @db.Date
-  finalDate          DateTime @db.Date
+  startDate          DateTime 
+  finalDate          DateTime 
   globalAvarage Float
   process       Process  @relation(fields: [processId], references: [id], onDelete: Cascade)
   processId    Int
