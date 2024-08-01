@@ -339,7 +339,12 @@ export const sectionExists = async (id: number) => {
   return !!section;
 };
 export const getSectionsByTeacherId = async (req: Request) => {
-  const userid = req.user?.id;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
   const periodoActual = await prisma.academicPeriod.findFirst({
     where: {
       process: {
@@ -349,12 +354,71 @@ export const getSectionsByTeacherId = async (req: Request) => {
       }
     }
   });
-  const idPeriodo =  periodoActual.id;
 
-  return await prisma.section.findMany({
-    where: { teacherId: userid, academicPeriodId: idPeriodo },
-    include : { section_Day: {select : { day : {select : {name : true}}}}, waitingList: true}
+  if (!periodoActual) {
+    throw new Error('No active academic period found');
+  }
+
+  const idPeriodo = periodoActual.id;
+
+  const sections = await prisma.section.findMany({
+    where: { teacherId: userId, academicPeriodId: idPeriodo },
+    include: {
+      section_Day: {
+        select: { day: { select: { name: true } } }
+      },
+      enrollments: {
+        include: {
+          student: {
+            include: {
+              user: {include : {person : true}} // Incluye la información de la persona asociada al estudiante
+            }
+          }
+        }
+      }
+    }
   });
+
+  const formattedSections = sections.map(section => {
+    const enrollments = section.enrollments;
+    const matriculados = enrollments.filter(enrollment => enrollment.waitingListId === null).map(enrollment => ({
+      id: enrollment.student.id,
+      dni: enrollment.student.user.person?.dni,
+      firstName: enrollment.student.user.person?.firstName,
+      middleName: enrollment.student.user.person?.middleName,
+      lastName: enrollment.student.user.person?.lastName,
+      secondLastName: enrollment.student.user.person?.secondLastName,
+      phoneNumber: enrollment.student.user.person?.phoneNumber,
+      instutionalEmail: enrollment.student.user.institutionalEmail,
+      email: enrollment.student.user.person?.email
+    }));
+
+    const enListaEspera = enrollments.filter(enrollment => enrollment.waitingListId !== null).map(enrollment => ({
+      id: enrollment.student.id,
+      dni: enrollment.student.user.person?.dni,
+      firstName: enrollment.student.user.person?.firstName,
+      middleName: enrollment.student.user.person?.middleName,
+      lastName: enrollment.student.user.person?.lastName,
+      secondLastName: enrollment.student.user.person?.secondLastName,
+      phoneNumber: enrollment.student.user.person?.phoneNumber,
+      instutionalEmail: enrollment.student.user.institutionalEmail,
+      email: enrollment.student.user.person?.email
+    }));
+
+    return {
+      ...section,
+      matriculados,
+      enListaEspera
+    };
+  });
+
+  // Eliminamos la propiedad enrollments
+  const cleanedSections = formattedSections.map(section => {
+    const { enrollments, ...rest } = section;
+    return rest;
+  });
+
+  return cleanedSections;
 };
 export const getTeachersByDepartment = async (req: Request) => {
   const userid = req.user?.id;
