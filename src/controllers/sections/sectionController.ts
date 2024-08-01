@@ -100,10 +100,9 @@ export const deleteSectionController = async (req: Request, res: Response) => {
   }
 };
 
-export const getSectionsController = async (req: Request, res: Response) => {
-  const { teacherId } = req.params;
+export const getSectionsByTeacherIdController = async (req: Request, res: Response) => {
   try {
-    const sections = await getSectionsByTeacherId(Number(teacherId));
+    const sections = await getSectionsByTeacherId(req);
     res.status(200).json(sections);
   } catch (error) {
     res.status(500).json({ error: error.message });

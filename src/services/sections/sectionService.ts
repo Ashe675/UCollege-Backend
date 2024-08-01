@@ -338,9 +338,21 @@ export const sectionExists = async (id: number) => {
   });
   return !!section;
 };
-export const getSectionsByTeacherId = async (teacherId: number) => {
+export const getSectionsByTeacherId = async (req: Request) => {
+  const userid = req.user?.id;
+  const periodoActual = await prisma.academicPeriod.findFirst({
+    where: {
+      process: {
+        active: true,
+        startDate: { lte: new Date() },
+        finalDate: { gte: new Date() }
+      }
+    }
+  });
+  const idPeriodo =  periodoActual.id;
+
   return await prisma.section.findMany({
-    where: { teacherId },
+    where: { teacherId: userid, academicPeriodId: idPeriodo },
     include : { section_Day: {select : { day : {select : {name : true}}}}, waitingList: true}
   });
 };

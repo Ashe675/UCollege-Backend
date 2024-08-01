@@ -203,7 +203,8 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
         }
       },
       section_Day : {select:{day:{select:{name :true}}}},
-      teacher : {include : {person : {select: {firstName: true, middleName:true, lastName:true,secondLastName:true}}}}
+      teacher : {include : {person : {select: {firstName: true, middleName:true, lastName:true,secondLastName:true}}}},
+      waitingList : {select: { id: true}},
     }
   });
 
@@ -234,7 +235,14 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           waitingListId: null 
         }
       });
-  
+
+      const listadeespera = await prisma.enrollment.count({
+        where: { 
+          sectionId: section.id,
+          waitingListId: section.waitingList.id 
+        }
+      });
+
       // Obtener el número de cupos disponibles
       const cupos = section.capacity - matriculados;
       if (!availableClassesMap[classId]) {
@@ -252,6 +260,7 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
         IH: section.IH,
         FH: section.FH,
         quotes: cupos,
+        waitingList: listadeespera,
         teacher: { 
           firstName:section.teacher.person.firstName,
           middleName:section.teacher.person.middleName,
@@ -268,8 +277,6 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
 
   return availableClasses;
 };
-
-
 
 export const getEnrolledClassesForStudent = async (studentId: number) => {
   // Obtener la información del estudiante

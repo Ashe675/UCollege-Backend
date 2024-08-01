@@ -10,7 +10,7 @@ import {
   getSectionByIdController,
   updateSectionController,
   deleteSectionController,
-  getSectionsController,
+  getSectionsByTeacherIdController,
   getUserData,
   getSectionByDepartmentController,
   updateSectionCapacityController,
@@ -64,11 +64,10 @@ router.get('/',
   authorizeRole([RoleEnum.ADMIN]),
   getAllSectionsController);
 //OBTENER SECCIONES POR MAESTRO
-router.get('/teacher/:teacherId', 
+router.get('/teacher/', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
-  validateTeacherId, 
-  getSectionsController);
+  getSectionsByTeacherIdController);
 //OBTENER MAESTROS DE DEPARTAMENTO
 router.get('/department/teacher',
   authenticate,
