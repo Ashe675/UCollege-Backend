@@ -48,10 +48,8 @@ export const createTeacher = async (req: Request, res: Response) => {
           active: true,
           regionalCenter_Faculty_Career_Department_Departament_id: parseInt(req.body.departamentId),
           regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
-          teacher: {
-            role: {
-              name: roleSpecial.name
-            }
+          role: {
+            name: roleSpecial.name
           }
         },
       });
@@ -116,7 +114,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       const newRegionalCenter_Faculty_Carrer_Department_Teacher = await createRCFCDTService(
         newTeacher.id,
         teacherData.RegionalCenter_Faculty_Career_id,
-        teacherData.departamentId
+        teacherData.departamentId,
+        teacherData.roleId
       );
 
       if (newRegionalCenter_Faculty_Carrer_Department_Teacher != null) {
@@ -602,9 +601,9 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
           regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
           teacher: {
             id: { not: teacher.id },
-            role: {
-              name: roleSpecial.name
-            }
+          },
+          role: {
+            name: roleSpecial.name
           }
         },
       });
@@ -622,8 +621,12 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
       const existingRelation = await transaction.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
         where: {
           teacherId: teacher.id,
-          regionalCenter_Faculty_Career_Department_Departament_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_Departament_id,
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+          regionalCenter_Faculty_Career_Department_Departament_id: {
+            in: teacher.teacherDepartments.map(depto => depto.regionalCenter_Faculty_Career_Department_Departament_id)
+          },
+          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: {
+            in: teacher.teacherDepartments.map(depto => depto.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id)
+          }
         }
       });
 
@@ -639,43 +642,23 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
           },
           data: {
             regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
-            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id,
+            roleId: parseInt(roleId)
           }
         });
-        await transaction.user.update({
-          where: {
-            id: teacher.id
-          },
-          data: {
-            role: {
-              connect: {
-                id: parseInt(roleId) // Reemplaza roleId con el ID del rol que deseas asignar
-              }
-            }
-          }
-        });
+
       } else {
         // Crear una nueva relación si no existe
         await transaction.regionalCenter_Faculty_Career_Department_Teacher.create({
           data: {
             teacherId: teacher.id,
             regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
-            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id,
+            roleId: parseInt(roleId)
           }
         });
 
-        await transaction.user.update({
-          where: {
-            id: teacher.id
-          },
-          data: {
-            role: {
-              connect: {
-                id: parseInt(roleId) // Reemplaza roleId con el ID del rol que deseas asignar
-              }
-            }
-          }
-        });
+
       }
     });
 

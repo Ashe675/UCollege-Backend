@@ -26,9 +26,6 @@ export const createTeacherService = async (teacherData: TeacherData) => {
                 institutionalEmail: teacherData.institutionalEmail,
                 password: hashedPassword,
                 verified: true,
-                role: {
-                    connect: { id: teacherData.roleId }
-                },
                 person: {
                     create: {
                         dni: teacherData.dni,

@@ -4,6 +4,7 @@ import { generateJWT } from "../../utils/auth/jwt"
 import { generateToken } from '../../utils/auth/token';
 import { AuthEmail } from "../../services/mail/authEmail";
 import { checkPassword, hashPassword } from "../../utils/auth/auth";
+import { Role } from "@prisma/client";
 
 export class AuthController {
 
@@ -12,7 +13,7 @@ export class AuthController {
         const lowerEmail = institutionalEmail.toLowerCase()
 
         try {
-            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true } })
+            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true, teacherDepartments : { include : {role : true} } } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })
@@ -25,7 +26,16 @@ export class AuthController {
                 return res.status(401).json({ error: error.message })
             }
 
-            const jwtoken = generateJWT({ id: userFound.id, role: userFound.role.name })
+            let role: Role
+
+            if (userFound.role) {
+                role = userFound.role
+            } else {
+                role = userFound.teacherDepartments.reduce((minRole, currentDept) => {
+                    return currentDept.role.id < minRole.role.id ? currentDept : minRole;
+                }, userFound.teacherDepartments[0]).role;
+            }
+            const jwtoken = generateJWT({ id: userFound.id, role: role.name })
 
             res.json({ jwtoken, user: { verified: userFound.verified, id: userFound.id } })
         } catch (error) {
@@ -38,13 +48,17 @@ export class AuthController {
         const lowerEmail = institutionalEmail.toLowerCase()
 
         try {
-            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true, person: true } })
+            const userFound = await prisma.user.findUnique({ where: { institutionalEmail: lowerEmail }, include: { role: true, person: true, teacherDepartments: { include: { role: true } } } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })
             }
 
-            if (userFound.role.name === 'TEACHER' || userFound.role.name === 'COORDINATOR') {
+            if (userFound.role?.name === 'TEACHER' || userFound.role?.name === 'COORDINATOR') {
+                const error = new Error('Debes solicitar al jefe de carrera que reinicie tu clave.')
+                return res.status(404).send({ error: error.message })
+            }
+            if (userFound.teacherDepartments?.some(depto => depto.role.name === 'TEACHER' || depto.role.name === 'COORDINATOR')) {
                 const error = new Error('Debes solicitar al jefe de carrera que reinicie tu clave.')
                 return res.status(404).send({ error: error.message })
             }
@@ -75,14 +89,19 @@ export class AuthController {
     static forgotPasswordTeacher = async (req: Request, res: Response) => {
         const idTeacher: number = parseInt(req.body.idTeacher)
         try {
-            const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true } })
+            const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true, teacherDepartments : { include : { role : true}} } })
             if (!userFound) {
                 const error = new Error('¡El usuario no existe!')
                 return res.status(404).send({ error: error.message })
             }
 
-            if (userFound.role.name !== 'TEACHER' && userFound.role.name !== 'COORDINATOR') {
+            if (userFound.role?.name !== 'TEACHER' && userFound.role?.name !== 'COORDINATOR') {
                 const error = new Error('El usuario no es un docente.')
+                return res.status(404).send({ error: error.message })
+            }
+
+            if (!userFound.teacherDepartments?.some(depto => depto.role.name === 'TEACHER' || depto.role.name === 'COORDINATOR')) {
+                const error = new Error('Debes solicitar al jefe de carrera que reinicie tu clave.')
                 return res.status(404).send({ error: error.message })
             }
 
@@ -152,7 +171,17 @@ export class AuthController {
     }
 
     static user = async (req: Request, res: Response) => {
-        return res.json(req.user)
+        if (req.user.role) {
+            return res.json(req.user)
+        } else if (req.user.teacherDepartments && req.user.teacherDepartments.length > 0) {
+            const roleWithMinId = req.user.teacherDepartments.reduce((minRole, currentDept) => {
+                return currentDept.role.id < minRole.role.id ? currentDept : minRole;
+            }, req.user.teacherDepartments[0]);
+
+            return res.json({ ...req.user, role: { name: roleWithMinId.role.name } });
+        } else {
+            return res.status(400).json({ error: 'No se pudo determinar el rol del usuario.' });
+        }
     }
 
     static updateCurrentUserPassword = async (req: Request, res: Response) => {
@@ -207,7 +236,7 @@ export class AuthController {
 
     static async optionsStudent(req: Request, res: Response) {
         try {
-            const options = await prisma.optionCareer.findMany({ where: { userId: req.user.id }, select: { id: true , regionalCenter_Faculty_Career: { select: { id: true, career: { select: { name: true } }, regionalCenter_Faculty : { select : {regionalCenter : { select : {name : true} }}} } } }, orderBy : { id : "asc" } })
+            const options = await prisma.optionCareer.findMany({ where: { userId: req.user.id }, select: { id: true, regionalCenter_Faculty_Career: { select: { id: true, career: { select: { name: true } }, regionalCenter_Faculty: { select: { regionalCenter: { select: { name: true } } } } } } }, orderBy: { id: "asc" } })
 
             if (!options.length) {
                 const error = new Error('No tienes opciones para elegir')
@@ -216,7 +245,7 @@ export class AuthController {
 
             const regionalCenter = options[0].regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
 
-            return res.json({options, regionalCenter})
+            return res.json({ options, regionalCenter })
         } catch (error) {
             res.status(500).json({ error: 'An error occurred' })
         }

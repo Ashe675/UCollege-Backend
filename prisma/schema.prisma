@@ -218,13 +218,13 @@ model User {
   verified       Boolean @default(false)
   
   description   String? @db.VarChar(200)
-  roleId        Int
+  roleId        Int?
 
   images      Image[]
   token       UserToken?
   student     Student?
   person      Person @relation(fields: [personId], references: [id], onDelete: Cascade)
-  role        Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role        Role? @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   sections    Section[]
 
@@ -262,6 +262,7 @@ model Role {
   id            Int @id @default(autoincrement())
   name          RoleEnum  @unique
   users         User[]
+  regionalCenterDepartmentsTeachers RegionalCenter_Faculty_Career_Department_Teacher[]
 } 
 
 model Student {
@@ -537,7 +538,9 @@ model RegionalCenter_Faculty_Career_Department_Teacher {
   regionalCenter_Faculty_Career_Department_Departament_id Int
   regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id Int
   active Boolean @default(true)
+  roleId        Int
 
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   teacher User @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId], onDelete: Cascade)
 
