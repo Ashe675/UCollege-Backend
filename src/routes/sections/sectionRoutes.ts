@@ -2,6 +2,7 @@
 import express from 'express';
 import {
   checkActiveProcesMatricula, 
+  checkActiveProcessesByTypeIdMiddlewareOR, 
   checkActiveProcessPeriod} 
   from '../../middleware/checkActiveProcessGeneric'
 import {
@@ -47,16 +48,16 @@ router.get('/validar/',authenticate, getUserData)
 router.post('/',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
-  createSectionValidators,  
-  checkActiveProcessPeriod,
-  checkActiveProcesMatricula,
+  createSectionValidators, 
+  checkActiveProcessPeriod, 
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkClassExistsAndActive, 
   checkClassroomExistsAndValidate,
   checkClassroomAvailability,
   checkTeacherExistsAndActive,
   checkClassCareerandCenterandTeacher,
   checkTeacherScheduleConflict,
-  createSectionController,
+  createSectionController
   );
 //OBTENER TODAS LAS SECCIONES
 router.get('/', 

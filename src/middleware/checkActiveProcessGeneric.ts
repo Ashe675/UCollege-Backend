@@ -61,3 +61,29 @@ export const checkActiveProcessByTypeIdMiddleware = (processTypeId: number) => {
     }
   };
 };
+
+
+export const checkActiveProcessesByTypeIdMiddlewareOR= (processTypeIdList : number[] ) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const process = await prisma.process.findFirst({
+        where: { processTypeId : { in  : processTypeIdList }, active: true, finalDate: { gte: new Date() }, startDate: { lte: new Date() } },
+        include: { processType: true, academicPeriod: true, inscriptions: true, parentProcess: true, results: true, subprocesses: true, daysEnrolls: true, planning: true }
+      })
+
+      if (!process) {
+        return res.status(400).json({ error: `No hay un proceso activo necesario para realizar esta acción.` });
+      }
+
+      // creo una variable para el body donde, ejemplo : req.body.academicPeriod
+      const nameParam = "process" + capitalizeWords(process.processType.name.toLocaleLowerCase()).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+
+      req.body[nameParam] = process
+
+      next();
+    } catch (error) {
+      console.log(error.message)
+      res.status(500).json({ error: 'Server Internal Error' })
+    }
+  };
+};
