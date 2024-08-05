@@ -10,7 +10,8 @@ import {
   getSectionByDepartment,
   updateSectionCapacity,
   getTeachersByDepartment,
-  getSectionByDepartmentActual
+  getSectionByDepartmentActual,
+  getWaitingListById
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection } from "../../utils/section/sectionUtils";
@@ -157,6 +158,23 @@ export const getTeachersByDepartmentAcademicPeriodController = async (req: Reque
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getWaitingListController = async (req: Request, res: Response) => {
+  const { sectionId } = req.params;
+
+  try {
+    const waitingListStudents = await getWaitingListById(Number(sectionId));
+
+    if (!waitingListStudents) {
+      return res.status(404).json({ error: 'No se encontró la lista de espera para la sección especificada' });
+    }
+
+    res.status(200).json(waitingListStudents);
+  } catch (error) {
+    console.error('Error obteniendo la lista de espera:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

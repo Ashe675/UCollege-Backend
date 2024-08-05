@@ -1,7 +1,7 @@
 // src/services/sectionService.ts
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
-
+import { getEnListadeEspera, getMatriculados } from "../../utils/section/sectionUtils";
 
 interface CreateSectionInput {
   IH: number;
@@ -286,16 +286,50 @@ const getDepartmentIdByClassId = async (classId: number) => {
   return classData.departamentId;
 };
 export const getAllSections = async () => {
-  return await prisma.section.findMany({
+  const sections = await prisma.section.findMany({
     include: { section_Day : {select : {day : {select : {name : true}}}}, waitingList : true},
   }
   );
+  const sectionsWithDetails = await Promise.all(
+    sections.map(async (section) => {
+      const [waitingListStudents, matriculados] = await Promise.all([
+        getEnListadeEspera(section.id),
+        getMatriculados(section.id)
+      ]);
+
+      return {
+        ...section,
+        matriculados: matriculados,
+        waitingList: waitingListStudents,
+        
+      };
+    })
+  );
+
+  return sectionsWithDetails;
 };
 export const getSectionById = async (id: number) => {
-  return await prisma.section.findUnique({
+  // Obtén la sección por ID
+  const section = await prisma.section.findUnique({
     where: { id },
-    include : { section_Day: { select : {day : {select : {name : true}}}}, waitingList: true}
+    include: { section_Day: { select: { day: { select: { name: true } } } } }
   });
+
+  if (!section) {
+    throw new Error('Section not found');
+  }
+
+  // Obtén la lista de espera y los matriculados de manera concurrente
+  const [waitingListStudents, matriculados] = await Promise.all([
+    getEnListadeEspera(section.id),
+    getMatriculados(section.id)
+  ]);
+
+  return {
+    ...section,
+    matriculados,
+    waitingList: waitingListStudents
+  };
 };
 export const getSectionByDepartment = async (req: Request) => {
   const userid = req.user?.id;
@@ -312,7 +346,24 @@ export const getSectionByDepartment = async (req: Request) => {
     include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
   });
 
-  return { departmentname, sections };
+  const sectionsWithDetails = await Promise.all(
+    sections.map(async (section) => {
+      const [waitingListStudents, matriculados] = await Promise.all([
+        getEnListadeEspera(section.id),
+        getMatriculados(section.id)
+      ]);
+
+      return {
+        ...section,
+        matriculados: matriculados,
+        waitingList: waitingListStudents,
+        
+      };
+    })
+  );
+  
+
+  return { departmentname, sectionsWithDetails };
 };
 
 export const getSectionByDepartmentActual = async (req: Request) => {
@@ -342,10 +393,26 @@ export const getSectionByDepartmentActual = async (req: Request) => {
 
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true },
-    include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
+    include : { section_Day : {select : {day : {select : {name : true}}}}}
   });
 
-  return { departmentname, sections };
+  const sectionsWithDetails = await Promise.all(
+    sections.map(async (section) => {
+      const [waitingListStudents, matriculados] = await Promise.all([
+        getEnListadeEspera(section.id),
+        getMatriculados(section.id)
+      ]);
+
+      return {
+        ...section,
+        matriculados: matriculados,
+        waitingList: waitingListStudents,
+        
+      };
+    })
+  );
+
+  return { departmentname, sectionsWithDetails };
 };
 
 export const deleteSection = async (id: number, justification: string) => {
@@ -376,10 +443,29 @@ export const getSectionsByTeacherId = async (req: Request) => {
   });
   const idPeriodo =  periodoActual.id;
 
-  return await prisma.section.findMany({
+  const sections = await prisma.section.findMany({
     where: { teacherId: userid, academicPeriodId: idPeriodo, active: true },
-    include : { section_Day: {select : { day : {select : {name : true}}}}, waitingList: true}
+    include: { section_Day: { select: { day: { select: { name: true } } } } }
   });
+
+  // Itera sobre cada sección y obtiene la lista de espera y los matriculados
+  const sectionsWithDetails = await Promise.all(
+    sections.map(async (section) => {
+      const [waitingListStudents, matriculados] = await Promise.all([
+        getEnListadeEspera(section.id),
+        getMatriculados(section.id)
+      ]);
+
+      return {
+        ...section,
+        matriculados: matriculados,
+        waitingList: waitingListStudents,
+        
+      };
+    })
+  );
+
+  return sectionsWithDetails;
 };
 export const getTeachersByDepartment = async (req: Request) => {
   const userid = req.user?.id;
@@ -425,6 +511,23 @@ export const getTeachersByDepartment = async (req: Request) => {
   });
 
   return { departmentname, teachers };
+};
+export const getWaitingListById = async (sectionId: number) => {
+  // Primero, obtenemos la sección para conseguir la lista de espera
+  const section = await prisma.section.findUnique({
+    where: { id: sectionId },
+    select: { waitingList: { select: { id: true } } }
+  });
+
+  if (!section || !section.waitingList) {
+    throw new Error('Sección no encontrada o no tiene lista de espera');
+  }
+
+  const waitingListStudents = getEnListadeEspera(sectionId);
+
+  // Luego, obtenemos los estudiantes en espera basándonos en el waitingListId
+
+  return waitingListStudents;
 };
 
 
