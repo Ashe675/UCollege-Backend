@@ -2,6 +2,7 @@
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 
+
 interface CreateSectionInput {
   IH: number;
   FH: number;
@@ -340,16 +341,20 @@ export const getSectionByDepartmentActual = async (req: Request) => {
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
 
   const sections = await prisma.section.findMany({
-    where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo },
+    where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true },
     include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
   });
 
   return { departmentname, sections };
 };
 
-export const deleteSection = async (id: number) => {
-  return await prisma.section.delete({
+export const deleteSection = async (id: number, justification: string) => {
+  return await prisma.section.update({
     where: { id },
+    data: {
+      active: false,
+      justification: justification,
+    },
   });
 };
 export const sectionExists = async (id: number) => {
@@ -372,7 +377,7 @@ export const getSectionsByTeacherId = async (req: Request) => {
   const idPeriodo =  periodoActual.id;
 
   return await prisma.section.findMany({
-    where: { teacherId: userid, academicPeriodId: idPeriodo },
+    where: { teacherId: userid, academicPeriodId: idPeriodo, active: true },
     include : { section_Day: {select : { day : {select : {name : true}}}}, waitingList: true}
   });
 };
