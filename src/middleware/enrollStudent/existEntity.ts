@@ -166,8 +166,8 @@ export const validEnrollmentProcess = async (req: Request, res: Response, next: 
       if (!process) {
         return res.status(400).json({ message: 'No hay un proceso de matrícula activo para este período académico.' });
       }
-  
       next();
+      
     } catch (error) {
       console.error('Error al verificar el proceso de matrícula:', error);
       return res.status(500).json({ message: 'Error interno del servidor.' });

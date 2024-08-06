@@ -19,7 +19,7 @@ export const removeEnrollment = async (req: Request, res: Response) => {
         });
 
         if (!existingEnrollment) {
-            return res.status(404).json({ error: 'Matricula no funciono' });
+            return res.status(404).json({ error: 'No se ha matriculado en esa seccion' });
         }
 
         // Eliminar la matrícula
