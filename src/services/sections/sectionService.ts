@@ -116,7 +116,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
         top: 0,
       }
     });
-
+    console.log("Hola");
     return {
       message: 'Sección creada correctamente',
       section: newSection
