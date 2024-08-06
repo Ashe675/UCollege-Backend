@@ -18,6 +18,7 @@ import {
   getTeachersByDepartmentController,
   getTeachersByDepartmentAcademicPeriodController
 } from '../../controllers/sections/sectionController';
+
 import { 
   validateSectionId, 
   createSectionValidators, 
@@ -118,18 +119,8 @@ router.delete('/:id',
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   validateSectionId, 
   deleteSectionController);
+  
 
 export default router;
 
-/**
- * -----------------------------------------------------------------------------
- * Autor: Cesar Abraham Banegas Figueroa
- * Correo: cabanegasf@unah.hn
- * Propósito: Desarrollo de las rutas par edificios
- * -----------------------------------------------------------------------------
- */
 
-router.get('/get-building',
-            authenticate,
-            authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
-)
