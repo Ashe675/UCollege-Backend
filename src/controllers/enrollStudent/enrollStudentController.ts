@@ -117,7 +117,7 @@ export const getEnrolledClassesForStudentController = async (req: Request, res: 
   const studentId = student.id;
   
   if (isNaN(studentId)) {
-    return res.status(400).json({ error: 'Invalid student ID' });
+    return res.status(400).json({ error: 'ID de estudiante invalido' });
   }
 
   try {
