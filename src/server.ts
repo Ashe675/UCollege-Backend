@@ -54,6 +54,7 @@ app.use('/api/teacher', teacherRoutes);
 app.use('/api/enroll', enrollRoutes);
 app.use('/api/section', sectionRoutes);
 
+
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 

@@ -119,3 +119,16 @@ router.delete('/:id',
   deleteSectionController);
 
 export default router;
+
+/**
+ * -----------------------------------------------------------------------------
+ * Autor: Cesar Abraham Banegas Figueroa
+ * Correo: cabanegasf@unah.hn
+ * Propósito: Desarrollo de las rutas par edificios
+ * -----------------------------------------------------------------------------
+ */
+
+router.get('/get-building',
+            authenticate,
+            authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+)
