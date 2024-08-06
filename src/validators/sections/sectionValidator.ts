@@ -50,6 +50,9 @@ export const createSectionValidators = [
   body('classId')
     .isInt().withMessage('Class ID debe ser un entero')
     .notEmpty().withMessage('Class ID es requerido'),
+  body('quota')
+    .isInt().withMessage('Los cupos deben de ser un entero')
+    .notEmpty().withMessage('Los cupos son requeridos'),
   body('teacherId')
     .isInt().withMessage('Teacher ID debe ser un entero')
     .notEmpty().withMessage('Teacher ID es requerido'),

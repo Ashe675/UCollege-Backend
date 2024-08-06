@@ -60,6 +60,10 @@ export const checkClassCareerandCenterandTeacher = async (req: Request, res: Res
       return res.status(400).json({ error: 'Esta clase no esta disponible en este centro' });
     }
 
+    if (idcarrerateacher !== carreradeljefe) {
+      return res.status(400).json({ error: 'El maestro no pertenece a su carrera' });
+    }
+
     if (idcarrerateacher !== idcarreraclase) {
       return res.status(400).json({ error: 'Esta clase no esta incluida en la carrera del maestro' });
     }
@@ -180,17 +184,17 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
 
     // Obtener el centro regional (regional center) del teacher (usuario autenticado)
     const teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-      where: { teacherId: teacherId },
+      where: { teacherId: teacherId, active : true },
       select: { regionalCenterFacultyCareerDepartment: { select: { RegionalCenterFacultyCareer: { select: { regionalCenter_Faculty: { select: { regionalCenterId: true } } } } } } },
     });
 
     if (!teacher) {
-      return res.status(400).json({ error: 'El maestro no existe' });
+      return res.status(400).json({ error: 'El maestro no existe o no está activo' });
     }
 
     // Verificar que el centro regional del edificio coincida con el del maestro
     if (building.regionalCenterId !== teacher.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenterId) {
-      return res.status(400).json({ error: 'El aula pertenece a un centro regional diferente' });
+      return res.status(400).json({ error: 'El aula o docente pertenece a un centro regional diferente' });
     }
 
     next();

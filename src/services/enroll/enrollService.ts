@@ -174,6 +174,11 @@ export class EnrollService {
 
                 let userFound = await tx.user.findFirst({ where: { person: { dni: student.dni } } })
                 if (userFound) {
+
+                    if(userFound.roleId !== 5){
+                        throw new Error(`Este estudiante es un docente, fila: ${index}`)
+                    }
+
                     await tx.regionalCenter_Faculty_Career_User.deleteMany({ where: { userId: userFound.id } })
                     await tx.user.update({
                         data: { verified: false }, where: {

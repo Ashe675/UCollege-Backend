@@ -19,7 +19,7 @@ export const createSectionController = async (req: Request, res: Response) => {
     res.status(201).json(newSection);
   } catch (error) {
     console.error('Error creando la sección:', error);
-    res.status(500).json({ error: 'Internal Server Erroree' });
+    res.status(400).json({ error: error.message });
   }
 };
 

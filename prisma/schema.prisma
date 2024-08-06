@@ -382,7 +382,8 @@ model Section {
   code          String     @unique @db.VarChar(20)
   capacity      Int
   IH            Int        
-  FH            Int        
+  FH            Int 
+  justification String?    @db.VarChar(200)    
   active        Boolean    @default(true)
   class         Class      @relation(fields: [classId], references: [id], onDelete: Cascade)
   classId      Int

@@ -8,11 +8,12 @@ interface CreateSectionInput {
   classId: number;
   teacherId: number;
   classroomId: number;
+  quota : number;
   days: number[]; // Array de IDs de días
 }
 export const createSection = async (data: CreateSectionInput, req: Request) => {
   const userlogged = req.user?.id;
-  const { IH, FH, classId, teacherId, classroomId, days } = data;
+  const { IH, FH, classId, teacherId, classroomId, days, quota } = data;
 
   try {
     // Obtener el código de la clase
@@ -37,7 +38,16 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
       throw new Error('Classroom not found');
     }
 
+    if(quota <=0){
+      throw new Error(`Cupos deben ser mayores a cero`);
+    }
+
+
     const capacity = classroomData.capacity;
+
+    if(quota > capacity  ){
+      throw new Error(`Cupos exceden la capacidad del aula ${capacity}`);
+    }
 
     // Formatear la hora de inicio para el código de la sección
     const formattedIH = IH < 10 ? `0${IH}` : `${IH}`;
@@ -80,7 +90,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     const newSection = await prisma.section.create({
       data: {
         code: sectionCode,
-        capacity,
+        capacity : Number(quota),
         IH,
         FH,
         classId,
@@ -112,7 +122,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     };
   } catch (error) {
     console.error('Error creating section:', error);
-    throw new Error('Internal Server Error');
+    throw new Error(error.message);
   }
 };
 interface UpdateSectionInput {
@@ -172,13 +182,31 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
           include: {
             enrollments: true
           }
-        }
+        },
+        classroom : true
       }
     });
 
     if (!section) {
       throw new Error('Section not found');
     }
+
+    if(increment <= 0){
+      throw new Error('El incremento debe ser mayor a cero.');
+    }
+
+    
+    if((increment + section.capacity) > section.classroom.capacity){
+      throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
+    }
+    
+    // Obtener el número de matriculados actuales (sin waitingListId)
+    const matriculados = await prisma.enrollment.count({
+      where: { 
+        sectionId: section.id,
+        waitingListId: null 
+      }
+    });
 
     // Calcular la nueva capacidad
     const newCapacity = section.capacity + increment;
@@ -189,14 +217,6 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       data: {
         capacity: newCapacity,
       },
-    });
-
-    // Obtener el número de matriculados actuales (sin waitingListId)
-    const matriculados = await prisma.enrollment.count({
-      where: { 
-        sectionId: section.id,
-        waitingListId: null 
-      }
     });
 
     // Obtener el número de cupos disponibles
@@ -235,7 +255,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     return updatedSection;
   } catch (error) {
     console.error('Error updating section capacity:', error);
-    throw new Error('Internal Server Error');
+    throw new Error(error.message);
   }
 };
 
