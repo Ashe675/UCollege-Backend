@@ -4,9 +4,10 @@ import { enrollStudent, enrollStudent2, getAvailableSectionsController, getEnrol
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
-import {existSection, 
-        existStudent, 
-        notAlreadyEnrolled, 
+import {
+        existSection,
+        existStudent,
+        notAlreadyEnrolled,
         validEnrollmentProcess,
         validateStudentEnrollmentPeriod,
         isSameClass,
@@ -42,13 +43,13 @@ router.get('/student/enroll',
 );
 
 router.post('/enroll',
-        authenticate, 
-        authorizeRole(['STUDENT']), 
+        authenticate,
+        authorizeRole(['STUDENT']),
         enrollStudentValidatorData,
-        existStudent,
         existSection,
+        existStudent,
         validateStudentEnrollmentPeriod,
-        validEnrollmentProcess, 
+        validEnrollmentProcess,
         isSameClass,
         notAlreadyEnrolled,
         isStudentOfSectionRegion,
@@ -62,7 +63,7 @@ router.delete('/enroll-delete/:sectionId',
         validEnrollmentProcess,
         validateStudentEnrollmentPeriod,
         removeEnrollment
-        );
+);
 
 // router.post('/test01',
 //         enrollStudent2,

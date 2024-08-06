@@ -4,9 +4,9 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 import { startCronJobs } from './utils/auth/cronToken';
-import '../src/utils/jobs/desactiveProcess'
+import { scheduleProcessVerification } from './utils/jobs/desactiveProcess'
 
-import inscriptionRoutes  from './routes/admission/inscriptionRoutes';
+import inscriptionRoutes from './routes/admission/inscriptionRoutes';
 import uploadRouter from './routes/admission/uploadRoutes'
 
 import resultRoutes from './routes/admission/resultRoutes';
@@ -30,6 +30,7 @@ import { corsConfig } from './config/cors';
 dotenv.config()
 connectDB()
 startCronJobs()
+scheduleProcessVerification()
 
 const app = express()
 
@@ -47,7 +48,7 @@ app.use('/api', careerRoutes);
 app.use('/api', regionalCenterRoutes);
 app.use('/api', admissionRoutes);
 app.use('/api', inscriptionsByDni);
-app.use('/api/upload',uploadRouter)
+app.use('/api/upload', uploadRouter)
 app.use('/api/inscriptions', inscriptionRoutes);
 app.use('/api/teacher', teacherRoutes);
 app.use('/api/enroll', enrollRoutes);

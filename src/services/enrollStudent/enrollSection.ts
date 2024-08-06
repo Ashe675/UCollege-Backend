@@ -1,4 +1,5 @@
 import { prisma } from "../../config/db";
+import { checkActiveProcessByTypeId } from "../../middleware/checkActiveProcessGeneric";
 
 export const enrollInSection = async (studentId: number, sectionId: number) => {
   // Verificar si el estudiante ya está matriculado en la sección
@@ -19,26 +20,26 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
     },
   });
 
-  
 
-  
+
+
   if (!section) {
     throw new Error('Section not found');
   }
-  
+
   // Verificar si el estudiante ha aprobado los requisitos de la clase
   const prerequisites = await prisma.studyPlan_Class.findMany({
-    where: {classId: section.class.id}
+    where: { classId: section.class.id }
   });
-  
+
   if (prerequisites.length > 0) {
-    
-    
+
+
     const prerequisiteClassIds = prerequisites
-    .map(req => req.prerequisiteClassId)
-    .filter(id => id !== null && id !== undefined); // Filtrar valores nulos o indefinidos
-    
-    
+      .map(req => req.prerequisiteClassId)
+      .filter(id => id !== null && id !== undefined); // Filtrar valores nulos o indefinidos
+
+
     if (prerequisiteClassIds.length > 0) {
       // Verificar las clases completadas por el estudiante
       const completedClasses = await prisma.enrollment.findMany({
@@ -48,24 +49,24 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
           grade: { gte: 65 }
         },
       });
-      
-      
-      
-      
+
+
+
+
       if (completedClasses.length < prerequisiteClassIds.length) {
         return 'prerequisites not met';
       }
-    } 
+    }
   }
-  
-  
-  
+
+
+
   // Verificar si hay cupos disponibles
   if (section.enrollments.length >= section.capacity) {
     // Verificar conflictos de horarios con otras secciones
     const conflicts = await checkScheduleConflicts(studentId, section.IH, section.FH);
 
-    
+
     if (conflicts.length > 0) {
       return 'time conflict';
     }
@@ -86,12 +87,12 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
         waitingListId
       },
     });
-    
+
     return 'added to waiting list';
   }
 
-  
-  
+
+
   // Matricular al estudiante en la sección
   await prisma.enrollment.create({
     data: {
@@ -100,22 +101,22 @@ export const enrollInSection = async (studentId: number, sectionId: number) => {
     },
   });
 
-  
-  
+
+
 
   return 'success';
 };
 
 const checkScheduleConflicts = async (studentId: number, IH: number, FH: number) => {
-  
+
   const enrollments = await prisma.enrollment.findMany({
     where: { studentId },
     include: { section: true },
   });
-  
+
   return enrollments.filter(enrollment => {
     const { IH: existingIH, FH: existingFH } = enrollment.section;
-    
+
     return !(FH <= existingIH || IH >= existingFH);
   });
 };
@@ -124,8 +125,84 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
   // Obtener la información del estudiante
   const estu = await prisma.student.findFirst({
     where: { id: studentId },
-    select: { userId: true }
+    select: { userId: true, globalAverage: true }
   });
+
+  const process = await checkActiveProcessByTypeId(3);
+
+  const currentDate = new Date();
+
+  // Convertir currentDate a UTC
+  const currentUtcDate = new Date(
+    currentDate.getUTCFullYear(),
+    currentDate.getUTCMonth(),
+    currentDate.getUTCDate(),
+    currentDate.getUTCHours(),
+    currentDate.getUTCMinutes(),
+    currentDate.getUTCSeconds()
+  );
+
+
+  if (estu.globalAverage === null || estu.globalAverage === 0) {
+    const dayEnrolls = await prisma.dayEnroll.findMany({
+      where: {
+        processId: process.id
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+    });
+
+    if (dayEnrolls.length === 0) {
+      throw new Error('No hay fechas de matrícula disponibles para este estudiante en este momento.');
+    }
+
+    // Verifica si la fecha actual coincide con el primer día de matrícula
+    const firstDayEnroll = dayEnrolls[0];
+
+    if (currentUtcDate < firstDayEnroll.startDate || currentUtcDate > firstDayEnroll.finalDate) {
+      throw new Error('Tu día de matrícula terminó o aún no ha empezado.');
+    }
+
+  } else {
+    const dayEnrolls = await prisma.dayEnroll.findMany({
+      where: {
+        processId: process.id,
+        startDate: {
+          lte: currentDate,
+        },
+        finalDate: {
+          gte: currentDate
+        }
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+    });
+
+    if (dayEnrolls.length === 0) {
+      throw new Error('No hay fechas de matrícula disponibles para este estudiante en este momento.');
+    }
+
+    const validEnroll = dayEnrolls.find((dayEnroll, index) => {
+      const nextDayEnroll = dayEnrolls[index + 1];
+      // Si no hay un día de matrícula siguiente, solo verifica el límite inferior
+      if (!nextDayEnroll) {
+        return estu.globalAverage >= dayEnroll.globalAvarage;
+      }
+
+      // Verificar si el promedio global está dentro del rango para el día de matrícula actual
+      return estu.globalAverage >= dayEnroll.globalAvarage && estu.globalAverage < nextDayEnroll.globalAvarage;
+
+    });
+
+    if (!validEnroll) {
+      throw new Error("No cumples con los requisitos de promedio global para matricularse en este momento");
+    }
+
+
+
+  }
 
   const idusuario = estu.userId;
 
@@ -195,9 +272,9 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
           }
         }
       },
-      section_Day : {select:{day:{select:{name :true}}}},
-      teacher : {include : {person : {select: {firstName: true, middleName:true, lastName:true,secondLastName:true}}}},
-      waitingList : {select: { id: true}},
+      section_Day: { select: { day: { select: { name: true } } } },
+      teacher: { include: { person: { select: { firstName: true, middleName: true, lastName: true, secondLastName: true } } } },
+      waitingList: { select: { id: true } },
     }
   });
 
@@ -230,32 +307,34 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
         where: {
           studentId: studentId,
           sectionId: section.id,
-        }, include:{
-          section:true,
+        }, include: {
+          section: true,
         }
       })
-      if (enrollData){
-        inEnroll=true;
-        if(enrollData.waitingListId){
-          inWaitingList=true;
-        }
+
+      if (enrollData && !enrollData.waitingListId) {
+        inEnroll = true;
       }
 
-      if(enrollData.section.classId == section.classId){
+      if (enrollData && enrollData.waitingListId) {
+        inWaitingList = true;
+      }
+
+      if (enrollData && enrollData.section.classId == section.classId) {
         allReadyClassEnroll = true
       }
 
       const matriculados = await prisma.enrollment.count({
-        where: { 
+        where: {
           sectionId: section.id,
-          waitingListId: null 
+          waitingListId: null
         }
       });
 
       const listadeespera = await prisma.enrollment.count({
-        where: { 
+        where: {
           sectionId: section.id,
-          waitingListId: section.waitingList.id 
+          waitingListId: section.waitingList.id
         }
       });
 
@@ -278,13 +357,13 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
         FH: section.FH,
         quotes: cupos,
         waitingList: listadeespera,
-        teacher: { 
-          firstName:section.teacher.person.firstName,
-          middleName:section.teacher.person.middleName,
-          lastName:section.teacher.person.lastName,
-          secondLastName:section.teacher.person.secondLastName,
+        teacher: {
+          firstName: section.teacher.person.firstName,
+          middleName: section.teacher.person.middleName,
+          lastName: section.teacher.person.lastName,
+          secondLastName: section.teacher.person.secondLastName,
         },
-        days : section.section_Day.map(days=>days.day.name),
+        days: section.section_Day.map(days => days.day.name),
         inEnrollment: inEnroll,
         inWaitingList: inWaitingList,
 
@@ -347,7 +426,7 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
     throw new Error('No hay un periodo acadmico activo todavia');
   }
 
-  const idPeriodo =  periodoActual.id;
+  const idPeriodo = periodoActual.id;
 
   // Obtener las clases matriculadas del estudiante
   const enrolledClasses = await prisma.enrollment.findMany({
@@ -360,18 +439,32 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
               studyPlan: { careerId: carreraEstudiante }
             }
           }
-        },academicPeriodId : idPeriodo,
+        }, academicPeriodId: idPeriodo,
         classroom: {
           building: {
             regionalCenterId: centroEstudiante
           }
         }
-      }, waitingListId : null,
+      }, waitingListId: null,
     },
     include: {
       section: {
         include: {
-          class: true
+          class: true,
+          teacher: {
+            include: {
+              person: true
+            }
+          },
+          section_Day: {
+            include: {
+              day: {
+                select: {
+                  name: true
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -382,8 +475,16 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
     classId: enrollment.section.class.id,
     className: enrollment.section.class.name,
     sectionCode: enrollment.section.code,
-    Hora_Incio: enrollment.section.IH,
-    Hora_Final: enrollment.section.FH
+    HI: enrollment.section.IH,
+    HF: enrollment.section.FH,
+    teacher: {
+      firstName: enrollment.section.teacher.person.firstName,
+      middleName: enrollment.section.teacher.person.middleName,
+      lastName: enrollment.section.teacher.person.lastName,
+      secondLastName: enrollment.section.teacher.person.secondLastName,
+    },
+    days: enrollment.section.section_Day.map(days => days.day.name),
+    sectionId: enrollment.section.id
   }));
 
   return enrolledClassDetails;
