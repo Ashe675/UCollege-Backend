@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from "../../config/db";
+import { getSiguientePeriodo,getPeriodoActual } from "../../utils/section/sectionUtils";
 
 export const checkClassExistsAndActive = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -82,14 +83,101 @@ export const checkClassCareerandCenterandTeacher = async (req: Request, res: Res
   }
 };
 
+
+export const checkSectionandCenterDepartment = async (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user?.id;
+  const sectionId = req.params.sectionId || req.body.sectionId;
+
+  if (!userId || !sectionId) {
+    return res.status(400).json({ error: 'Falta el ID de usuario o ID de seccion' });
+  }
+
+  try {
+    const sectionFaculty = await prisma.section.findFirst({
+      where: { id: sectionId },
+      select: { regionalCenter_Faculty_CareerId: true }
+    });
+
+    if (!sectionFaculty) {
+      return res.status(404).json({ error: 'Seccion no encontrada' });
+    }
+
+    const teacherFaculty = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+      where: { teacherId: userId },
+      select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
+    });
+
+    if (!teacherFaculty) {
+      return res.status(404).json({ error: 'Maestro no encontrado' });
+    }
+
+    const sectionRegionalCenter_Faculty_CareerId = sectionFaculty.regionalCenter_Faculty_CareerId;
+    const teacherRegionalCenter_Faculty_CareerId = teacherFaculty.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+
+    if (sectionRegionalCenter_Faculty_CareerId !== teacherRegionalCenter_Faculty_CareerId) {
+      return res.status(403).json({ error: 'Este usuario no tiene acceso a esta seccion' });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error checking regional center faculty:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 export const checkClassroomAvailability = async (req: Request, res: Response, next: NextFunction) => {
   const { IH, FH, classroomId, days } = req.body;
-
+  const IdPeriodo = await getPeriodoActual();
   try {
     // Obtener las secciones conflictivas
     const conflictingSections = await prisma.section.findMany({
       where: {
         classroomId,
+        academicPeriodId: IdPeriodo,
+        section_Day: {
+          some: {
+            dayId: { in: days }
+          }
+        },
+        OR: [
+          {
+            IH: { lte: IH },
+            FH: { gt: IH },
+          },
+          {
+            IH: { lt: FH },
+            FH: { gte: FH },
+          },
+          {
+            IH: { gte: IH },
+            FH: { lte: FH },
+          },
+        ],
+      },
+      include: {
+        section_Day: true,
+      },
+    });
+
+    if (conflictingSections.length > 0) {
+      return res.status(400).json({ error: 'El aula ya está ocupada dentro de esas horas y días.' });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error checking classroom availability:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const checkClassroomAvailabilityNext = async (req: Request, res: Response, next: NextFunction) => {
+  const { IH, FH, classroomId, days } = req.body;
+  const idPeriodo = await getSiguientePeriodo();
+  try {
+    // Obtener las secciones conflictivas
+    const conflictingSections = await prisma.section.findMany({
+      where: {
+        classroomId,
+        academicPeriodId:idPeriodo,
         section_Day: {
           some: {
             dayId: { in: days }
@@ -207,6 +295,7 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
 export const checkTeacherExistsAndActive = async (req: Request, res: Response, next: NextFunction) => {
   const { teacherId } = req.body;
   const misterId = req.user?.id;
+  
   try {
     const existingTeacher = await prisma.user.findUnique({
       where: { id: teacherId },
@@ -243,11 +332,56 @@ export const checkTeacherExistsAndActive = async (req: Request, res: Response, n
 
 export const checkTeacherScheduleConflict = async (req: Request, res: Response, next: NextFunction) => {
   const { teacherId, IH, FH, days } = req.body;
-
+  const IdPeriodo = await getPeriodoActual();
   try {
     const conflictingSections = await prisma.section.findMany({
       where: {
         teacherId,
+        academicPeriodId: IdPeriodo,
+        section_Day: {
+          some: {
+            dayId: { in: days }
+          }
+        },
+        OR: [
+          {
+            IH: { lte: IH },
+            FH: { gt: IH },
+          },
+          {
+            IH: { lt: FH },
+            FH: { gte: FH },
+          },
+          {
+            IH: { gte: IH },
+            FH: { lte: FH },
+          },
+        ],
+      },
+      include: {
+        section_Day: true,
+      },
+    });
+
+    if (conflictingSections.length > 0) {
+      return res.status(400).json({ error: 'El maestro tiene otra sección programada durante estas horas y días.' });
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error checking teacher schedule conflict:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const checkTeacherScheduleConflictNext = async (req: Request, res: Response, next: NextFunction) => {
+  const { teacherId, IH, FH, days } = req.body;
+  const idPeriodo = await getSiguientePeriodo();
+  try {
+    const conflictingSections = await prisma.section.findMany({
+      where: {
+        teacherId,
+        academicPeriodId: idPeriodo,
         section_Day: {
           some: {
             dayId: { in: days }
@@ -340,7 +474,7 @@ export const validateTeacherId = async (req: Request, res: Response, next: NextF
 export const checkTeacherScheduleConflictUpdate = async (req: Request, res: Response, next: NextFunction) => {
   const { teacherId, IH, FH, days } = req.body;
   const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
-
+  const idPeriodo = await getPeriodoActual();
   try {
     // Obtener la sección actual para comparar las horas
     const existingSection = await prisma.section.findUnique({
@@ -356,6 +490,62 @@ export const checkTeacherScheduleConflictUpdate = async (req: Request, res: Resp
       const conflictingSections = await prisma.section.findMany({
         where: {
           teacherId,
+          academicPeriodId: idPeriodo,
+          id: { not: Number(sectionId) },
+          section_Day: {
+            some: {
+              dayId: { in: days }
+            }
+          }, // Excluir la sección actual de la validación
+          OR: [
+            {
+              IH: { lte: IH },
+              FH: { gt: IH },
+            },
+            {
+              IH: { lt: FH },
+              FH: { gte: FH },
+            },
+            {
+              IH: { gte: IH },
+              FH: { lte: FH },
+            },
+          ],
+        },
+      });
+
+      if (conflictingSections.length > 0) {
+        return res.status(400).json({ error: 'El maestro tiene otra sección programada durante estas horas' });
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error checking teacher schedule conflict:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const checkTeacherScheduleConflictUpdateNext = async (req: Request, res: Response, next: NextFunction) => {
+  const { teacherId, IH, FH, days } = req.body;
+  const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
+  const idPeriodo = await getSiguientePeriodo();
+  try {
+    // Obtener la sección actual para comparar las horas
+    const existingSection = await prisma.section.findUnique({
+      where: { id: Number(sectionId) },
+    });
+
+    if (!existingSection) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    // Verificar conflictos solo si las horas están cambiando
+    if (IH !== existingSection.IH || FH !== existingSection.FH) {
+      const conflictingSections = await prisma.section.findMany({
+        where: {
+          teacherId,
+          academicPeriodId: idPeriodo,
           id: { not: Number(sectionId) },
           section_Day: {
             some: {
@@ -394,7 +584,7 @@ export const checkTeacherScheduleConflictUpdate = async (req: Request, res: Resp
 export const checkClassroomAvailabilityUpdate = async (req: Request, res: Response, next: NextFunction) => {
   const { IH, FH, classroomId, days } = req.body;
   const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
-
+  const idPeriodo = await getPeriodoActual();
   try {
     // Obtener la sección actual para comparar las horas
     const existingSection = await prisma.section.findUnique({
@@ -409,6 +599,62 @@ export const checkClassroomAvailabilityUpdate = async (req: Request, res: Respon
     if (IH !== existingSection.IH || FH !== existingSection.FH || classroomId !== existingSection.classroomId) {
       const conflictingSections = await prisma.section.findMany({
         where: {
+          classroomId,
+          academicPeriodId: idPeriodo,
+          id: { not: Number(sectionId) },
+          section_Day: {
+            some: {
+              dayId: { in: days }
+            }
+          }, // Excluir la sección actual de la validación
+          OR: [
+            {
+              IH: { lte: IH },
+              FH: { gt: IH },
+            },
+            {
+              IH: { lt: FH },
+              FH: { gte: FH },
+            },
+            {
+              IH: { gte: IH },
+              FH: { lte: FH },
+            },
+          ],
+        },
+      });
+
+      if (conflictingSections.length > 0) {
+        return res.status(400).json({ error: 'El aula ya está ocupada durante estas horas' });
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error checking classroom availability:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const checkClassroomAvailabilityUpdateNext = async (req: Request, res: Response, next: NextFunction) => {
+  const { IH, FH, classroomId, days } = req.body;
+  const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
+  const idPeriodo = await getSiguientePeriodo();
+  try {
+    // Obtener la sección actual para comparar las horas
+    const existingSection = await prisma.section.findUnique({
+      where: { id: Number(sectionId) },
+    });
+
+    if (!existingSection) {
+      return res.status(404).json({ error: 'Section no encontrada' });
+    }
+
+    // Verificar conflictos solo si las horas o el aula están cambiando
+    if (IH !== existingSection.IH || FH !== existingSection.FH || classroomId !== existingSection.classroomId) {
+      const conflictingSections = await prisma.section.findMany({
+        where: {
+          academicPeriodId:idPeriodo,
           classroomId : Number(classroomId),
           id: { not: Number(sectionId) },
           section_Day: {

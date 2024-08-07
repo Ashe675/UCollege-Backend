@@ -11,14 +11,27 @@ import {
   updateSectionCapacity,
   getTeachersByDepartment,
   getSectionByDepartmentActual,
-  getWaitingListById
+  getWaitingListById,
+  createSectionNext,
+  getSectionsByTeacherIdNext,
+  getSectionByDepartmentActualNext
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
-import { getRegionalCenterSection } from "../../utils/section/sectionUtils";
+import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
 
 export const createSectionController = async (req: Request, res: Response) => {
   try {
     const newSection = await createSection(req.body, req);
+    res.status(201).json(newSection);
+  } catch (error) {
+    console.error('Error creando la sección:', error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const createSectionControllerNext = async (req: Request, res: Response) => {
+  try {
+    const newSection = await createSectionNext(req.body, req);
     res.status(201).json(newSection);
   } catch (error) {
     console.error('Error creando la sección:', error);
@@ -126,6 +139,15 @@ export const getSectionsByTeacherIdController = async (req: Request, res: Respon
   }
 };
 
+export const getSectionsByTeacherIdControllerNext = async (req: Request, res: Response) => {
+  try {
+    const sections = await getSectionsByTeacherIdNext(req);
+    res.status(200).json(sections);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const updateSectionCapacityController = async (req: Request, res: Response) => {
   const { id } = req.params;
   const increment = Number(req.body.increment);
@@ -155,6 +177,16 @@ export const getTeachersByDepartmentController = async (req: Request, res: Respo
 export const getTeachersByDepartmentAcademicPeriodController = async (req: Request, res: Response) => {
   try {
     const result = await getSectionByDepartmentActual(req);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error getting teachers by department:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getTeachersByDepartmentAcademicPeriodControllerNext = async (req: Request, res: Response) => {
+  try {
+    const result = await getSectionByDepartmentActualNext(req);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);

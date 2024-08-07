@@ -15,6 +15,11 @@ export const createProcess = async (data: ProcessData) => {
   let { processTypeId, ...restData } = data;
   processTypeId = +processTypeId;
 
+  // Validar fechas
+  const startDate = new Date(restData.startDate);
+  const finalDate = new Date(restData.finalDate);
+  const now = new Date();
+
   if (new Date(restData.startDate) < new Date()) {
     throw new Error('La fecha inicial debe de ser mayor o igual a la actual.')
   }
@@ -29,7 +34,6 @@ export const createProcess = async (data: ProcessData) => {
     where: {
       processTypeId,
       OR: [
-        { active: true },
         {
           startDate: { lte: new Date(restData.finalDate) },
           finalDate: { gte: new Date(restData.startDate) }
@@ -151,6 +155,30 @@ export const createProcess = async (data: ProcessData) => {
     });
 
     return process
+  }
+
+  if (processTypeId === 6) {
+
+    const nextAcademicPeriod = await prisma.process.findFirst({
+      where: {
+        processTypeId: 5,
+        startDate: { gte: now },
+        finalDate:{gte:now}
+      },
+      orderBy: {
+        startDate: 'asc',
+      },
+    });
+
+    if (!nextAcademicPeriod) {
+      throw new Error('No se encontró el siguiente periodo académico.');
+    }
+
+    if (finalDate > new Date(nextAcademicPeriod.finalDate)) {
+      throw new Error('La fecha final del proceso de creación de secciones no puede ser mayor a la fecha final del siguiente periodo académico.');
+    }
+
+    restData.processId = nextAcademicPeriod.id;
   }
 
   // Crear el proceso

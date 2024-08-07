@@ -22,6 +22,7 @@ import departmentHeadRoutes from './routes/departmentHead/departmentHeadRoutes';
 import userRoutes from "./routes/user/userRoutes";
 import authRoutes from './routes/auth/authRoutes';
 import adminRoutes from './routes/admin/adminRoutes';
+import statisticsRoutes from './routes/statistics/statisticsRoutes';
 
 import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
@@ -56,6 +57,7 @@ app.use('/api/enroll', enrollRoutes);
 app.use('/api/section', sectionRoutes);
 app.use('/api/department-head', departmentHeadRoutes);
 
+app.use('/api/statistics', statisticsRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
