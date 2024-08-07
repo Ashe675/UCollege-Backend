@@ -17,14 +17,15 @@ import {
   updateSectionCapacityController,
   getTeachersByDepartmentController,
   getTeachersByDepartmentAcademicPeriodController,
-  getWaitingListController
+  getWaitingListController,
+  createSectionControllerNext,
+  getSectionsByTeacherIdControllerNext,
+  getTeachersByDepartmentAcademicPeriodControllerNext
 } from '../../controllers/sections/sectionController';
 
 import { 
   validateSectionId, 
   createSectionValidators, 
-  checkSectionExists, 
-  checkSectionExistsUpdate,
   validateSectionCapacity,
 } from '../../validators/sections/sectionValidator';
 import { 
@@ -38,7 +39,12 @@ import {
   checkTeacherExistsAndActive,
   checkTeacherScheduleConflict,
   checkTeacherScheduleConflictUpdate,
-  validateTeacherId
+  validateTeacherId,
+  checkSectionandCenterDepartment,
+  checkClassroomAvailabilityNext,
+  checkTeacherScheduleConflictNext,
+  checkClassroomAvailabilityUpdateNext,
+  checkTeacherScheduleConflictUpdateNext,
 
  } from "../../middleware/section/sectionMiddleware";
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -51,16 +57,29 @@ router.post('/',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   createSectionValidators, 
-  checkActiveProcessPeriod, 
   checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkClassExistsAndActive, 
-  checkClassroomExistsAndValidate,
-  checkClassroomAvailability,
+  checkClassroomExistsAndValidate, //corregir por periodo
+  checkClassroomAvailability, //corregir por periodo
   checkTeacherExistsAndActive,
   checkClassCareerandCenterandTeacher,
-  checkTeacherScheduleConflict,
+  checkTeacherScheduleConflict, //corregir por periodo
   createSectionController
   );
+  //CREAR SECCIONES SIGUEINTE PERIODO
+router.post('/next/',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  createSectionValidators, 
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
+  checkClassExistsAndActive, 
+  checkClassroomExistsAndValidate, 
+  checkClassroomAvailabilityNext, //corregir por periodo
+  checkTeacherExistsAndActive,
+  checkClassCareerandCenterandTeacher,
+  checkTeacherScheduleConflictNext, //corregir por periodo
+  createSectionControllerNext
+);
 //OBTENER TODAS LAS SECCIONES
 router.get('/', 
   authenticate,
@@ -71,6 +90,11 @@ router.get('/teacher/',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
   getSectionsByTeacherIdController);
+//OBTENER SECCIONES POR MAESTRO SIGUIENTE PERIODO
+router.get('/teacher/next', 
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  getSectionsByTeacherIdControllerNext);
 //OBTENER MAESTROS DE DEPARTAMENTO
 router.get('/department/teacher',
   authenticate,
@@ -87,20 +111,26 @@ router.get('/department/actual',
   authenticate, 
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getTeachersByDepartmentAcademicPeriodController)
+//OBTENER SECCIONES POR DEPARTAMENTO AUTENTICADO SIGUIENTE PERIODO
+router.get('/department/next', 
+  authenticate, 
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  getTeachersByDepartmentAcademicPeriodControllerNext)
 //OBTENER SECCION POR ID
-router.get('/:id', 
+router.get('/:sectionId', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  checkSectionandCenterDepartment,
   validateSectionId, 
   getSectionByIdController);
 //ACTUALIZAR SECCION
-router.put('/:id', 
+router.put('/:sectionId', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   createSectionValidators,
+  checkSectionandCenterDepartment,
   validateSectionId,
-  checkActiveProcessPeriod,
-  checkActiveProcesMatricula,
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkClassExistsAndActive, 
   checkClassroomExistsAndValidate,
   checkClassroomAvailabilityUpdate,
@@ -108,16 +138,34 @@ router.put('/:id',
   checkTeacherScheduleConflictUpdate,
   checkClassCareerandCenterandTeacher,
   updateSectionController);
-//AUMENTAR CUPOS
-router.put('/capacity/:id',
+//ACTUALIZAR SECCION SIGUIENTE PERIODO
+router.put('/next/:sectionId', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  createSectionValidators,
+  checkSectionandCenterDepartment,
+  validateSectionId,
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
+  checkClassExistsAndActive, 
+  checkClassroomExistsAndValidate,
+  checkClassroomAvailabilityUpdateNext,
+  checkTeacherExistsAndActive,
+  checkTeacherScheduleConflictUpdateNext,
+  checkClassCareerandCenterandTeacher,
+  updateSectionController);
+//AUMENTAR CUPOS
+router.put('/capacity/:sectionId',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   validateSectionCapacity,
   updateSectionCapacityController
 )
-router.delete('/:id', 
+router.delete('/:sectionId', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
+  checkSectionandCenterDepartment,
   validateSectionId, 
   deleteSectionController);
   

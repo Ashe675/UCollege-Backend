@@ -115,3 +115,46 @@ export const getRegionalCenterSection = async (id: number) => {
       
       return matriculados;
   };
+
+  export const getSiguientePeriodo = async () => {
+    const now = new Date();
+        const nextAcademicPeriod = await prisma.process.findFirst({
+          where: {
+            processTypeId: 5,
+            startDate: { gte: now },
+            finalDate: { gte: now},
+          },
+          orderBy: {
+            startDate: 'asc'
+          },
+          select: {
+            id: true,
+            academicPeriod: {
+              select: {
+                id: true
+              }
+            }
+          }
+        });
+      
+        if (!nextAcademicPeriod) {
+          throw new Error('No se encontró ningún siguiente período académico.');
+        }
+
+        const idPeriodo = nextAcademicPeriod.academicPeriod.id;
+        return idPeriodo;
+  }
+
+  export const getPeriodoActual = async () => {
+    const academicPeriod = await prisma.process.findFirst({
+      where: { processTypeId: 5, active: true, finalDate: { gte: new Date() }, startDate: { lte: new Date() } },
+      select: { academicPeriod: { select: { id: true } } },
+    });
+
+    if (!academicPeriod) {
+      throw new Error('Academic period not found');
+    }
+
+    const idPeriodo = academicPeriod.academicPeriod.id;
+    return idPeriodo;
+  }
