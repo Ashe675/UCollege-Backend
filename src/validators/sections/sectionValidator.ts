@@ -43,7 +43,7 @@ export const createSectionValidators = [
     .notEmpty().withMessage('FH es requerido')
     .custom((value, { req }) => {
       if (value <= req.body.IH) {
-        throw new Error('FH debe ser mayor que IH');
+        throw new Error('Hora final debe ser mayor que la Hora Inicial');
       }
       return true;
     }),
