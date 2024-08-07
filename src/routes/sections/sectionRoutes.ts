@@ -19,6 +19,7 @@ import {
   getTeachersByDepartmentAcademicPeriodController,
   getWaitingListController
 } from '../../controllers/sections/sectionController';
+
 import { 
   validateSectionId, 
   createSectionValidators, 
@@ -119,8 +120,11 @@ router.delete('/:id',
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   validateSectionId, 
   deleteSectionController);
+  
 
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
 
 export default router;
+
+

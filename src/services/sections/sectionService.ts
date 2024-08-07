@@ -9,7 +9,7 @@ interface CreateSectionInput {
   classId: number;
   teacherId: number;
   classroomId: number;
-  quota : number;
+  quota: number;
   days: number[]; // Array de IDs de días
 }
 export const createSection = async (data: CreateSectionInput, req: Request) => {
@@ -39,14 +39,14 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
       throw new Error('Classroom not found');
     }
 
-    if(quota <=0){
+    if (quota <= 0) {
       throw new Error(`Cupos deben ser mayores a cero`);
     }
 
 
     const capacity = classroomData.capacity;
 
-    if(quota > capacity  ){
+    if (quota > capacity) {
       throw new Error(`Cupos exceden la capacidad del aula ${capacity}`);
     }
 
@@ -91,7 +91,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
     const newSection = await prisma.section.create({
       data: {
         code: sectionCode,
-        capacity : Number(quota),
+        capacity: Number(quota),
         IH,
         FH,
         classId,
@@ -106,7 +106,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
         }
       },
       include: {
-        section_Day: {select : { day : {  select : { name : true}}}}
+        section_Day: { select: { day: { select: { name: true } } } }
       }
     });
 
@@ -164,7 +164,7 @@ export const updateSection = async (id: number, data: UpdateSectionInput, req: R
           create: days.map(dayId => ({ dayId })), // Crear los nuevos días
         },
       },
-      include: { section_Day: {select: {day: { select: {name :  true}}}} },
+      include: { section_Day: { select: { day: { select: { name: true } } } } },
     });
 
     return updatedSection;
@@ -184,7 +184,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
             enrollments: true
           }
         },
-        classroom : true
+        classroom: true
       }
     });
 
@@ -192,20 +192,20 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       throw new Error('Section not found');
     }
 
-    if(increment <= 0){
+    if (increment <= 0) {
       throw new Error('El incremento debe ser mayor a cero.');
     }
 
-    
-    if((increment + section.capacity) > section.classroom.capacity){
+
+    if ((increment + section.capacity) > section.classroom.capacity) {
       throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
     }
-    
+
     // Obtener el número de matriculados actuales (sin waitingListId)
     const matriculados = await prisma.enrollment.count({
-      where: { 
+      where: {
         sectionId: section.id,
-        waitingListId: null 
+        waitingListId: null
       }
     });
 
@@ -287,7 +287,7 @@ const getDepartmentIdByClassId = async (classId: number) => {
 };
 export const getAllSections = async () => {
   const sections = await prisma.section.findMany({
-    include: { section_Day : {select : {day : {select : {name : true}}}}, waitingList : true},
+    include: { section_Day: { select: { day: { select: { name: true } } } }, waitingList: true },
   }
   );
   const sectionsWithDetails = await Promise.all(
@@ -301,7 +301,7 @@ export const getAllSections = async () => {
         ...section,
         matriculados: matriculados,
         waitingList: waitingListStudents,
-        
+
       };
     })
   );
@@ -335,15 +335,19 @@ export const getSectionByDepartment = async (req: Request) => {
   const userid = req.user?.id;
   const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
     where: { teacherId: userid },
-    select: { regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } } }
+    select: {
+      regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } },
+      regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: true
+    }
   });
 
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
+  const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
 
   const sections = await prisma.section.findMany({
-    where: { class: { departamentId: userdepartmentid } },
-    include : { section_Day : {select : {day : {select : {name : true}}}}, waitingList: true}
+    where: { class: { departamentId: userdepartmentid }, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
+    include: { section_Day: { select: { day: { select: { name: true } } } }, waitingList: true }
   });
 
   const sectionsWithDetails = await Promise.all(
@@ -357,11 +361,11 @@ export const getSectionByDepartment = async (req: Request) => {
         ...section,
         matriculados: matriculados,
         waitingList: waitingListStudents,
-        
+
       };
     })
   );
-  
+
 
   return { departmentname, sectionsWithDetails };
 };
@@ -370,7 +374,10 @@ export const getSectionByDepartmentActual = async (req: Request) => {
   const userid = req.user?.id;
   const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
     where: { teacherId: userid },
-    select: { regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } } }
+    select: {
+      regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } },
+      regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: true
+    }
   });
 
   const periodoActual = await prisma.academicPeriod.findFirst({
@@ -387,13 +394,32 @@ export const getSectionByDepartmentActual = async (req: Request) => {
     throw new Error('No hay un periodo acadmico activo todavia');
   }
 
-  const idPeriodo =  periodoActual.id;
+  const idPeriodo = periodoActual.id;
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
+  const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
 
   const sections = await prisma.section.findMany({
-    where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true },
-    include : { section_Day : {select : {day : {select : {name : true}}}}}
+    where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
+    include: {
+      section_Day: { select: { day: { select: { name: true } } } },
+      classroom: {
+        select: {
+          code: true,
+          building: {
+            select: { code: true }
+          }
+        }
+      },
+      teacher: {
+        select: {
+          institutionalEmail: true,
+          person: true,
+          id: true,
+          identificationCode: true
+        }
+      }
+    }
   });
 
   const sectionsWithDetails = await Promise.all(
@@ -406,8 +432,10 @@ export const getSectionByDepartmentActual = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
+        quotasAvailability : section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        
+        waitingListCount : waitingListStudents.length
+
       };
     })
   );
@@ -441,7 +469,7 @@ export const getSectionsByTeacherId = async (req: Request) => {
       }
     }
   });
-  const idPeriodo =  periodoActual.id;
+  const idPeriodo = periodoActual.id;
 
   const sections = await prisma.section.findMany({
     where: { teacherId: userid, academicPeriodId: idPeriodo, active: true },
@@ -459,8 +487,9 @@ export const getSectionsByTeacherId = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
+        quotasAvailability : section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        
+        waitingListCount : waitingListStudents.length
       };
     })
   );
@@ -498,6 +527,7 @@ export const getTeachersByDepartment = async (req: Request) => {
           verified: true,
           description: true,
           roleId: true,
+          images: { where: { avatar: true }, select: { url: true } },
           person: {
             select: {
               firstName: true,
