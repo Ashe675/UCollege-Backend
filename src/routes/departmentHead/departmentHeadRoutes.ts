@@ -1,11 +1,20 @@
 import express from 'express';
-import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
 
+//middleware
+import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+import {validateCodeIdentificationData} from '../../middleware/codeIdentification/validateCodeIdentificationData'
+
+//validators
+import {isStudentCode} from '../../validators/departmentHead/isStudentCode'
+
+//Controladores
 import {getAllBuilding} 
 from '../../controllers/sections/buildingController';
-
 import { getAllClass } from '../../controllers/departmentHead/classController';
+import { getAcademicHistory } from '../../controllers/departmentHead/departmentHeadController'
+
+
 
 const router = express.Router();
 
@@ -26,6 +35,14 @@ router.get('/get-class',
     authenticate, 
     authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
     getAllClass
+);
+
+router.get('/student-history/:identificationCode',
+    authenticate, 
+    authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+    validateCodeIdentificationData,
+    isStudentCode,
+    getAcademicHistory,
 );
 
 export default router;

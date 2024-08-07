@@ -25,7 +25,7 @@ export const getAllClass = async (req: Request, res: Response)=>{
 
         const classes = await getClassesOfDepartment(departmentUserId);
         
-        return res.status(200).json()
+        return res.status(200).json(classes)
 
     } catch (error) {
         console.error('Error al obtener clases:', error);
