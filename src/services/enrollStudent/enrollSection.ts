@@ -159,8 +159,7 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
 
     // Verifica si la fecha actual coincide con el primer día de matrícula
     const firstDayEnroll = dayEnrolls[0];
-
-    if (currentUtcDate < firstDayEnroll.startDate || currentUtcDate > firstDayEnroll.finalDate) {
+    if (currentDate < firstDayEnroll.startDate || currentDate > firstDayEnroll.finalDate) {
       throw new Error('Tu día de matrícula terminó o aún no ha empezado.');
     }
 

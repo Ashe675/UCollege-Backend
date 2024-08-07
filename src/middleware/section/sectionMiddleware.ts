@@ -164,7 +164,7 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
   try {
     // Obtener el edificio (building) del aula (classroom)
     const classroom = await prisma.classroom.findUnique({
-      where: { id: classroomId },
+      where: { id: Number(classroomId) },
       select: { buildingId: true },
     });
 
@@ -409,7 +409,7 @@ export const checkClassroomAvailabilityUpdate = async (req: Request, res: Respon
     if (IH !== existingSection.IH || FH !== existingSection.FH || classroomId !== existingSection.classroomId) {
       const conflictingSections = await prisma.section.findMany({
         where: {
-          classroomId,
+          classroomId : Number(classroomId),
           id: { not: Number(sectionId) },
           section_Day: {
             some: {

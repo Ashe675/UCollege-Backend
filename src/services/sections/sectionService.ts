@@ -312,7 +312,20 @@ export const getSectionById = async (id: number) => {
   // Obtén la sección por ID
   const section = await prisma.section.findUnique({
     where: { id },
-    include: { section_Day: { select: { day: { select: { name: true } } } } }
+    include: {
+      section_Day: { select: { day: { select: { name: true, id: true } } } },
+      teacher: { select: { person: true, identificationCode: true, institutionalEmail: true, id: true } },
+      classroom: {
+        select: {
+          capacity: true,
+          code: true,
+          building: {
+            select: { code: true, id: true }
+          }
+        }
+      },
+      class: true
+    }
   });
 
   if (!section) {
@@ -327,8 +340,10 @@ export const getSectionById = async (id: number) => {
 
   return {
     ...section,
-    matriculados,
-    waitingList: waitingListStudents
+    matriculados: matriculados,
+    quotasAvailability: section.capacity - matriculados.length,
+    waitingList: waitingListStudents,
+    waitingListCount: waitingListStudents.length
   };
 };
 export const getSectionByDepartment = async (req: Request) => {
@@ -432,9 +447,9 @@ export const getSectionByDepartmentActual = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
-        quotasAvailability : section.capacity - matriculados.length,
+        quotasAvailability: section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        waitingListCount : waitingListStudents.length
+        waitingListCount: waitingListStudents.length
 
       };
     })
@@ -487,9 +502,9 @@ export const getSectionsByTeacherId = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
-        quotasAvailability : section.capacity - matriculados.length,
+        quotasAvailability: section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        waitingListCount : waitingListStudents.length
+        waitingListCount: waitingListStudents.length
       };
     })
   );
