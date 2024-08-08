@@ -75,6 +75,22 @@ export const activateEnrollmentProcess = async (startDate: Date, finalDate: Date
       where: { processTypeId : 5 , active: true, finalDate: { gte: new Date() }, startDate: { lte: new Date() } }
     })
 
+    if(new Date(startDate) >= academicPeriod.finalDate  ||  new Date(finalDate) >= academicPeriod.finalDate || new Date(startDate) < academicPeriod.startDate ){
+      throw new Error('Las fechas se deben de mantener dentro del periodo académico.')
+    }
+
+    // Verificar si ya existe un proceso de matricula asociado a este periodo
+    const existingUploadGradeProcess = await prisma.process.findFirst({
+      where: {
+        processTypeId: 3,
+        processId: academicPeriod.id,
+      },
+    });
+
+    // Si ya existe un proceso de matricula , retornar un error
+    if (existingUploadGradeProcess) {
+      throw new Error('Ya hay un proceso de matricula asociado al periodo actual.')
+    }
 
     // Crear un nuevo proceso de matrícula
     const newProcess = await prisma.process.create({
