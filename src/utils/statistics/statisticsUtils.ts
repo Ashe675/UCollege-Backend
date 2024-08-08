@@ -43,7 +43,7 @@ export const getTotalAprobadosDepartment = async (req:Request)=>{
       });
     return cantidadAprobados;
 };
-const getPeriodoUltimo = async () => {
+export const getPeriodoUltimo = async () => {
     const periodo = await prisma.academicPeriod.findFirst({
         where: {
             process: {
@@ -51,13 +51,20 @@ const getPeriodoUltimo = async () => {
                 finalDate: {
                     lt: new Date(), // Asegúrate de que el período haya finalizado antes o en la fecha actual
                 },
-                processTypeId : 5,
+                processTypeId: 5,
             },  
         },
         orderBy: {
-            process:{finalDate: 'desc', }// Ordenar por fecha final en orden descendente}
+            process: {
+                finalDate: 'desc', // Ordenar por fecha final en orden descendente
+            }
         },
     });
+
+    if (!periodo) {
+        throw new Error('No se encontró un período académico terminado.');
+    }
+
     const periodoId = periodo.id;
     console.log(periodoId);
     return periodoId;

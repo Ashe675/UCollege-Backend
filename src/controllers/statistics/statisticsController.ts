@@ -11,7 +11,7 @@ import {
     getClaseConMasAprobado,
     getClaseConMasReprobado,
     getEstadisticasDepartment,
-    getEstadisticasDepartmentActual
+    getEstadisticasDepartmentUltimoPeriodo
 } from '../../services/statistics/statisticsService';
 
 export const handleGetAprobadosPorClase = async (req: Request, res: Response) => {
@@ -35,7 +35,7 @@ export const getEstadisticasDepartmentController = async (req: Request, res: Res
 
 export const getEstadisticasDepartmentControllerActual = async (req: Request, res: Response) => {
     try {
-        const statistics = await getEstadisticasDepartmentActual(req);
+        const statistics = await getEstadisticasDepartmentUltimoPeriodo(req);
         return res.status(200).json(statistics);
     } catch (error) {
         return res.status(500).json({ message: error.message });
