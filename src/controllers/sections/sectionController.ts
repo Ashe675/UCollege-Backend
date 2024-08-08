@@ -45,7 +45,7 @@ export const getAllSectionsController = async (req: Request, res: Response) => {
     res.status(200).json(sections);
   } catch (error) {
     console.error('Error obteniendo secciones:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -61,7 +61,7 @@ export const getUserData = async (req: Request, res: Response) => {
       res.status(200).json(user);
   } catch (error) {
       console.error('Error fetching user data:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      res.status(400).json({ error: error.message });
   }
 };
 
@@ -76,7 +76,7 @@ export const getSectionByIdController = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('Error obteniendo sección:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -85,7 +85,7 @@ export const getSectionByDepartmentController = async (req: Request, res: Respon
     const sections = await getSectionByDepartment(req);
     res.json(sections);
   } catch (error) {
-    res.status(500).json({ message: 'Error retrieving sections', error });
+    res.status(400).json({ message: 'Error retrieving sections', error });
   }
 }; 
 
@@ -101,7 +101,7 @@ export const updateSectionController = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error actualizando sección:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -123,10 +123,10 @@ export const deleteSectionController = async (req: Request, res: Response) => {
     }
 
     const updatedSection = await deleteSection(Number(id), justification);
-    res.status(200).json({ message: 'Sección desactivada correctamente', updatedSection });
+    res.status(200).json({ message: 'Sección cancelada correctamente', updatedSection });
   } catch (error) {
     console.error('Error desactivando sección:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -135,7 +135,7 @@ export const getSectionsByTeacherIdController = async (req: Request, res: Respon
     const sections = await getSectionsByTeacherId(req);
     res.status(200).json(sections);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -144,7 +144,7 @@ export const getSectionsByTeacherIdControllerNext = async (req: Request, res: Re
     const sections = await getSectionsByTeacherIdNext(req);
     res.status(200).json(sections);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -160,7 +160,7 @@ export const updateSectionCapacityController = async (req: Request, res: Respons
     });
   } catch (error) {
     console.error('Error actualizando la capacidad de la sección:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({error: error.message });
   }
 };
 
@@ -170,7 +170,7 @@ export const getTeachersByDepartmentController = async (req: Request, res: Respo
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({error: error.message});
   }
 };
 
@@ -180,7 +180,7 @@ export const getTeachersByDepartmentAcademicPeriodController = async (req: Reque
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -190,7 +190,7 @@ export const getTeachersByDepartmentAcademicPeriodControllerNext = async (req: R
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -207,6 +207,6 @@ export const getWaitingListController = async (req: Request, res: Response) => {
     res.status(200).json(waitingListStudents);
   } catch (error) {
     console.error('Error obteniendo la lista de espera:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(400).json({ error: error.message });
   }
 };

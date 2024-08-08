@@ -2,6 +2,7 @@
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 import { getEnListadeEspera, getMatriculados,getSiguientePeriodo } from "../../utils/section/sectionUtils";
+import { checkActiveProcessByTypeId } from '../../middleware/checkActiveProcessGeneric';
 
 interface CreateSectionInput {
   IH: number;
@@ -599,6 +600,13 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
   });
 
   const idPeriodo = await getSiguientePeriodo();
+
+  const processCreateSection = await checkActiveProcessByTypeId(6)
+  
+  if(!processCreateSection) {
+    throw new Error('Aún no se pueden planificar las clases del próximo periodo.')
+  }
+
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
   const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
@@ -670,9 +678,12 @@ export const deleteSection = async (id: number, justification: string) => {
       startDate: 'asc',
     },
   });
+
+
   const academicPeriodSection = await prisma.section.findFirst({
-    where:{id:id, OR: [{academicPeriodId: currentAcademicPeriod.academicPeriod.id},{academicPeriodId: nextAcademicPeriod.academicPeriod.id}]},
+    where:{id:id, OR: [{academicPeriodId: currentAcademicPeriod.academicPeriod.id},{academicPeriodId: nextAcademicPeriod ?  nextAcademicPeriod.academicPeriod.id : -1 }]},
   })
+
   if (!academicPeriodSection) {
     throw new Error('No se puede eliminar esta seccion porque pertenece a un periodo academico anterior');
   };

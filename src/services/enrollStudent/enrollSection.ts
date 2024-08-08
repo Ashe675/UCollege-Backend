@@ -243,6 +243,7 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
   // Obtener todas las secciones disponibles en ese centro y carrera
   const allSections = await prisma.section.findMany({
     where: {
+      active : true,
       classroom: {
         building: {
           regionalCenterId: centroEstudiante
