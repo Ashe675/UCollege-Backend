@@ -157,7 +157,7 @@ export const getRegionalCenterSection = async (id: number) => {
 
     const idPeriodo = academicPeriod.academicPeriod.id;
     return idPeriodo;
-  }
+  };
 
   export const validateUserAndSection = async (userId: number, sectionId: number) => {
     // Obtener el regionalCenter_Faculty_CareerId del usuario

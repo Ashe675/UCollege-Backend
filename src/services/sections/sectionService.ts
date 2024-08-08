@@ -934,6 +934,81 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
     grades
   };
 };
+export const getEnrollmentsActual = async (req: Request) => {
+  const userId = req.user.id;
+  
+  // Obtener el ID del centro regional y facultad del usuario
+  const regionalCenter_Faculty = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+    where: { teacherId: userId },
+    select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
+  });
+
+  const regionalCenter_FacultyCareerId = regionalCenter_Faculty?.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+
+  if (!regionalCenter_FacultyCareerId) {
+    throw new Error('No se encontró el centro regional y facultad del usuario.');
+  }
+
+  // Obtener el período académico actual
+  const academicPeriodId = await getPeriodoActual();
+  const getAvatar = (images: { url: string; avatar: boolean }[]) =>
+    images.find(image => image.avatar)?.url || null;
+  // Obtener todas las inscripciones en el período actual
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      section: {
+        academicPeriodId: academicPeriodId,
+        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId
+      }
+    },
+    select: {
+      studentId: true,
+      student: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true
+                }
+              },
+              institutionalEmail: true,
+              identificationCode: true,
+              images: {
+                select: {
+                  idImage: true,
+                  url: true,
+                  avatar: true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Mapear la información de los estudiantes
+  const result = enrollments.map(enrollment => ({
+    studentId: enrollment.studentId,
+    userId: enrollment.student.id,
+    dni: enrollment.student.user.person.dni,
+    firstName: enrollment.student.user.person.firstName,
+    middleName: enrollment.student.user.person.middleName,
+    lastName: enrollment.student.user.person.lastName,
+    secondLastName: enrollment.student.user.person.secondLastName,
+    institutionalEmail: enrollment.student.user.institutionalEmail,
+    identificationCode: enrollment.student.user.identificationCode,
+    avatar: getAvatar(enrollment.student.user.images) // Obtén el avatar usando la función getAvatar
+  }));
+
+  return result;
+};
 
 
 

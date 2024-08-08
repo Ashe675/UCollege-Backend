@@ -15,7 +15,8 @@ import {
   createSectionNext,
   getSectionsByTeacherIdNext,
   getSectionByDepartmentActualNext,
-  getGradesBySectionId
+  getGradesBySectionId,
+  getEnrollmentsActual,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -84,6 +85,15 @@ export const getSectionByIdController = async (req: Request, res: Response) => {
 export const getSectionByDepartmentController = async (req: Request, res: Response) => {
   try {
     const sections = await getSectionByDepartment(req);
+    res.json(sections);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving sections', error });
+  }
+}; 
+
+export const getEnrollmentByDepartmentController = async (req: Request, res: Response) => {
+  try {
+    const sections = await getEnrollmentsActual(req);
     res.json(sections);
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving sections', error });
@@ -231,3 +241,4 @@ export const getGradesBySectionIdController = async (req: Request, res: Response
     return res.status(500).json({ message: error.message });
   }
 };
+

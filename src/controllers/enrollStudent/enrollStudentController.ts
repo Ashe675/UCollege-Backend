@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { enrollInSection, getAvailableSectionsForStudent, getEnrolledClassesForStudent } from '../../services/enrollStudent/enrollSection';
+import { enrollInSection, getAvailableSectionsForStudent, getEnrolledClassesForStudent, updateTeacherGrade } from '../../services/enrollStudent/enrollSection';
 import { prisma } from '../../config/db';
 
 export const enrollStudent = async (req: Request, res: Response) => {
@@ -129,6 +129,20 @@ export const getEnrolledClassesForStudentController = async (req: Request, res: 
     return res.status(200).json(sections);
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+};
+
+export const addTeacherGrade = async (req: Request, res: Response) => {
+  const userId = req.user.id; // Asumiendo que el ID del usuario está en el req.user
+  const { sectionId } = req.params;
+  const { teacherGrade } = req.body; // Evaluación del docente que se enviará en el cuerpo de la solicitud
+
+  try {
+    await updateTeacherGrade(userId, parseInt(sectionId), teacherGrade);
+    res.status(200).json({ message: 'Evaluación del docente realizada exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
   }
 };
 

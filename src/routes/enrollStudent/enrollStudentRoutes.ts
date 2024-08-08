@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { enrollStudent, enrollStudent2, getAvailableSectionsController, getEnrolledClassesForStudentController } from '../../controllers/enrollStudent/enrollStudentController';
+import { enrollStudent, enrollStudent2, getAvailableSectionsController, getEnrolledClassesForStudentController,addTeacherGrade } from '../../controllers/enrollStudent/enrollStudentController';
 import { removeEnrollment } from '../../controllers/enrollStudent/deleteEnrollStudentController';
 
 import { enrollStudentValidatorData } from '../../validators/enrollStudent/enrollStudentValidator';
@@ -65,8 +65,11 @@ router.delete('/enroll-delete/:sectionId',
         removeEnrollment
 );
 
+router.post('/teacher-grade/:sectionId',authenticate,authorizeRole(['STUDENT']), addTeacherGrade);
 // router.post('/test01',
 //         enrollStudent2,
 //         )
+
+
 
 export default router;

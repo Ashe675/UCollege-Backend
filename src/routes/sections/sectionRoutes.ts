@@ -21,7 +21,8 @@ import {
   createSectionControllerNext,
   getSectionsByTeacherIdControllerNext,
   getTeachersByDepartmentAcademicPeriodControllerNext,
-  getGradesBySectionIdController
+  getGradesBySectionIdController,
+  getEnrollmentByDepartmentController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -86,6 +87,11 @@ router.get('/',
   authenticate,
   authorizeRole([RoleEnum.ADMIN]),
   getAllSectionsController);
+//OBTENER TODOS LOS MATRICULADOS DEL DEPARTAMRNTO
+router.get('/enrollments/current/',
+  authenticate, 
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  getEnrollmentByDepartmentController)
 //OBTENER SECCIONES POR MAESTRO
 router.get('/teacher/', 
   authenticate,

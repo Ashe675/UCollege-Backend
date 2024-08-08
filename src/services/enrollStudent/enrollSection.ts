@@ -490,3 +490,41 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
   return enrolledClassDetails;
 };
 
+export const updateTeacherGrade = async (userId: number, sectionId: number, teacherGrade: number) => {
+  // Validar que el valor sea de 0 a 100
+  if (teacherGrade < 0 || teacherGrade > 100) {
+    throw new Error('La evaluación del docente debe ser un número entre 0 y 100.');
+  }
+  const student = await prisma.student.findFirst({
+    where: {userId: userId},
+    select: {id:true}
+  });
+  const studentId = student.id;
+  // Obtener la inscripción del estudiante en la sección especificada
+  const enrollment = await prisma.enrollment.findUnique({
+    where: {
+      sectionId_studentId: {
+        sectionId,
+        studentId: studentId,
+      }
+    }
+  });
+
+  if (!enrollment) {
+    throw new Error('No esta matriculado en esta seccion.');
+  }
+
+  // Actualizar la evaluación del docente
+  await prisma.enrollment.update({
+    where: {
+      sectionId_studentId: {
+        sectionId,
+        studentId: studentId
+      }
+    },
+    data: {
+      TeacherGrade: teacherGrade
+    }
+  });
+};
+
