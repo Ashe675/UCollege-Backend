@@ -1,7 +1,7 @@
 // src/services/sectionService.ts
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
-import { getEnListadeEspera, getMatriculados,getSiguientePeriodo } from "../../utils/section/sectionUtils";
+import { getEnListadeEspera, getMatriculados,getPeriodoActual,getSiguientePeriodo, validateUserAndSection } from "../../utils/section/sectionUtils";
 
 interface CreateSectionInput {
   IH: number;
@@ -807,6 +807,132 @@ export const getWaitingListById = async (sectionId: number) => {
   // Luego, obtenemos los estudiantes en espera basándonos en el waitingListId
 
   return waitingListStudents;
+};
+export const getGradesBySectionId = async (sectionId: number, req: Request) => {
+  const userId = req.user.id;
+  const academicPeriodId = await getPeriodoActual();
+
+  // Validar que el usuario tenga acceso a la sección
+  await validateUserAndSection(userId, sectionId);
+
+  // Obtener las notas junto con la información de la sección, el maestro y la clase
+  const notas = await prisma.enrollment.findMany({
+    where: {
+      sectionId: sectionId,
+      section: { academicPeriodId: academicPeriodId }
+    },
+    select: {
+      studentId: true,
+      grade: true,
+      section: {
+        select: {
+          teacher: {
+            select: {
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true,
+                }
+              },
+              identificationCode: true,
+              institutionalEmail: true,
+              id:true,
+              images: {
+                select: {
+                  url: true,
+                  avatar: true,
+                }
+              }
+            }
+          },
+          class: {
+            select: {
+              name: true
+            }
+          }
+        }
+      },
+      student: {
+        select: {
+          user: {
+            select: {
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true,
+                }
+              },
+              institutionalEmail: true,
+              identificationCode: true,
+              id:true,
+              images: {
+                select: {
+                  url: true,
+                  avatar: true,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Si no se encuentran notas, se retorna un error
+  if (notas.length === 0) {
+    throw new Error('No se encontraron notas para esta sección.');
+  }
+
+  // Obtener la información de la sección, el maestro y la clase
+  const { section } = notas[0];
+  const className = section.class.name;
+  const teacher = section.teacher;
+  
+  // Filtrar imágenes para obtener solo el avatar activo
+  const getAvatar = (images: { url: string; avatar: boolean }[]) =>
+    images.find(image => image.avatar)?.url || null;
+
+  // Información del maestro
+  const teacherInfo = {
+    teacherId: teacher.id,
+    dni: teacher.person.dni,
+    firstName: teacher.person.firstName,
+    middleName: teacher.person.middleName,
+    lastName: teacher.person.lastName,
+    secondLastName: teacher.person.secondLastName,
+    institutionalEmail: teacher.institutionalEmail,
+    identificationCode: teacher.identificationCode,
+    avatar: getAvatar(teacher.images),
+  };
+
+  // Mapear las notas con la información de los estudiantes y sus avatares
+  const grades = notas.map(nota => ({
+    studentId: nota.studentId,
+    userId: nota.student.user.id,
+    dni: nota.student.user.person.dni,
+    firstName: nota.student.user.person.firstName,
+    middleName: nota.student.user.person.middleName,
+    lastName: nota.student.user.person.lastName,
+    secondLastName: nota.student.user.person.secondLastName,
+    institutionalEmail: nota.student.user.institutionalEmail,
+    identificationCode: nota.student.user.identificationCode,
+    avatar: getAvatar(nota.student.user.images),
+    grade: nota.grade
+  }));
+
+  // Retornar la información solicitada
+  return {
+    sectionId,
+    className,
+    teacher: teacherInfo,
+    grades
+  };
 };
 
 

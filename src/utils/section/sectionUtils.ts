@@ -158,3 +158,40 @@ export const getRegionalCenterSection = async (id: number) => {
     const idPeriodo = academicPeriod.academicPeriod.id;
     return idPeriodo;
   }
+
+  export const validateUserAndSection = async (userId: number, sectionId: number) => {
+    // Obtener el regionalCenter_Faculty_CareerId del usuario
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+      where: { teacherId: userId },
+      select: {
+        regionalCenterFacultyCareerDepartment: {
+          select: {
+            regionalCenter_Faculty_CareerId: true
+          }
+        }
+      }
+    });
+  
+    if (!user) {
+      throw new Error('Usuario no encontrado en el centro de formación.');
+    }
+  
+    const userFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+  
+    // Obtener el regionalCenter_Faculty_CareerId de la sección
+    const section = await prisma.section.findFirst({
+      where: { id: sectionId },
+      select: { regionalCenter_Faculty_CareerId: true }
+    });
+  
+    if (!section) {
+      throw new Error('Sección no encontrada.');
+    }
+  
+    const sectionFacultyCareerId = section.regionalCenter_Faculty_CareerId;
+  
+    // Comparar los IDs
+    if (userFacultyCareerId !== sectionFacultyCareerId) {
+      throw new Error('El usuario no tiene acceso a esta sección.');
+    }
+  };

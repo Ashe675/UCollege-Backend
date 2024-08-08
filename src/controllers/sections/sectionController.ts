@@ -14,7 +14,8 @@ import {
   getWaitingListById,
   createSectionNext,
   getSectionsByTeacherIdNext,
-  getSectionByDepartmentActualNext
+  getSectionByDepartmentActualNext,
+  getGradesBySectionId
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -66,9 +67,9 @@ export const getUserData = async (req: Request, res: Response) => {
 };
 
 export const getSectionByIdController = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const { sectionId } = req.params;
   try {
-    const section = await getSectionById(Number(id));
+    const section = await getSectionById(Number(sectionId));
     if (section) {
       res.status(200).json(section);
     } else {
@@ -76,7 +77,7 @@ export const getSectionByIdController = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error('Error obteniendo sección:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Erroree' });
   }
 };
 
@@ -208,5 +209,25 @@ export const getWaitingListController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error obteniendo la lista de espera:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getGradesBySectionIdController = async (req: Request, res: Response) => {
+  try {
+    // Obtén el ID de la sección del parámetro de la solicitud
+    const sectionId = parseInt(req.params.sectionId, 10);
+    
+    if (isNaN(sectionId)) {
+      return res.status(400).json({ message: 'ID de sección inválido' });
+    }
+
+    // Obtén las notas utilizando el servicio
+    const grades = await getGradesBySectionId(sectionId, req);
+
+    // Devuelve las notas en la respuesta
+    return res.status(200).json(grades);
+  } catch (error) {
+    // Maneja los errores y devuelve una respuesta de error
+    return res.status(500).json({ message: error.message });
   }
 };
