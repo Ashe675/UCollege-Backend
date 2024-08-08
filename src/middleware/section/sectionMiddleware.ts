@@ -86,7 +86,7 @@ export const checkClassCareerandCenterandTeacher = async (req: Request, res: Res
 
 export const checkSectionandCenterDepartment = async (req: Request, res: Response, next: NextFunction) => {
   const userId = req.user?.id;
-  const sectionId = req.params.sectionId || req.body.sectionId;
+  const sectionId = req.params.id;
 
   if (!userId || !sectionId) {
     return res.status(400).json({ error: 'Falta el ID de usuario o ID de seccion' });
@@ -94,7 +94,7 @@ export const checkSectionandCenterDepartment = async (req: Request, res: Respons
 
   try {
     const sectionFaculty = await prisma.section.findFirst({
-      where: { id: sectionId },
+      where: { id: Number(sectionId) },
       select: { regionalCenter_Faculty_CareerId: true }
     });
 
@@ -252,7 +252,7 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
   try {
     // Obtener el edificio (building) del aula (classroom)
     const classroom = await prisma.classroom.findUnique({
-      where: { id: classroomId },
+      where: { id: Number(classroomId) },
       select: { buildingId: true },
     });
 
@@ -654,8 +654,8 @@ export const checkClassroomAvailabilityUpdateNext = async (req: Request, res: Re
     if (IH !== existingSection.IH || FH !== existingSection.FH || classroomId !== existingSection.classroomId) {
       const conflictingSections = await prisma.section.findMany({
         where: {
-          classroomId,
           academicPeriodId:idPeriodo,
+          classroomId : Number(classroomId),
           id: { not: Number(sectionId) },
           section_Day: {
             some: {

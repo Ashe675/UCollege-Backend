@@ -53,7 +53,7 @@ export const checkDaysComplete = async (req: Request, res: Response, next: NextF
 
         if (!processType || processType?.id !== 3) return res.status(400).json({ error: 'Tipo de proceso inválido.' });
 
-        const countDays = differenceInDays(new Date(startDate), new Date(finalDate))
+        const countDays = differenceInDays(new Date(startDate), new Date(finalDate)) + 1
 
         if (!days || days.length !== countDays) {
             return res.status(400).json({ error: `Tienes que definir (${countDays}) días de la matrícula. ` });

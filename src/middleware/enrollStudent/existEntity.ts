@@ -264,7 +264,7 @@ export const validateStudentEnrollmentPeriod = async (req: Request, res: Respons
       // Verifica si la fecha actual coincide con el primer día de matrícula
       const firstDayEnroll = dayEnrolls[0];
 
-      if (currentUtcDate < firstDayEnroll.startDate || currentUtcDate > firstDayEnroll.finalDate) {
+      if (currentDate < firstDayEnroll.startDate || currentDate > firstDayEnroll.finalDate) {
         return res.status(400).json({ message: "No cumples con los requisitos de promedio global para matricularse en este momento" });
       }
     } else {

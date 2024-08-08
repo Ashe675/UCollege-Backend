@@ -51,7 +51,7 @@ export const createProcess = async (data: ProcessData) => {
   });
 
   if (overlappingProcesses.length > 0) {
-    throw new Error('Ya existe un proceso activo o se encontraron procesos superpuestos.');
+    throw new Error('Se encontraron procesos superpuestos para esas fechas.');
   }
 
   const isInrage = isInRangeDate(new Date(restData.startDate), new Date(restData.finalDate));
@@ -110,10 +110,25 @@ export const createProcess = async (data: ProcessData) => {
       }
     })
 
-    console.log(lastAcademicPeriodProcess)
-
     if (!lastAcademicPeriodProcess) {
       throw new Error('No se encontro ningún periodo activo.')
+    }
+
+    if(new Date(restData.startDate) >= lastAcademicPeriodProcess.finalDate  ||  new Date(restData.finalDate) >= lastAcademicPeriodProcess.finalDate || new Date(restData.startDate) < lastAcademicPeriodProcess.startDate ){
+      throw new Error('Las fechas se deben de mantener dentro del periodo académico.')
+    }
+
+    // Verificar si ya existe un proceso de entrega de notas asociado a este periodo
+    const existingUploadGradeProcess = await prisma.process.findFirst({
+      where: {
+        processTypeId: 4,
+        processId: lastAcademicPeriodProcess.id,
+      },
+    });
+
+    // Si ya existe un proceso de entrega de notas , retornar un error
+    if (existingUploadGradeProcess) {
+      throw new Error('Ya hay un proceso entrega de notas asociado al periodo actual.')
     }
 
     // Asignar el id del proceso del periodo encontrado al nuevo proceso
@@ -174,8 +189,21 @@ export const createProcess = async (data: ProcessData) => {
       throw new Error('No se encontró el siguiente periodo académico.');
     }
 
-    if (finalDate > new Date(nextAcademicPeriod.finalDate)) {
-      throw new Error('La fecha final del proceso de creación de secciones no puede ser mayor a la fecha final del siguiente periodo académico.');
+    if (finalDate > new Date(nextAcademicPeriod.startDate) ||  startDate >= new Date(nextAcademicPeriod.startDate) ) {
+      throw new Error('La fecha inicial y final del proceso de creación de secciones no puede ser mayor a la fecha inicial del siguiente periodo académico.');
+    }
+
+    // Verificar si ya existe un proceso de creacion de seccones asociado a este periodo academico
+    const existingPeriodProcess = await prisma.process.findFirst({
+      where: {
+        processTypeId: 6,
+        processId: nextAcademicPeriod.id,
+      },
+    });
+
+    // Si ya existe un proceso de resultados asociado, retornar un error
+    if (existingPeriodProcess) {
+      throw new Error('Ya hay un proceso de creación de secciones asociado al próximo periodo')
     }
 
     restData.processId = nextAcademicPeriod.id;

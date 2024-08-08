@@ -498,7 +498,7 @@ export const deleteTeacher = async (req: Request, res: Response) => {
   try {
     const process = await checkActiveProcessByTypeId(5);
     if (process) {
-      return res.status(400).json({ error: `No se puede cambiar de centro ya que hay un periodo académico activo.` });
+      return res.status(400).json({ error: `No se puede eliminar el docente ya que hay un periodo académico activo.` });
     }
 
     // Buscar el docente por su código de identificación
