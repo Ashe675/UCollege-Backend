@@ -73,7 +73,7 @@ export class AuthController {
     }
 
     static forgotPasswordTeacher = async (req: Request, res: Response) => {
-        const idTeacher: number = parseInt(req.body.idTeacher)
+        const idTeacher: number = parseInt(req.body.idTeacher || req.params.idTeacher)
         try {
             const userFound = await prisma.user.findUnique({ where: { id: idTeacher }, include: { role: true, person: true } })
             if (!userFound) {

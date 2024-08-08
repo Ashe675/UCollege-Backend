@@ -35,7 +35,7 @@ import { checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkActi
 
 const router = Router();
 
-router.post('/process', authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator, checkActiveProcess,isActiveProcessByProcessTypeIdGeneric ,createProcessController);
+router.post('/process', authenticate, authorizeRole([RoleEnum.ADMIN]), createProcessValidator, checkActiveProcess ,createProcessController);
 router.put('/process/activate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, activateProcessController);
 router.put('/process/deactivate', authenticate, authorizeRole([RoleEnum.ADMIN]), processIdValidator, checkActiveProcess, deactivateProcessController);
 router.put('/process/updateFinalDate', authenticate, authorizeRole([RoleEnum.ADMIN]), finalDateValidator, checkActiveProcess, updateFinalDateController);

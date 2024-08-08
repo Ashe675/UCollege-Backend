@@ -379,7 +379,7 @@ model Classroom {
 
 model Section {
   id            Int        @id @default(autoincrement())
-  code          String     @unique @db.VarChar(20)
+  code          String     @db.VarChar(20)
   capacity      Int
   IH            Int        
   FH            Int 

@@ -6,6 +6,9 @@ export const getBuildingByRegionalCenterId = async (regionalCenterId: number) =>
         const buildings = await prisma.building.findMany({
             where: {
                 regionalCenterId: regionalCenterId
+            },
+            include : {
+                classrooms : true
             }
         });
         return buildings;

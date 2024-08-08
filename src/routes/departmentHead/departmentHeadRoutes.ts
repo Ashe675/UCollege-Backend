@@ -31,7 +31,7 @@ router.get('/buildings-rooms',
     getAllBuilding
 );
 
-router.get('/get-class',
+router.get('/classes',
     authenticate, 
     authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
     getAllClass

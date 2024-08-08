@@ -43,7 +43,7 @@ export const createSectionValidators = [
     .notEmpty().withMessage('FH es requerido')
     .custom((value, { req }) => {
       if (value <= req.body.IH) {
-        throw new Error('FH debe ser mayor que IH');
+        throw new Error('Hora final debe ser mayor que la Hora Inicial');
       }
       return true;
     }),
@@ -71,43 +71,3 @@ export const createSectionValidators = [
   handleInputErrors,
 ];
 
-export const checkSectionExists = async (req: Request, res: Response, next: NextFunction) => {
-  const { code } = req.body;
-  try {
-    const existingSection = await prisma.section.findUnique({
-      where: { code },
-    });
-
-    if (existingSection) {
-      return res.status(400).json({ error: 'Una sección ya existe con ese mismo codigo' });
-    }
-
-    next();
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server erroreeerr' });
-  }
-};
-
-export const checkSectionExistsUpdate = async (req: Request, res: Response, next: NextFunction) => {
-  const { code } = req.body;
-  const { id: sectionId } = req.params; // Obtén el ID de la sección desde los parámetros de la ruta
-  
-  try {
-    // Verificar si ya existe una sección con el mismo código, excluyendo la sección actual
-    const existingSection = await prisma.section.findFirst({
-      where: {
-        code,
-        id: { not: Number(sectionId) }, // Excluir la sección actual de la validación
-      },
-    });
-
-    if (existingSection) {
-      return res.status(400).json({ error: 'Una sección ya existe con ese mismo código' });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Error checking if section exists:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
