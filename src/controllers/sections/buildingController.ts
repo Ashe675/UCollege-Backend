@@ -18,20 +18,36 @@ export const getAllBuilding = async (req: Request, res: Response) => {
     try {
         const teacher = await prisma.user.findUnique({ where: { id: userId } });
         if (!teacher) {
-            return res.status(404).json({ error: 'Profesor no encontrado' });
+            return res.status(402).json({ error: 'Profesor no encontrado' });
         }
 
         const regionalCenter = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
             where: {
                 teacherId: teacher.id,
                 //active: true,
+            },include:{
+                regionalCenterFacultyCareerDepartment:{
+                    include:{
+                        RegionalCenterFacultyCareer:{
+                            include:{
+                                regionalCenter_Faculty:{
+                                    include:{
+                                        regionalCenter:true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
-        if (!regionalCenter) {
-            return res.status(404).json({ error: 'Centro regional no encontrado para el profesor activo' });
+
+        if (!regionalCenter.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter) {
+            return res.status(403).json({ error: 'Centro regional no encontrado para el profesor activo' });
         }
 
-        const regionalCenterId = regionalCenter.regionalCenter_Faculty_Career_Department_Departament_id;
+        const regionalCenterId = regionalCenter.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.id;
+        
 
         const buildings = await getBuildingByRegionalCenterId(regionalCenterId);
 
