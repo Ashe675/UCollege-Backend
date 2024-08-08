@@ -97,15 +97,6 @@ export const getEnrollmentByDepartmentController = async (req: Request, res: Res
     const sections = await getEnrollmentsActual(req);
     res.json(sections);
   } catch (error) {
-    res.status(400).json({ message: 'Error retrieving sections', error });
-  }
-}; 
-
-export const getEnrollmentByDepartmentController = async (req: Request, res: Response) => {
-  try {
-    const sections = await getEnrollmentsActual(req);
-    res.json(sections);
-  } catch (error) {
     res.status(500).json({ message: 'Error retrieving sections', error });
   }
 }; 
