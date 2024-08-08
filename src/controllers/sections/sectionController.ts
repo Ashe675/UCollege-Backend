@@ -68,9 +68,9 @@ export const getUserData = async (req: Request, res: Response) => {
 };
 
 export const getSectionByIdController = async (req: Request, res: Response) => {
-  const { sectionId } = req.params;
+  const { id } = req.params;
   try {
-    const section = await getSectionById(Number(sectionId));
+    const section = await getSectionById(Number(id));
     if (section) {
       res.status(200).json(section);
     } else {
@@ -206,10 +206,10 @@ export const getTeachersByDepartmentAcademicPeriodControllerNext = async (req: R
 };
 
 export const getWaitingListController = async (req: Request, res: Response) => {
-  const { sectionId } = req.params;
+  const { id } = req.params;
 
   try {
-    const waitingListStudents = await getWaitingListById(Number(sectionId));
+    const waitingListStudents = await getWaitingListById(Number(id));
 
     if (!waitingListStudents) {
       return res.status(404).json({ error: 'No se encontró la lista de espera para la sección especificada' });

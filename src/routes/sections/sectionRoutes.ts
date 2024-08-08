@@ -21,7 +21,7 @@ import {
   createSectionControllerNext,
   getSectionsByTeacherIdControllerNext,
   getTeachersByDepartmentAcademicPeriodControllerNext,
-  getGradesBySectionIdController,
+  // getGradesBySectionIdController,
   getEnrollmentByDepartmentController,
 } from '../../controllers/sections/sectionController';
 
@@ -178,10 +178,11 @@ router.put('/deactivate/:id',
   checkSectionandCenterDepartment,
   validateSectionId, 
   deleteSectionController);
-router.get('/grades/:sectionId', 
-  authenticate, 
-  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
-  getGradesBySectionIdController); 
+  
+// router.get('/grades/:sectionId', 
+//   authenticate, 
+//   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+//   getGradesBySectionIdController); 
 
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
