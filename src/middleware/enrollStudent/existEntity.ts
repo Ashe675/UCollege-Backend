@@ -377,18 +377,50 @@ export const isStudentOfSectionRegion = async (req: Request, res: Response, next
     sectionId = parseInt(req.params.sectionId);
   }
   try {
-    const section = await prisma.section.findUnique({ where: { id: sectionId }, include: { regionalCenter_Faculty_Career: true } });
-    const studnet = await prisma.user.findUnique({ where: { id: userId } });
+    const section = await prisma.section.findUnique({ where: { id: sectionId }, include: { 
+      regionalCenter_Faculty_Career:{
+        include: {
+          regionalCenter_Faculty:{
+            include:{
+              regionalCenter:true
+            }
+          }
+        }
+      }
 
-    const regionalCenter_Faculty_Career_user = await prisma.regionalCenter_Faculty_Career_User.findMany({
+     } });
+    const studnet = await prisma.user.findUnique({ where: { id: userId }, });
+
+    const regionalCenter_Faculty_Career_user = await prisma.regionalCenter_Faculty_Career_User.findFirst({
       where: {
-        regionalCenter_Faculty_CareerId: section.regionalCenter_Faculty_CareerId,
-        userId: studnet.id
+        userId: studnet.id,
+        
+      }, include:{
+        regionalCenter_Faculty_Career:{
+          include:{
+            regionalCenter_Faculty:{
+              include:{
+                regionalCenter: true
+              }
+            }
+          }
+        }
       }
     });
 
-    if (regionalCenter_Faculty_Career_user.length === 0) {
-      return res.status(400).json({ message: 'El estudiente no es de este centro regional o facultad' });
+    if(!regionalCenter_Faculty_Career_user){
+      return res.status(400).json({ message: 'No hay una relacion entre usuario y su centro regional, facultad, carrera' });
+    
+    }
+
+    console.log(section)
+    console.log(studnet)
+
+    if (
+      !(regionalCenter_Faculty_Career_user.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.id ==
+      section.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenterId)
+    ) {
+      return res.status(400).json({ message: 'El estudiente no es de este centro regional' });
     }
     next();
 
