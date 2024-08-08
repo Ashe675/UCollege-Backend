@@ -2,6 +2,7 @@
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 import { getEnListadeEspera, getMatriculados,getSiguientePeriodo } from "../../utils/section/sectionUtils";
+import { checkActiveProcessByTypeId } from '../../middleware/checkActiveProcessGeneric';
 
 interface CreateSectionInput {
   IH: number;
@@ -131,7 +132,7 @@ export const createSectionNext = async (data: CreateSectionInput, req: Request) 
             top: 0,
           }
         });
-        console.log("Hola");
+        
         return {
           message: 'Sección creada correctamente',
           section: newSection
@@ -442,7 +443,20 @@ export const getSectionById = async (id: number) => {
   // Obtén la sección por ID
   const section = await prisma.section.findUnique({
     where: { id },
-    include: { section_Day: { select: { day: { select: { name: true } } } } }
+    include: {
+      section_Day: { select: { day: { select: { name: true, id: true } } } },
+      teacher: { select: { person: true, identificationCode: true, institutionalEmail: true, id: true } },
+      classroom: {
+        select: {
+          capacity: true,
+          code: true,
+          building: {
+            select: { code: true, id: true }
+          }
+        }
+      },
+      class: true
+    }
   });
 
   if (!section) {
@@ -457,8 +471,10 @@ export const getSectionById = async (id: number) => {
 
   return {
     ...section,
-    matriculados,
-    waitingList: waitingListStudents
+    matriculados: matriculados,
+    quotasAvailability: section.capacity - matriculados.length,
+    waitingList: waitingListStudents,
+    waitingListCount: waitingListStudents.length
   };
 };
 export const getSectionByDepartment = async (req: Request) => {
@@ -562,9 +578,9 @@ export const getSectionByDepartmentActual = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
-        quotasAvailability : section.capacity - matriculados.length,
+        quotasAvailability: section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        waitingListCount : waitingListStudents.length
+        waitingListCount: waitingListStudents.length
 
       };
     })
@@ -584,6 +600,13 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
   });
 
   const idPeriodo = await getSiguientePeriodo();
+
+  const processCreateSection = await checkActiveProcessByTypeId(6)
+  
+  if(!processCreateSection) {
+    throw new Error('Aún no se pueden planificar las clases del próximo periodo.')
+  }
+
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
   const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
@@ -655,9 +678,12 @@ export const deleteSection = async (id: number, justification: string) => {
       startDate: 'asc',
     },
   });
+
+
   const academicPeriodSection = await prisma.section.findFirst({
-    where:{id:id, OR: [{academicPeriodId: currentAcademicPeriod.academicPeriod.id},{academicPeriodId: nextAcademicPeriod.academicPeriod.id}]},
+    where:{id:id, OR: [{academicPeriodId: currentAcademicPeriod.academicPeriod.id},{academicPeriodId: nextAcademicPeriod ?  nextAcademicPeriod.academicPeriod.id : -1 }]},
   })
+
   if (!academicPeriodSection) {
     throw new Error('No se puede eliminar esta seccion porque pertenece a un periodo academico anterior');
   };
@@ -707,9 +733,9 @@ export const getSectionsByTeacherId = async (req: Request) => {
       return {
         ...section,
         matriculados: matriculados,
-        quotasAvailability : section.capacity - matriculados.length,
+        quotasAvailability: section.capacity - matriculados.length,
         waitingList: waitingListStudents,
-        waitingListCount : waitingListStudents.length
+        waitingListCount: waitingListStudents.length
       };
     })
   );
