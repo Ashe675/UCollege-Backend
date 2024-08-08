@@ -9,7 +9,9 @@ import {
     handleGetPorcentajeReprobadosDepartamento,
     handleGetPorcentajeReprobadosDepartamentoActual,
     handleGetClaseConMasAprobado,
-    handleGetClaseConMasReprobado
+    handleGetClaseConMasReprobado,
+    getEstadisticasDepartmentController,
+    getEstadisticasDepartmentControllerActual
 } from '../../controllers/statistics/statisticsController';
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
@@ -31,5 +33,6 @@ router.get('/porcentaje-reprobados-departamento-actual',authenticate,authorizeRo
 // Rutas para la clase con más aprobados y reprobados
 router.get('/clase-con-mas-aprobados',authenticate,authorizeRole([RoleEnum.DEPARTMENT_HEAD]), handleGetClaseConMasAprobado);
 router.get('/clase-con-mas-reprobados',authenticate,authorizeRole([RoleEnum.DEPARTMENT_HEAD]), handleGetClaseConMasReprobado);
-
+router.get('/estadisticas-departamento', authenticate,authorizeRole([RoleEnum.DEPARTMENT_HEAD]), getEstadisticasDepartmentController)
+router.get('/estadisticas-departamento-actual', authenticate,authorizeRole([RoleEnum.DEPARTMENT_HEAD]), getEstadisticasDepartmentControllerActual)
 export default router;

@@ -9,7 +9,9 @@ import {
     getPorcentajeReprobadosDepartamento,
     getPorcentajeReprobadosDepartamentoActual,
     getClaseConMasAprobado,
-    getClaseConMasReprobado
+    getClaseConMasReprobado,
+    getEstadisticasDepartment,
+    getEstadisticasDepartmentActual
 } from '../../services/statistics/statisticsService';
 
 export const handleGetAprobadosPorClase = async (req: Request, res: Response) => {
@@ -19,6 +21,24 @@ export const handleGetAprobadosPorClase = async (req: Request, res: Response) =>
         res.json({ cantidadAprobados: result });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+export const getEstadisticasDepartmentController = async (req: Request, res: Response) => {
+    try {
+        const statistics = await getEstadisticasDepartment(req);
+        return res.status(200).json(statistics);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
+export const getEstadisticasDepartmentControllerActual = async (req: Request, res: Response) => {
+    try {
+        const statistics = await getEstadisticasDepartmentActual(req);
+        return res.status(200).json(statistics);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 };
 

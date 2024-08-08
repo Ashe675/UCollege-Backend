@@ -1,5 +1,5 @@
 import { prisma } from "../../config/db";
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { getTotalMatriculadosDepartment,
     getTotalAprobadosDepartment,
     getTotalReprobadosDepartment,
@@ -8,7 +8,7 @@ import { getTotalMatriculadosDepartment,
     getTotalReprobadosDepartmentActual,
     getClaseConMasAprobados,
     getClaseConMasReprobados} from "../../utils/statistics/statisticsUtils";
-
+import { getPeriodoActual } from "../../utils/section/sectionUtils";
 export const getAprobadosPorClase = async (sectionId: number) => {
     const cantidadAprobados = await prisma.enrollment.count({
       where: {
@@ -20,6 +20,187 @@ export const getAprobadosPorClase = async (sectionId: number) => {
     });
     return cantidadAprobados;
   };
+  export const getEstadisticasDepartment = async (req: Request) => {
+    const userId = req.user.id;
+        // Obtener el regionalCenterFacultyCareerId del profesor
+        const regionalCenter_Faculty_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+          where: { teacherId: userId },
+          select: {
+              regionalCenterFacultyCareerDepartment: {
+                  select: {
+                      regionalCenter_Faculty_CareerId: true
+                  }
+              }
+          }
+      });
+  
+      if (!regionalCenter_Faculty_Teacher) {
+          throw new Error('No se encontró la información del profesor');
+      }
+  
+      const regionalCenterFacultyCareerId = regionalCenter_Faculty_Teacher.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+  
+      // Obtener todas las secciones del departamento según el regionalCenterFacultyCareerId
+      const sections = await prisma.section.findMany({
+          where: {
+              regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId
+          },
+          select: {
+              id: true,
+              code: true,  
+              class: {select:{name:true}}  
+          }
+      });
+  
+      if (sections.length === 0) {
+          return []; // Devuelve un array vacío si no hay secciones
+      }
+  
+      // Recopilar estadísticas para cada sección
+      const statistics = await Promise.all(sections.map(async (section) => {
+          const totalEnrollments = await prisma.enrollment.count({
+              where: {
+                  sectionId: section.id,
+              },
+          });
+  
+          const totalAprobados = await prisma.enrollment.count({
+              where: {
+                  sectionId: section.id,
+                  grade: {
+                      gte: 65,
+                  },
+              },
+          });
+  
+          const totalReprobados = await prisma.enrollment.count({
+              where: {
+                  sectionId: section.id,
+                  grade: {
+                      lt: 65,
+                  },
+              },
+          });
+  
+          const promedioNotas = await prisma.enrollment.aggregate({
+              where: {
+                  sectionId: section.id,
+              },
+              _avg: {
+                  grade: true,
+              },
+          });
+  
+          const porcentajeAprobados = totalEnrollments === 0 ? 0 : (totalAprobados / totalEnrollments) * 100;
+          const porcentajeReprobados = totalEnrollments === 0 ? 0 : (totalReprobados / totalEnrollments) * 100;
+  
+          return {
+              sectionId: section.id,
+              sectionCode: section.code,
+              className: section.class.name,
+              totalEnrollments,
+              totalAprobados,
+              totalReprobados,
+              porcentajeAprobados: parseFloat(porcentajeAprobados.toFixed(2)),
+              porcentajeReprobados: parseFloat(porcentajeReprobados.toFixed(2)),
+              promedioNotas: promedioNotas._avg.grade ? parseFloat(promedioNotas._avg.grade.toFixed(2)) : 0,
+          };
+      }));
+  
+      return statistics;
+};
+
+export const getEstadisticasDepartmentActual = async (req: Request) => {
+  const userId = req.user.id;
+  const idPeriodo = await getPeriodoActual();
+      // Obtener el regionalCenterFacultyCareerId del profesor
+      const regionalCenter_Faculty_Teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: {
+            regionalCenterFacultyCareerDepartment: {
+                select: {
+                    regionalCenter_Faculty_CareerId: true
+                }
+            }
+        }
+    });
+
+    if (!regionalCenter_Faculty_Teacher) {
+        throw new Error('No se encontró la información del profesor');
+    }
+
+    const regionalCenterFacultyCareerId = regionalCenter_Faculty_Teacher.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+
+    // Obtener todas las secciones del departamento según el regionalCenterFacultyCareerId
+    const sections = await prisma.section.findMany({
+        where: {
+            regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId,
+            academicPeriodId: idPeriodo,
+        },
+        select: {
+            id: true,
+            code: true,  
+            class: {select:{name:true}}  
+        }
+    });
+
+    if (sections.length === 0) {
+        return []; // Devuelve un array vacío si no hay secciones
+    }
+
+    // Recopilar estadísticas para cada sección
+    const statistics = await Promise.all(sections.map(async (section) => {
+        const totalEnrollments = await prisma.enrollment.count({
+            where: {
+                sectionId: section.id,
+            },
+        });
+
+        const totalAprobados = await prisma.enrollment.count({
+            where: {
+                sectionId: section.id,
+                grade: {
+                    gte: 65,
+                },
+            },
+        });
+
+        const totalReprobados = await prisma.enrollment.count({
+            where: {
+                sectionId: section.id,
+                grade: {
+                    lt: 65,
+                },
+            },
+        });
+
+        const promedioNotas = await prisma.enrollment.aggregate({
+            where: {
+                sectionId: section.id,
+            },
+            _avg: {
+                grade: true,
+            },
+        });
+
+        const porcentajeAprobados = totalEnrollments === 0 ? 0 : (totalAprobados / totalEnrollments) * 100;
+        const porcentajeReprobados = totalEnrollments === 0 ? 0 : (totalReprobados / totalEnrollments) * 100;
+
+        return {
+            sectionId: section.id,
+            sectionCode: section.code,
+            className: section.class.name,
+            totalEnrollments,
+            totalAprobados,
+            totalReprobados,
+            porcentajeAprobados: parseFloat(porcentajeAprobados.toFixed(2)),
+            porcentajeReprobados: parseFloat(porcentajeReprobados.toFixed(2)),
+            promedioNotas: promedioNotas._avg.grade ? parseFloat(promedioNotas._avg.grade.toFixed(2)) : 0,
+        };
+    }));
+
+    return statistics;
+};
 export const getReprobadosPorClase= async(sectionId: number) => {
     const cantidadReprobados = await prisma.enrollment.count({
       where: {
