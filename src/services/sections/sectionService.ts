@@ -442,7 +442,7 @@ export const getAllSections = async () => {
 export const getSectionById = async (id: number) => {
   // Obtén la sección por ID
   const section = await prisma.section.findUnique({
-    where: { id },
+    where: { id: id },
     include: {
       section_Day: { select: { day: { select: { name: true, id: true } } } },
       teacher: { select: { person: true, identificationCode: true, institutionalEmail: true, id: true } },

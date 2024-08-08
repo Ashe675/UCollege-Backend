@@ -68,9 +68,9 @@ export const getUserData = async (req: Request, res: Response) => {
 };
 
 export const getSectionByIdController = async (req: Request, res: Response) => {
-  const { sectionId } = req.params;
+  const { id } = req.params;
   try {
-    const section = await getSectionById(Number(sectionId));
+    const section = await getSectionById(Number(id));
     if (section) {
       res.status(200).json(section);
     } else {
