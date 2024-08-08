@@ -51,7 +51,7 @@ export const createProcess = async (data: ProcessData) => {
   });
 
   if (overlappingProcesses.length > 0) {
-    throw new Error('Ya existe un proceso activo o se encontraron procesos superpuestos.');
+    throw new Error('Se encontraron procesos superpuestos para esas fechas.');
   }
 
   const isInrage = isInRangeDate(new Date(restData.startDate), new Date(restData.finalDate));
@@ -176,6 +176,19 @@ export const createProcess = async (data: ProcessData) => {
 
     if (finalDate > new Date(nextAcademicPeriod.finalDate)) {
       throw new Error('La fecha final del proceso de creación de secciones no puede ser mayor a la fecha final del siguiente periodo académico.');
+    }
+
+    // Verificar si ya existe un proceso de creacion de seccones asociado a este periodo academico
+    const existingPeriodProcess = await prisma.process.findFirst({
+      where: {
+        processTypeId: 6,
+        processId: nextAcademicPeriod.id,
+      },
+    });
+
+    // Si ya existe un proceso de resultados asociado, retornar un error
+    if (existingPeriodProcess) {
+      throw new Error('Ya hay un proceso de creación de secciones asociado al próximo periodo')
     }
 
     restData.processId = nextAcademicPeriod.id;
