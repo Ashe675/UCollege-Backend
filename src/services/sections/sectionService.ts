@@ -982,11 +982,13 @@ export const getEnrollmentsActual = async (req: Request) => {
   // Obtener todas las inscripciones en el período actual
   const enrollments = await prisma.enrollment.findMany({
     where: {
+      waitingListId : null,
       section: {
         academicPeriodId: academicPeriodId,
-        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId
+        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId //* ISSUE: VALIDAR QUE SEA DEL DEPARTAMENTO TAMBIEN 
       }
     },
+    distinct : 'studentId', 
     select: {
       studentId: true,
       student: {
