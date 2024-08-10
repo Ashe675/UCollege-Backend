@@ -48,6 +48,7 @@ import {
   checkTeacherScheduleConflictNext,
   checkClassroomAvailabilityUpdateNext,
   checkTeacherScheduleConflictUpdateNext,
+  validateCapacityChange,
 
  } from "../../middleware/section/sectionMiddleware";
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -174,6 +175,7 @@ router.put('/capacity/:id',
   checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkSectionandCenterDepartment,
   validateSectionCapacity,
+  validateCapacityChange,
   updateSectionCapacityController
 )
 

@@ -323,25 +323,13 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       throw new Error('Section not found');
     }
 
-    if (increment <= 0) {
-      throw new Error('El incremento debe ser mayor a cero.');
-    }
-
-
-    if ((increment + section.capacity) > section.classroom.capacity) {
-      throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
-    }
-
-    // Obtener el número de matriculados actuales (sin waitingListId)
-    const matriculados = await prisma.enrollment.count({
-      where: {
-        sectionId: section.id,
-        waitingListId: null
-      }
-    });
-
     // Calcular la nueva capacidad
     const newCapacity = section.capacity + increment;
+
+    // Validar si la nueva capacidad excede la capacidad del aula
+    if (newCapacity > section.classroom.capacity) {
+      throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
+    }
 
     // Actualizar la capacidad de la sección
     const updatedSection = await prisma.section.update({
@@ -352,10 +340,15 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     });
 
     // Obtener el número de cupos disponibles
+    const matriculados = await prisma.enrollment.count({
+      where: {
+        sectionId: section.id,
+        waitingListId: null
+      }
+    });
     const availableSlots = newCapacity - matriculados;
 
     if (availableSlots > 0 && section.waitingList) {
-      // Obtener los estudiantes en la lista de espera, ordenados por 'top' para inscribir a los primeros en la lista
       const waitingListEntries = await prisma.waitingList.findUnique({
         where: { id: section.waitingList.id },
         include: {
@@ -363,13 +356,11 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
         }
       });
 
-      // Seleccionar los primeros en la lista de espera según el número de cupos disponibles
       const waitingListEnrollments = waitingListEntries.enrollments
-        .filter(enrollment => enrollment.waitingListId !== null) // Filtrar solo los que están en lista de espera
+        .filter(enrollment => enrollment.waitingListId !== null)
         .slice(0, availableSlots);
 
       for (const enrollment of waitingListEnrollments) {
-        // Actualizar la inscripción para quitar el waitingListId
         await prisma.enrollment.update({
           where: {
             sectionId_studentId: {
@@ -390,6 +381,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     throw new Error(error.message);
   }
 };
+
 
 
 const getCareerIdByDepartmentId = async (departmentId: number) => {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from "../../config/db";
-import { getSiguientePeriodo,getPeriodoActual } from "../../utils/section/sectionUtils";
+import { getSiguientePeriodo, getPeriodoActual } from "../../utils/section/sectionUtils";
 
 export const checkClassExistsAndActive = async (req: Request, res: Response, next: NextFunction) => {
 
@@ -177,7 +177,7 @@ export const checkClassroomAvailabilityNext = async (req: Request, res: Response
     const conflictingSections = await prisma.section.findMany({
       where: {
         classroomId,
-        academicPeriodId:idPeriodo,
+        academicPeriodId: idPeriodo,
         section_Day: {
           some: {
             dayId: { in: days }
@@ -272,7 +272,7 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
 
     // Obtener el centro regional (regional center) del teacher (usuario autenticado)
     const teacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-      where: { teacherId: teacherId, active : true },
+      where: { teacherId: teacherId, active: true },
       select: { regionalCenterFacultyCareerDepartment: { select: { RegionalCenterFacultyCareer: { select: { regionalCenter_Faculty: { select: { regionalCenterId: true } } } } } } },
     });
 
@@ -295,7 +295,7 @@ export const checkClassroomExistsAndValidate = async (req: Request, res: Respons
 export const checkTeacherExistsAndActive = async (req: Request, res: Response, next: NextFunction) => {
   const { teacherId } = req.body;
   const misterId = req.user?.id;
-  
+
   try {
     const existingTeacher = await prisma.user.findUnique({
       where: { id: teacherId },
@@ -654,8 +654,8 @@ export const checkClassroomAvailabilityUpdateNext = async (req: Request, res: Re
     if (IH !== existingSection.IH || FH !== existingSection.FH || classroomId !== existingSection.classroomId) {
       const conflictingSections = await prisma.section.findMany({
         where: {
-          academicPeriodId:idPeriodo,
-          classroomId : Number(classroomId),
+          academicPeriodId: idPeriodo,
+          classroomId: Number(classroomId),
           id: { not: Number(sectionId) },
           section_Day: {
             some: {
@@ -708,7 +708,55 @@ export const getUserData = async (req: Request, res: Response) => {
   }
 };
 
+export const validateCapacityChange = async (req: Request, res: Response, next: NextFunction) => {
+  const { increment } = req.body;
+  const { id } = req.params;
 
+  try {
+    const sectionId = Number(id);
+
+    if (isNaN(sectionId)) {
+      return res.status(400).json({ error: 'Invalid section ID' });
+    }
+
+    const section = await prisma.section.findUnique({
+      where: { id: sectionId },
+      include: {
+        classroom: true
+      }
+    });
+
+    if (!section) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    const matriculados = await prisma.enrollment.count({
+      where: {
+        sectionId: section.id,
+        waitingListId: null
+      }
+    });
+
+    const newCapacity = section.capacity + increment;
+
+    // Primero valida los matriculados
+    if (matriculados > 0) {
+      if (increment < 0 && newCapacity < matriculados) {
+        return res.status(400).json({ error: `No se pueden disminuir ${Math.abs(increment)} cupos ya que hay ${matriculados} estudiantes matriculados.` });
+      }
+    } else {
+      // Si no hay matriculados, valida que la capacidad no sea menor que 1
+      if (newCapacity < 1) {
+        return res.status(400).json({ error: 'La capacidad de la sección no puede ser inferior a 1.' });
+      }
+    }
+
+    next();
+  } catch (error) {
+    console.error('Error validating capacity change:', error);
+    return res.status(500).json({ error: error.message });
+  }
+};
 
 
 
