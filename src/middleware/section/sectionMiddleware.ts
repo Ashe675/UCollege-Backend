@@ -719,6 +719,10 @@ export const validateCapacityChange = async (req: Request, res: Response, next: 
       return res.status(400).json({ error: 'Invalid section ID' });
     }
 
+    if (isNaN(increment)) {
+      return res.status(400).json({ error: 'La cantidad es inválida.' });
+    }
+
     const section = await prisma.section.findUnique({
       where: { id: sectionId },
       include: {
@@ -735,14 +739,13 @@ export const validateCapacityChange = async (req: Request, res: Response, next: 
         sectionId: section.id,
         waitingListId: null
       }
-    });
+    })
 
-    const newCapacity = section.capacity + increment;
-
+    const newCapacity = section.capacity + Number(increment);
     // Primero valida los matriculados
     if (matriculados > 0) {
-      if (increment < 0 && newCapacity < matriculados) {
-        return res.status(400).json({ error: `No se pueden disminuir ${Math.abs(increment)} cupos ya que hay ${matriculados} estudiantes matriculados.` });
+      if (Number(increment) < 0 && newCapacity < matriculados) {
+        return res.status(400).json({ error: `No se pueden disminuir ${Math.abs(Number(increment))} cupos ya que hay ${matriculados} estudiantes matriculados.` });
       }
     } else {
       // Si no hay matriculados, valida que la capacidad no sea menor que 1
