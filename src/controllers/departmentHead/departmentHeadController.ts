@@ -151,8 +151,9 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
         }
 
         academicHistory['SumUV'] = totalUV;
-        academicHistory['academicIndex'] = academicHistory['SumUVxNota']/totalUV;
         
+        academicHistory['academicIndex'] = Math.round(academicHistory['SumUVxNota'] / totalUV);
+
 
         
         

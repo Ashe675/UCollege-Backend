@@ -49,6 +49,9 @@ import {
   checkTeacherScheduleConflictUpdateNext,
 
  } from "../../middleware/section/sectionMiddleware";
+
+ import { validateDayUv } from '../../validators/sections/validateDayUv';
+
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
 
@@ -66,6 +69,7 @@ router.post('/',
   checkTeacherExistsAndActive,
   checkClassCareerandCenterandTeacher,
   checkTeacherScheduleConflict, //corregir por periodo
+  validateDayUv,
   createSectionController
   );
   //CREAR SECCIONES SIGUEINTE PERIODO
@@ -80,6 +84,7 @@ router.post('/next',
   checkTeacherExistsAndActive,
   checkClassCareerandCenterandTeacher,
   checkTeacherScheduleConflictNext, //corregir por periodo
+  validateDayUv,
   createSectionControllerNext
 );
 //OBTENER TODAS LAS SECCIONES

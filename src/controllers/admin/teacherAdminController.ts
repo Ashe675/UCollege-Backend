@@ -491,14 +491,73 @@ export const updateTeacher = async (req: Request, res: Response) => {
 };
 
 
-//Eliminar Docente
+//Eliminar docente
 export const deleteTeacher = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar si hay un periodo académico activo
+    const process = await checkActiveProcessByTypeId(5);
+    if (process) {
+      return res.status(400).json({ error: `No se puede desactivar el docente ya que hay un periodo académico activo.` });
+    }
+
+    // Buscar el docente por su ID
+    const teacher = await prisma.user.findUnique({
+      where: {
+        id: parseInt(id),
+        role: {
+          name: {
+            in: ['TEACHER', 'COORDINATOR', 'DEPARTMENT_HEAD']
+          }
+        },
+        active: true,
+      },
+      include: {
+        person: true,
+        teacherDepartments: true,
+        images: true, // Incluye imágenes si se manejan en esta relación
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Docente no encontrado o no está activo.' });
+    }
+
+    // Eliminar imágenes asociadas al docente de la nube
+    if (teacher.images && teacher.images.length) {
+      for (const image of teacher.images) {
+        try {
+          await deleteImageFromCloud(image.publicId);
+        } catch (error) {
+          console.error(`Error al eliminar imagen de la nube: ${image.publicId}`, error);
+          
+        }
+      }
+    }
+
+    // Eliminar el usuario y todas las relaciones asociadas en cascada
+    await prisma.user.delete({
+      where: {
+        id: teacher.id,
+      },
+    });
+
+    res.status(200).json({ message: 'Docente eliminado exitosamente.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al eliminar el docente.' });
+  }
+};
+
+//Desactiva al docente
+export const desactiveTeacher = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
     const process = await checkActiveProcessByTypeId(5);
     if (process) {
-      return res.status(400).json({ error: `No se puede eliminar el docente ya que hay un periodo académico activo.` });
+      return res.status(400).json({ error: `No se puede desactivar el docente ya que hay un periodo académico activo.` });
     }
 
     // Buscar el docente por su código de identificación
@@ -509,7 +568,8 @@ export const deleteTeacher = async (req: Request, res: Response) => {
           name: {
             in: ['TEACHER', 'COORDINATOR', 'DEPARTMENT_HEAD']
           }
-        }
+        },
+        active: true,
       },
       include: {
         person: true,
@@ -518,7 +578,7 @@ export const deleteTeacher = async (req: Request, res: Response) => {
     });
 
     if (!teacher) {
-      return res.status(404).json({ error: 'Docente no encontrado' });
+      return res.status(404).json({ error: 'Docente no encontrado o no esta activo' });
     }
 
     // Verificar si el registro en la tabla Person existe antes de eliminarlo
@@ -530,27 +590,81 @@ export const deleteTeacher = async (req: Request, res: Response) => {
 
     if (personExists) {
 
-      const images = await prisma.image.findMany({ where: { userId: teacher.id } })
-
-      if (images.length) {
-        for (const image of images) {
-          const result = await deleteImageFromCloud(image.publicId)
-        }
-      }
-
-      await prisma.person.delete({
+      await prisma.user.update({
         where: {
-          id: teacher.personId,
+          id: teacher.id,
         },
+        data:{
+          active: false
+        }
       });
     } else {
       throw new Error(`No se encontró la persona con id: ${teacher.personId}`);
     }
 
-    res.status(200).json({ message: 'Docente eliminado exitosamente' });
+    res.status(200).json({ message: 'Docente desactivado exitosamente' });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error al eliminar el docente' });
+    res.status(500).json({ error: 'Error al desactivar el docente' });
+  }
+};
+
+//Activar al docente
+export const activateTeacher = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const process = await checkActiveProcessByTypeId(5);
+    if (process) {
+      return res.status(400).json({ error: `No se puede activar el docente ya que hay un periodo académico activo.` });
+    }
+
+    // Buscar el docente por su código de identificación
+    const teacher = await prisma.user.findUnique({
+      where: {
+        id: parseInt(id),
+        role: {
+          name: {
+            in: ['TEACHER', 'COORDINATOR', 'DEPARTMENT_HEAD']
+          }
+        },
+        active: false,
+      },
+      include: {
+        person: true,
+        teacherDepartments: true,
+      },
+    });
+
+    if (!teacher) {
+      return res.status(404).json({ error: 'Docente no encontrado o no esta desactivo' });
+    }
+
+    // Verificar si el registro en la tabla Person existe antes de eliminarlo
+    const personExists = await prisma.person.findUnique({
+      where: {
+        id: teacher.personId,
+      },
+    });
+
+    if (personExists) {
+
+      await prisma.user.update({
+        where: {
+          id: teacher.id,
+        },
+        data:{
+          active: true
+        }
+      });
+    } else {
+      throw new Error(`No se encontró la persona con id: ${teacher.personId}`);
+    }
+
+    res.status(200).json({ message: 'Docente activado exitosamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al activar el docente' });
   }
 };
 
