@@ -1,5 +1,6 @@
 // src/controllers/sectionController.ts
 import { Request, Response } from 'express';
+import { prisma } from '../../config/db';
 import {
   createSection,
   getAllSections,
@@ -18,6 +19,7 @@ import {
   getGradesBySectionId,
   getEnrollmentsActual,
   getTeachersByDepartmentPagination,
+  downloadSectionEnrollmentsExcel,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -233,3 +235,54 @@ export const getWaitingListController = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+export const getGradesBySectionIdController = async (req: Request, res: Response) => {
+  try {
+    // Obtén el ID de la sección del parámetro de la solicitud
+    const sectionId = parseInt(req.params.sectionId, 10);
+    
+    if (isNaN(sectionId)) {
+      return res.status(400).json({ message: 'ID de sección inválido' });
+    }
+
+    // Obtén las notas utilizando el servicio
+    const grades = await getGradesBySectionId(sectionId, req);
+
+    // Devuelve las notas en la respuesta
+    return res.status(200).json(grades);
+  } catch (error) {
+    // Maneja los errores y devuelve una respuesta de error
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSectionEnrollmentsExcel = async (req: Request, res: Response) => {
+  const sectionId = parseInt(req.params.id, 10);
+  const userId = req.user.id;
+
+  if (isNaN(sectionId)) {
+    return res.status(400).json({ error: 'ID de sección inválido' });
+  }
+
+  try {
+    //Verificar si el usuario autenticado es el teacher de la sección
+    const section = await prisma.section.findUnique({
+      where: { id: sectionId },
+      select: { teacherId: true }
+    });
+
+    if (!section) {
+      return res.status(404).json({ error: 'Sección no encontrada' });
+    }
+
+    if (section.teacherId !== userId) {
+      return res.status(403).json({ error: 'No autorizado: No eres el profesor de esta sección' });
+    }
+
+    // Si la validación pasa, descargar el archivo Excel
+    await downloadSectionEnrollmentsExcel(sectionId, res);
+  } catch (error) {
+    res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
+  }
+};
+
