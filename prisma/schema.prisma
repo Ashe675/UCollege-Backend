@@ -408,19 +408,28 @@ model AcademicPeriod {
   sections     Section[]
 }
 
+enum Observation {
+  APR  // Aprobado
+  REP  // Reprobado
+  ABD  // Abandonado
+  NSP  // No se presentó
+}
+
 model Enrollment {
-  section      Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  sectionId   Int
-  date         DateTime @db.Date @default(now())
-  grade        Float?
-  TeacherGrade Float?     // Campo opcional para la evaluación del docente
-  message      String?  @db.VarChar(45)
-  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId   Int
-  waitingList  WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
-  waitingListId Int?
+  section        Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sectionId      Int
+  date           DateTime  @db.Date @default(now())
+  grade          Float?
+  TeacherGrade   Float?    // Campo opcional para la evaluación del docente
+  message        String?   @db.VarChar(45)
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId      Int
+  waitingList    WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
+  waitingListId  Int?
+  OBS            Observation?  // Campo de observación con Enum y valor por defecto nulo
   @@id([sectionId, studentId])
 }
+
 
 model WaitingList {
   id Int     @id @default(autoincrement())

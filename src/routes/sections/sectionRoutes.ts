@@ -24,6 +24,7 @@ import {
   getGradesBySectionIdController,
   getEnrollmentByDepartmentController,
   getTeachersByDepartmentPageController,
+  getSectionEnrollmentsExcel,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -137,6 +138,12 @@ router.get('/:id',
   checkSectionandCenterDepartment,
   validateSectionId, 
   getSectionByIdController);
+router.get('/download/:id', 
+    authenticate,
+    authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+    checkSectionandCenterDepartment,
+    validateSectionId, 
+    getSectionEnrollmentsExcel);
 //ACTUALIZAR SECCION
 router.put('/:id', 
   authenticate,
