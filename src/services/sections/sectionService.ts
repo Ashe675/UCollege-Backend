@@ -548,6 +548,7 @@ export const getSectionByDepartmentActual = async (req: Request) => {
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
     include: {
+      class : true,
       section_Day: { select: { day: { select: { name: true } } } },
       classroom: {
         select: {
@@ -614,6 +615,7 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
     include: {
+      class : true,
       section_Day: { select: { day: { select: { name: true } } } },
       classroom: {
         select: {
