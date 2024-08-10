@@ -323,25 +323,13 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       throw new Error('Section not found');
     }
 
-    if (increment <= 0) {
-      throw new Error('El incremento debe ser mayor a cero.');
-    }
-
-
-    if ((increment + section.capacity) > section.classroom.capacity) {
-      throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
-    }
-
-    // Obtener el número de matriculados actuales (sin waitingListId)
-    const matriculados = await prisma.enrollment.count({
-      where: {
-        sectionId: section.id,
-        waitingListId: null
-      }
-    });
-
     // Calcular la nueva capacidad
     const newCapacity = section.capacity + increment;
+
+    // Validar si la nueva capacidad excede la capacidad del aula
+    if (newCapacity > section.classroom.capacity) {
+      throw new Error(`No se pueden aumentar ${increment} cupos ya que el aula no tiene la capacidad (${section.classroom.capacity}).`);
+    }
 
     // Actualizar la capacidad de la sección
     const updatedSection = await prisma.section.update({
@@ -352,10 +340,15 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     });
 
     // Obtener el número de cupos disponibles
+    const matriculados = await prisma.enrollment.count({
+      where: {
+        sectionId: section.id,
+        waitingListId: null
+      }
+    });
     const availableSlots = newCapacity - matriculados;
 
     if (availableSlots > 0 && section.waitingList) {
-      // Obtener los estudiantes en la lista de espera, ordenados por 'top' para inscribir a los primeros en la lista
       const waitingListEntries = await prisma.waitingList.findUnique({
         where: { id: section.waitingList.id },
         include: {
@@ -363,13 +356,11 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
         }
       });
 
-      // Seleccionar los primeros en la lista de espera según el número de cupos disponibles
       const waitingListEnrollments = waitingListEntries.enrollments
-        .filter(enrollment => enrollment.waitingListId !== null) // Filtrar solo los que están en lista de espera
+        .filter(enrollment => enrollment.waitingListId !== null)
         .slice(0, availableSlots);
 
       for (const enrollment of waitingListEnrollments) {
-        // Actualizar la inscripción para quitar el waitingListId
         await prisma.enrollment.update({
           where: {
             sectionId_studentId: {
@@ -390,6 +381,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     throw new Error(error.message);
   }
 };
+
 
 
 const getCareerIdByDepartmentId = async (departmentId: number) => {
@@ -442,7 +434,7 @@ export const getAllSections = async () => {
 export const getSectionById = async (id: number) => {
   // Obtén la sección por ID
   const section = await prisma.section.findUnique({
-    where: { id : id },
+    where: { id },
     include: {
       section_Day: { select: { day: { select: { name: true, id: true } } } },
       teacher: { select: { person: true, identificationCode: true, institutionalEmail: true, id: true } },
@@ -819,6 +811,104 @@ export const getTeachersByDepartment = async (req: Request) => {
 
   return { departmentname, teachers };
 };
+export const getTeachersByDepartmentPagination = async (req: Request) => {
+  const userid = req.user?.id;
+
+  // Obtener el usuario y su departamento
+  const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+    where: { teacherId: userid },
+    select: {
+      regionalCenterFacultyCareerDepartment: {
+        select: {
+          departmentId: true,
+          Departament: {
+            select: { name: true }
+          },
+          RegionalCenterFacultyCareer: {
+            select: {
+              regionalCenter_Faculty: {
+                select: { regionalCenterId: true }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!user) {
+    throw new Error("User not found or does not belong to a department");
+  }
+
+  const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
+  const userDepartmentId = user.regionalCenterFacultyCareerDepartment.departmentId;
+  const userRegionalCenterId = user.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenterId;
+
+  // Obtener los parámetros de paginación
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  // Consultar los maestros con paginación, ordenados alfabéticamente por firstName
+  const teachers = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
+    where: {
+      regionalCenterFacultyCareerDepartment: {
+        departmentId: userDepartmentId,
+        RegionalCenterFacultyCareer: {
+          regionalCenter_Faculty: { regionalCenterId: userRegionalCenterId }
+        }
+      }
+    },
+    select: {
+      teacher: {
+        select: {
+          id: true,
+          identificationCode: true,
+          personId: true,
+          active: true,
+          institutionalEmail: true,
+          verified: true,
+          description: true,
+          roleId: true,
+          images: { where: { avatar: true }, select: { url: true } },
+          person: {
+            select: {
+              firstName: true,
+              lastName: true,
+              dni: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      teacher: {
+        person: {
+          firstName: 'asc'
+        }
+      }
+    },
+    skip,
+    take: limit
+  });
+
+  // Calcular el total de maestros para la paginación
+  const totalTeachers = await prisma.regionalCenter_Faculty_Career_Department_Teacher.count({
+    where: {
+      regionalCenterFacultyCareerDepartment: {
+        departmentId: userDepartmentId,
+        RegionalCenterFacultyCareer: {
+          regionalCenter_Faculty: { regionalCenterId: userRegionalCenterId }
+        }
+      }
+    }
+  });
+
+  const totalPages = Math.ceil(totalTeachers / limit);
+
+  return { departmentname, teachers, page, totalPages };
+};
+
 export const getWaitingListById = async (sectionId: number) => {
   // Primero, obtenemos la sección para conseguir la lista de espera
   const section = await prisma.section.findUnique({
@@ -968,12 +1058,13 @@ export const getEnrollmentsActual = async (req: Request) => {
   // Obtener el ID del centro regional y facultad del usuario
   const regionalCenter_Faculty = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
     where: { teacherId: userId },
-    select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
+    select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true, departmentId: true } } }
   });
 
   const regionalCenter_FacultyCareerId = regionalCenter_Faculty?.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
-
-  if (!regionalCenter_FacultyCareerId) {
+  const departmentTeacherId = regionalCenter_Faculty?.regionalCenterFacultyCareerDepartment.departmentId;
+  
+  if (!regionalCenter_FacultyCareerId || !departmentTeacherId) {
     throw new Error('No se encontró el centro regional y facultad del usuario.');
   }
 
@@ -981,7 +1072,13 @@ export const getEnrollmentsActual = async (req: Request) => {
   const academicPeriodId = await getPeriodoActual();
   const getAvatar = (images: { url: string; avatar: boolean }[]) =>
     images.find(image => image.avatar)?.url || null;
-  // Obtener todas las inscripciones en el período actual
+
+  // Obtener los parámetros de paginación
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  // Obtener todas las inscripciones en el período actual con paginación
   const enrollments = await prisma.enrollment.findMany({
     where: {
       waitingListId : null,
@@ -1020,7 +1117,9 @@ export const getEnrollmentsActual = async (req: Request) => {
           }
         }
       }
-    }
+    },
+    skip,
+    take: limit,
   });
 
   // Mapear la información de los estudiantes
@@ -1034,10 +1133,29 @@ export const getEnrollmentsActual = async (req: Request) => {
     secondLastName: enrollment.student.user.person.secondLastName,
     institutionalEmail: enrollment.student.user.institutionalEmail,
     identificationCode: enrollment.student.user.identificationCode,
-    avatar: getAvatar(enrollment.student.user.images) // Obtén el avatar usando la función getAvatar
+    avatar: getAvatar(enrollment.student.user.images)
   }));
 
-  return result;
+  // Contar el total de inscripciones para la paginación
+  const totalEnrollments = await prisma.enrollment.count({
+    where: {
+      section: {
+        academicPeriodId: academicPeriodId,
+        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
+        class: { departamentId: departmentTeacherId }
+      }
+    }
+  });
+
+  return {
+    enrollments: result,
+    pagination: {
+      totalItems: totalEnrollments,
+      currentPage: page,
+      totalPages: Math.ceil(totalEnrollments / limit),
+      itemsPerPage: limit,
+    }
+  };
 };
 
 
