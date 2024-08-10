@@ -17,6 +17,7 @@ import {
   getSectionByDepartmentActualNext,
   getGradesBySectionId,
   getEnrollmentsActual,
+  getTeachersByDepartmentPagination,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -179,6 +180,16 @@ export const updateSectionCapacityController = async (req: Request, res: Respons
 export const getTeachersByDepartmentController = async (req: Request, res: Response) => {
   try {
     const result = await getTeachersByDepartment(req);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error getting teachers by department:', error);
+    res.status(400).json({error: error.message});
+  }
+};
+
+export const getTeachersByDepartmentPageController = async (req: Request, res: Response) => {
+  try {
+    const result = await getTeachersByDepartmentPagination(req);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error getting teachers by department:', error);

@@ -288,6 +288,121 @@ export const getTeacherById = async (req: Request, res: Response) => {
   }
 };
 
+export const getTeachersPagination = async (req: Request, res: Response) => {
+  try {
+    // Obtener los parámetros de paginación
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // Consultar los docentes con paginación y ordenar alfabéticamente por firstName
+    const teachers = await prisma.user.findMany({
+      where: {
+        role: {
+          name: {
+            in: ['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD'],
+          },
+        },
+      },
+      include: {
+        person: true,
+        role: true,
+        images: {
+          where: {
+            avatar: true,
+          },
+          select: {
+            url: true,
+          },
+        },
+      },
+      orderBy: {
+        person: {
+          firstName: 'asc',
+        },
+      },
+      skip,
+      take: limit,
+    });
+
+    // Mapea los docentes y realiza las consultas adicionales
+    const formattedTeachers = await Promise.all(
+      teachers.map(async (teacher) => {
+        const RegionalCenter_Faculty_Career_Department_Teacher =
+          await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+            where: { teacherId: teacher.id },
+          });
+
+        const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
+          ? await prisma.regionalCenter_Faculty_Career.findUnique({
+              where: {
+                id: RegionalCenter_Faculty_Career_Department_Teacher
+                  .regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
+              },
+              include: {
+                regionalCenter_Faculty: {
+                  include: {
+                    regionalCenter: true,
+                  },
+                },
+              },
+            })
+          : null;
+
+        const departament = RegionalCenter_Faculty_Career_Department_Teacher
+          ? await prisma.departament.findUnique({
+              where: {
+                id: RegionalCenter_Faculty_Career_Department_Teacher
+                  .regionalCenter_Faculty_Career_Department_Departament_id,
+              },
+            })
+          : null;
+
+        return {
+          user_id: teacher.id,
+          avatar: teacher.images[0] ? teacher.images[0] : null,
+          firstName: teacher.person.firstName,
+          middleName: teacher.person.middleName,
+          lastName: teacher.person.lastName,
+          secondLastName: teacher.person.secondLastName,
+          regionalCenter: regionalCenter
+            ? regionalCenter.regionalCenter_Faculty.regionalCenter.name
+            : null,
+          departament: departament ? departament.name : null,
+          role: teacher.role.name,
+          dni: teacher.person.dni,
+          identificationCode: teacher.identificationCode,
+        };
+      })
+    );
+
+    // Contar el total de docentes para la paginación
+    const totalTeachers = await prisma.user.count({
+      where: {
+        role: {
+          name: {
+            in: ['COORDINATOR', 'TEACHER', 'DEPARTMENT_HEAD'],
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      teachers: formattedTeachers,
+      pagination: {
+        totalItems: totalTeachers,
+        currentPage: page,
+        totalPages: Math.ceil(totalTeachers / limit),
+        itemsPerPage: limit,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener los docentes' });
+  }
+};
+
+
 // Obtener un docente por su DNI
 export const getTeacherByDni = async (req: Request, res: Response) => {
   try {
