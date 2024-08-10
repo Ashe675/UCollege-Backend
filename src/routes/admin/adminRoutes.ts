@@ -16,7 +16,8 @@ import {
   getTeacherByIdentificationCode,
   updateTeacher,
   deleteTeacher,
-  updateTeacherCenters
+  updateTeacherCenters,
+  getTeachersPagination
  } from '../../controllers/admin/teacherAdminController';
 
  import {getAllDepartments} from '../../services/admin/getAllDepartent'
@@ -81,6 +82,12 @@ router.get('/teachers',
   authenticate,
   authorizeRole(['ADMIN']),
   getTeachers
+);
+
+router.get('/teachers-pagination',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  getTeachersPagination
 );
 
 // Ruta para obtener un docente por ID

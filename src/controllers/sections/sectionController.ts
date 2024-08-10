@@ -17,6 +17,7 @@ import {
   getSectionByDepartmentActualNext,
   getGradesBySectionId,
   getEnrollmentsActual,
+  getTeachersByDepartmentPagination,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -68,9 +69,9 @@ export const getUserData = async (req: Request, res: Response) => {
 };
 
 export const getSectionByIdController = async (req: Request, res: Response) => {
-  const { sectionId } = req.params;
+  const { id } = req.params;
   try {
-    const section = await getSectionById(Number(sectionId));
+    const section = await getSectionById(Number(id));
     if (section) {
       res.status(200).json(section);
     } else {
@@ -79,6 +80,7 @@ export const getSectionByIdController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error obteniendo sección:', error);
     res.status(400).json({ error: error.message });
+    
   }
 };
 
@@ -185,6 +187,16 @@ export const getTeachersByDepartmentController = async (req: Request, res: Respo
   }
 };
 
+export const getTeachersByDepartmentPageController = async (req: Request, res: Response) => {
+  try {
+    const result = await getTeachersByDepartmentPagination(req);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error getting teachers by department:', error);
+    res.status(400).json({error: error.message});
+  }
+};
+
 export const getTeachersByDepartmentAcademicPeriodController = async (req: Request, res: Response) => {
   try {
     const result = await getSectionByDepartmentActual(req);
@@ -218,6 +230,6 @@ export const getWaitingListController = async (req: Request, res: Response) => {
     res.status(200).json(waitingListStudents);
   } catch (error) {
     console.error('Error obteniendo la lista de espera:', error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };

@@ -23,6 +23,7 @@ import {
   getTeachersByDepartmentAcademicPeriodControllerNext,
   getGradesBySectionIdController,
   getEnrollmentByDepartmentController,
+  getTeachersByDepartmentPageController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -47,6 +48,7 @@ import {
   checkTeacherScheduleConflictNext,
   checkClassroomAvailabilityUpdateNext,
   checkTeacherScheduleConflictUpdateNext,
+  validateCapacityChange,
 
  } from "../../middleware/section/sectionMiddleware";
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
@@ -107,6 +109,11 @@ router.get('/department/teacher',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getTeachersByDepartmentController
+);
+router.get('/department/teacher-page/',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  getTeachersByDepartmentPageController
 )
 //OBTENER SECCIONES POR DEPARTAMENTO AUTENTICADO
 router.get('/department', 
@@ -168,6 +175,7 @@ router.put('/capacity/:id',
   checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkSectionandCenterDepartment,
   validateSectionCapacity,
+  validateCapacityChange,
   updateSectionCapacityController
 )
 
