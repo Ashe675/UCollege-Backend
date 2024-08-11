@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
 import { deleteFileService, uploadFileService } from '../../services/Resources/resourcesService'; // Asegúrate de que la ruta sea correcta
+import path from 'path';
+import fs from 'fs';
+import { promisify } from 'util';
+
+const writeFile = promisify(fs.writeFile);
+const unlink = promisify(fs.unlink);
 
 export const uploadFileController = async (req: Request, res: Response) => {
     const sectionId = parseInt(req.params.id, 10);
@@ -16,14 +22,27 @@ export const uploadFileController = async (req: Request, res: Response) => {
     if (!fileName || typeof fileName !== 'string') {
       return res.status(400).json({ error: 'Nombre del archivo no proporcionado o inválido' });
     }
-  
+    
+    // Generar un nombre de archivo temporal único
+    const tempFilePath = path.join(__dirname, `${Date.now()}-${fileName}`);
+
     try {
-      const fileBuffer = file.buffer;
+
       const fileType = file.mimetype;
+      
+      await writeFile(tempFilePath, file.buffer);
+
+      // Validar el tamaño del archivo (1GB máximo para videos)
+      const maxVideoSize = 1024 * 1024 * 1024; // 1GB en bytes
+      if (fileType.startsWith('video/') && file.buffer.length > maxVideoSize) {
+        throw new Error('El tamaño del video excede el límite de 1GB.');
+      }
   
-      const resource = await uploadFileService(fileBuffer, fileType, sectionId, fileName);
+      const resource = await uploadFileService(tempFilePath, fileType, sectionId, fileName);
       res.status(201).json(resource);
     } catch (error) {
+      // Eliminar el archivo temporal en caso de error
+      await unlink(tempFilePath);
       res.status(500).json({ error: `Error al subir el archivo: ${error.message}` });
     }
   };
