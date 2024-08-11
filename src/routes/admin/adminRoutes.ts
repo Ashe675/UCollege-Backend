@@ -38,6 +38,7 @@ import upload from '../../middleware/admission/upload';
 import { getTeacherRolesController } from '../../controllers/teachers/getTeachers';
 import { checkDaysComplete, isActiveProcessByProcessTypeIdGeneric } from '../../middleware/enroll/enrollMiddlewares';
 import { checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkActiveProcessGeneric';
+import { isRoleTeacher } from '../../middleware/admin/isRoleTeacher';
 
 
 const router = Router();
@@ -218,7 +219,7 @@ router.put('/user/change-roles/:identificationCode',
   authenticate,
   authorizeRole([RoleEnum.ADMIN]),
   validateCodeIdentificationData,
-  //solo docentes, excluye admin y estudiante
+  isRoleTeacher,
   changeRoleController,
   
 )
