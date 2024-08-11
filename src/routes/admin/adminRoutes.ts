@@ -211,7 +211,9 @@ router.put('/user/change-roles/:identificationCode',
   authenticate,
   authorizeRole([RoleEnum.ADMIN]),
   validateCodeIdentificationData,
+  //solo docentes, excluye admin y estudiante
   changeRoleController,
+  
 )
 
 export default router;
