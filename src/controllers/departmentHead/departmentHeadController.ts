@@ -127,14 +127,14 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
                 "uv/ca": enrollment.section.class.UV,
                 "periodo": enrollment.section.academicPeriod.number,
                 "Nota": enrollment.grade,
-                "obs": enrollment.grade >= 65 ? "apr" : "rpb"
+                "obs": enrollment.OBS
             };
         
             // Agregar inscripción al array del año correspondiente
             academicHistory['years'][year].enrollments.push(enrollmentDetails);
         
             // Si la inscripción es aprobada, incrementa el contador de clases aprobadas
-            if (enrollmentDetails.obs === "apr") {
+            if (enrollmentDetails.obs === "APR") {
                 academicHistory['years'][year].totalAprov++;
             }
             }
@@ -154,8 +154,9 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
         }
 
         academicHistory['SumUV'] = totalUV;
-        academicHistory['academicIndex'] = academicHistory['SumUVxNota']/totalUV;
         
+        academicHistory['academicIndex'] = Math.round(academicHistory['SumUVxNota'] / totalUV);
+
 
         
         

@@ -18,7 +18,7 @@ export const getAllBuilding = async (req: Request, res: Response) => {
     try {
         const teacher = await prisma.user.findUnique({ where: { id: userId } });
         if (!teacher) {
-            return res.status(402).json({ error: 'Profesor no encontrado' });
+            return res.status(404).json({ error: 'Profesor no encontrado' });
         }
 
         const regionalCenter = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
@@ -43,7 +43,7 @@ export const getAllBuilding = async (req: Request, res: Response) => {
         });
 
         if (!regionalCenter.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter) {
-            return res.status(403).json({ error: 'Centro regional no encontrado para el profesor activo' });
+            return res.status(404).json({ error: 'Centro regional no encontrado para el profesor activo' });
         }
 
         const regionalCenterId = regionalCenter.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.id;

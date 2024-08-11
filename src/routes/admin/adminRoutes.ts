@@ -6,6 +6,9 @@ import {
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { createProcessValidator, processIdValidator, finalDateValidator } from '../../validators/admin/processValidator';
 import { activateEnrollmentValidator } from '../../validators/admin/enrollmentValidator';
+
+import {validateCodeIdentificationData} from '../../middleware/codeIdentification/validateCodeIdentificationData'
+
 import { checkActiveProcess } from '../../middleware/admin/checkActiveProcess';
 import { RoleEnum } from '@prisma/client';
 import {
@@ -17,8 +20,11 @@ import {
   updateTeacher,
   deleteTeacher,
   updateTeacherCenters,
-  getTeachersPagination
+  getTeachersPagination,
+  desactiveTeacher,
+  activateTeacher
  } from '../../controllers/admin/teacherAdminController';
+ import { changeRoleController } from '../../controllers/admin/changeRoleController';
 
  import {getAllDepartments} from '../../services/admin/getAllDepartent'
 
@@ -32,6 +38,7 @@ import upload from '../../middleware/admission/upload';
 import { getTeacherRolesController } from '../../controllers/teachers/getTeachers';
 import { checkDaysComplete, isActiveProcessByProcessTypeIdGeneric } from '../../middleware/enroll/enrollMiddlewares';
 import { checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkActiveProcessGeneric';
+import { isRoleTeacher } from '../../middleware/admin/isRoleTeacher';
 
 
 const router = Router();
@@ -134,12 +141,26 @@ router.put('/teacher-update/:identificationCode',
 );
 
 
-// Ruta para eliminar un docente
+// Ruta para eliminar un docente (No recomendada es destructiva)
 router.delete('/teacher-delete/:id',
   authenticate,
   authorizeRole(['ADMIN']),
   deleteTeacher
 );
+
+// Ruta para desactivar y activar un docente
+router.put('/teacher-desactivate/:id',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  desactiveTeacher
+);
+
+router.put('/teacher-activate/:id',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  activateTeacher
+);
+
 
 /**
  * Body de la peticion :
@@ -186,6 +207,21 @@ router.post('/enroll/activate',
 
 router.get('/getAllDataDepartment',
             getAllDepartments,
+)
+
+
+/**
+ * {
+ *  'roleName': 'ADMIN'
+ * }
+ */
+router.put('/user/change-roles/:identificationCode',
+  authenticate,
+  authorizeRole([RoleEnum.ADMIN]),
+  validateCodeIdentificationData,
+  isRoleTeacher,
+  changeRoleController,
+  
 )
 
 export default router;
