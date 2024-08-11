@@ -1,5 +1,6 @@
 // src/routes/sectionRoutes.ts
 import express from 'express';
+import multer from 'multer';
 import {
   checkActiveProcesMatricula, 
   checkActiveProcessesByTypeIdMiddlewareOR, 
@@ -54,8 +55,10 @@ import {
  } from "../../middleware/section/sectionMiddleware";
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
+import { deleteFileController, uploadFileController } from '../../controllers/resources/resourcesController';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() }); // Usar almacenamiento en memoria
 router.get('/validar/',authenticate, getUserData)
 //CREAR SECCIONES
 router.post('/',
@@ -200,6 +203,14 @@ router.get('/grades/:sectionId',
 
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
+
+router.post('/resources/:id', 
+  //authenticate,
+  //authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  upload.single('file'), 
+  uploadFileController);
+
+router.delete('/resources/:id', deleteFileController);
 
 export default router;
 
