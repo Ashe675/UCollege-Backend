@@ -356,6 +356,25 @@ model Class {
 
 }
 
+model Resource {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)  // Nombre del recurso
+  publicId   String    @db.VarChar(255)  // ID público para identificar el recurso externamente
+  url        String    @db.VarChar(255)
+  type       ResourceType
+  sectionId  Int
+  section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum ResourceType {
+  VIDEO
+  PHOTO
+  DOCUMENT
+}
+
 model Building {
   id          Int      @id @default(autoincrement())
   code        String   @db.VarChar(10)
@@ -398,6 +417,7 @@ model Section {
   waitingList WaitingList?
   section_Day Section_Day[]
   enrollments   Enrollment[]
+  resources  Resource[]
 }
 
 model AcademicPeriod {
