@@ -33,7 +33,10 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
                     }
                 },
                 person: true,
-                images: true
+                images: {
+                    where : { avatar : true},
+                    select : {url : true}
+                }
                 
             }
         })

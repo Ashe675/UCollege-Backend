@@ -9,7 +9,8 @@ router.post('/login', ...AuthValidator.validatorLogin(), AuthController.login)
 
 router.post('/forgot-password', ...AuthValidator.validatorForgotPassword(), AuthController.forgotPassword)
 
-router.post('/forgot-password-teacher/:teacherId', ...AuthValidator.validatorForgotPassword(), AuthController.forgotPasswordTeacher)
+router.post('/forgot-password-teacher/:teacherId', authenticate,
+    authorizeRole(['DEPARTMENT_HEAD']),  AuthController.forgotPasswordTeacher)
 
 router.get('/valid/:token', AuthController.userTokenExists)
 

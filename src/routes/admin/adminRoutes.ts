@@ -20,6 +20,7 @@ import {
   updateTeacher,
   deleteTeacher,
   updateTeacherCenters,
+  getTeachersPagination,
   desactiveTeacher,
   activateTeacher
  } from '../../controllers/admin/teacherAdminController';
@@ -87,6 +88,12 @@ router.get('/teachers',
   authenticate,
   authorizeRole(['ADMIN']),
   getTeachers
+);
+
+router.get('/teachers-pagination',
+  authenticate,
+  authorizeRole(['ADMIN']),
+  getTeachersPagination
 );
 
 // Ruta para obtener un docente por ID

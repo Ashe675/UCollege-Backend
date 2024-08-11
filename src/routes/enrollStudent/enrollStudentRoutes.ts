@@ -65,7 +65,8 @@ router.delete('/enroll-delete/:sectionId',
         removeEnrollment
 );
 
-router.post('/teacher-grade/:sectionId',authenticate,authorizeRole(['STUDENT']), addTeacherGrade);
+// * ISSUE : FALTA EL VALIDATOR
+router.post('/teacher-grade/:sectionId',authenticate,authorizeRole(['STUDENT']), addTeacherGrade); 
 // router.post('/test01',
 //         enrollStudent2,
 //         )

@@ -23,6 +23,8 @@ import {
   getTeachersByDepartmentAcademicPeriodControllerNext,
   // getGradesBySectionIdController,
   getEnrollmentByDepartmentController,
+  getTeachersByDepartmentPageController,
+  getSectionEnrollmentsExcel,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -47,6 +49,7 @@ import {
   checkTeacherScheduleConflictNext,
   checkClassroomAvailabilityUpdateNext,
   checkTeacherScheduleConflictUpdateNext,
+  validateCapacityChange,
 
  } from "../../middleware/section/sectionMiddleware";
 
@@ -112,6 +115,11 @@ router.get('/department/teacher',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getTeachersByDepartmentController
+);
+router.get('/department/teacher-page/',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+  getTeachersByDepartmentPageController
 )
 //OBTENER SECCIONES POR DEPARTAMENTO AUTENTICADO
 router.get('/department', 
@@ -135,6 +143,12 @@ router.get('/:id',
   checkSectionandCenterDepartment,
   validateSectionId, 
   getSectionByIdController);
+router.get('/download/:id', 
+    authenticate,
+    authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+    checkSectionandCenterDepartment,
+    validateSectionId, 
+    getSectionEnrollmentsExcel);
 //ACTUALIZAR SECCION
 router.put('/:id', 
   authenticate,
@@ -173,6 +187,7 @@ router.put('/capacity/:id',
   checkActiveProcessesByTypeIdMiddlewareOR([3,6]),
   checkSectionandCenterDepartment,
   validateSectionCapacity,
+  validateCapacityChange,
   updateSectionCapacityController
 )
 
@@ -183,7 +198,6 @@ router.put('/deactivate/:id',
   checkSectionandCenterDepartment,
   validateSectionId, 
   deleteSectionController);
-  
 // router.get('/grades/:sectionId', 
 //   authenticate, 
 //   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
