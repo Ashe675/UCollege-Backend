@@ -1085,7 +1085,8 @@ export const getEnrollmentsActual = async (req: Request) => {
       waitingListId : null,
       section: {
         academicPeriodId: academicPeriodId,
-        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId //* ISSUE: VALIDAR QUE SEA DEL DEPARTAMENTO TAMBIEN 
+        regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
+        class: { departamentId: departmentTeacherId } //* ISSUE: VALIDAR QUE SEA DEL DEPARTAMENTO TAMBIEN, HECHO!
       }
     },
     distinct : 'studentId', 
@@ -1121,6 +1122,15 @@ export const getEnrollmentsActual = async (req: Request) => {
     },
     skip,
     take: limit,
+    orderBy : {
+      student : {
+        user : {
+          person : {
+            firstName : 'asc'
+          }
+        }
+      }
+    }
   });
 
   // Mapear la información de los estudiantes
