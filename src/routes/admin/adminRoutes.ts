@@ -215,7 +215,7 @@ router.get('/getAllDataDepartment',
  *  'roleName': 'ADMIN'
  * }
  */
-router.put('/user/change-roles/:identificationCode',
+router.put('/change-role/:identificationCode',
   authenticate,
   authorizeRole([RoleEnum.ADMIN]),
   validateCodeIdentificationData,

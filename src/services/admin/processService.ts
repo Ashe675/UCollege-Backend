@@ -227,7 +227,7 @@ export const createProcess = async (data: ProcessData) => {
 export const activateProcess = async (id: number) => {
   const process = await prisma.process.updateMany({
     where: {
-      OR: [{ processId: id }, { id }],
+      OR: [{ processId: Number(id) }, {id : Number(id) }],
       startDate: {
         lte: new Date()
       },

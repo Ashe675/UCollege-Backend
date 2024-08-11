@@ -219,7 +219,8 @@ export const getTeachers = async (req: Request, res: Response) => {
         departament: departament ? departament.name : null,
         role: teacher.role.name,
         dni: teacher.person.dni,
-        identificationCode: teacher.identificationCode
+        identificationCode: teacher.identificationCode,
+        active : teacher.active
       };
     }));
 
@@ -278,7 +279,8 @@ export const getTeacherById = async (req: Request, res: Response) => {
       role: teacher.role.name,
       dni: teacher.person.dni,
       identificationCode: teacher.identificationCode,
-      images: teacher.images
+      images: teacher.images,
+      active : teacher.active
     };
 
     res.status(200).json(formattedTeacher);
@@ -372,6 +374,7 @@ export const getTeachersPagination = async (req: Request, res: Response) => {
           role: teacher.role.name,
           dni: teacher.person.dni,
           identificationCode: teacher.identificationCode,
+          active : teacher.active
         };
       })
     );
@@ -473,7 +476,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
 
     // Encuentra al usuario por su código de identificación
     const teacher = await prisma.user.findUnique({
-      where: { identificationCode: identificationCode },
+      where: { identificationCode: identificationCode},
       include: {
         person: true,
         role: true,
@@ -536,7 +539,8 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
       dni: teacher.person.dni,
       identificationCode: teacher.identificationCode,
       phoneNumber: teacher.person.phoneNumber,
-      email: teacher.person.email
+      email: teacher.person.email,
+      active : teacher.active
     };
 
     res.status(200).json(formattedTeacher);
@@ -729,10 +733,6 @@ export const activateTeacher = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const process = await checkActiveProcessByTypeId(5);
-    if (process) {
-      return res.status(400).json({ error: `No se puede activar el docente ya que hay un periodo académico activo.` });
-    }
 
     // Buscar el docente por su código de identificación
     const teacher = await prisma.user.findUnique({

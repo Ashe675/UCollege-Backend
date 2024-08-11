@@ -779,6 +779,7 @@ export const getTeachersByDepartment = async (req: Request) => {
 
   const teachers = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
     where: {
+      teacher : { active : true },  
       regionalCenterFacultyCareerDepartment: {
         departmentId: userDepartmentId,
         RegionalCenterFacultyCareer: {
@@ -853,6 +854,7 @@ export const getTeachersByDepartmentPagination = async (req: Request) => {
   // Consultar los maestros con paginación, ordenados alfabéticamente por firstName
   const teachers = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
     where: {
+      teacher : { active : true  },
       regionalCenterFacultyCareerDepartment: {
         departmentId: userDepartmentId,
         RegionalCenterFacultyCareer: {
