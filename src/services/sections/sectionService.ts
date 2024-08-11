@@ -2,6 +2,7 @@
 import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 import { checkActiveProcessByTypeId } from '../../middleware/checkActiveProcessGeneric';
+import ExcelJS from 'exceljs';
 import { getEnListadeEspera, getMatriculados,getPeriodoActual,getSiguientePeriodo, validateUserAndSection } from "../../utils/section/sectionUtils";
 
 interface CreateSectionInput {
@@ -1156,6 +1157,69 @@ export const getEnrollmentsActual = async (req: Request) => {
       itemsPerPage: limit,
     }
   };
+};
+export const downloadSectionEnrollmentsExcel = async (sectionId: number, res: Response) => {
+  // Obtén los matriculados de la sección
+  const clase = await prisma.section.findFirst({
+    where: {id: sectionId},
+    include:{class:true}
+  });
+  const matriculados = await prisma.enrollment.findMany({
+    where: { sectionId },
+    include: {
+      student: {
+        select: {
+          user: {
+            select: {
+              identificationCode: true,
+              institutionalEmail: true,
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Crear un nuevo libro de Excel
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Matriculados');
+
+  // Definir las columnas
+  worksheet.columns = [
+    { header: 'NÚMERO DE IDENTIDAD', key: 'dni', width: 15 },
+    { header: 'NOMBRE COMPLETO', key: 'fullName', width: 40 },
+    { header: 'NÚMERO DE CUENTA', key: 'identificationCode', width: 20 },
+    { header: 'CORREO INSTITUCIONAL', key: 'email', width: 30 }
+  ];
+
+  // Agregar los datos de los matriculados
+  matriculados.forEach((enrollment) => {
+    worksheet.addRow({
+      dni: enrollment.student.user.person.dni,
+      fullName: `${enrollment.student.user.person.firstName} ${enrollment.student.user.person.middleName || ''} ${enrollment.student.user.person.lastName} ${enrollment.student.user.person.secondLastName || ''}`,
+      identificationCode: enrollment.student.user.identificationCode,
+      email: enrollment.student.user.institutionalEmail,
+    });
+  });
+
+  // Configurar el nombre del archivo
+  const fileName = `Matriculados_Seccion_${clase.class.name}_${clase.code}.xlsx`;
+
+  // Enviar el archivo Excel como respuesta
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+
+  await workbook.xlsx.write(res);
+  res.end();
 };
 
 
