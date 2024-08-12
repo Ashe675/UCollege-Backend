@@ -34,7 +34,7 @@ export const checkEnrollStudent = async (req: Request, res: Response, next: Next
         });
 
         if(!student){
-            return res.status(404).json({ error: 'El codigo de identificacion no es de un estudiante o el estudinte no existe' });
+            return res.status(400).json({ error: 'El codigo de identificacion no es de un estudiante o el estudinte no existe' });
         }
         
         // Verificar si el estudiante está matriculado en la sección

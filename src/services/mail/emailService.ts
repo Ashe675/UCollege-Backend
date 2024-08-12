@@ -71,7 +71,7 @@ export const sendEmailGrades = async (firstName: string, lastName: string, url: 
       </head>
       <body style="font-family: sans-serif;">
         <div style="">
-          <h1 style="color: #242323; padding: 5px; text-align: center; width: 100%; display: flex; justify-content: center;">Resultados de Admisión</h1>
+          <h1 style="color: #242323; padding: 5px; text-align: center; width: 100%; display: flex; justify-content: center;">Notificacion de Notas</h1>
           <p style="color: #444; font-size: 24px;">
             Hola ${firstName} ${lastName} ,
             Se le informa que ya se han subido las notas de su clase ${clase} a la plataforma de 

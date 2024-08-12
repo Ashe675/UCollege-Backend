@@ -17,7 +17,7 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
         })).id
 
         if(!processId){
-            return res.status(402).json({messeage: "No se encontro proceso de periodo ..."})
+            return res.status(402).json({error: "No se encontro proceso de periodo ..."})
         }
 
         
@@ -48,7 +48,7 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
         });
 
         if(sections.length===0){
-            return res.status(402).json({messeage: "No se encontraron secciones o no existen en este periodo academico"})
+            return res.status(402).json({error: "No se encontraron secciones o no existen en este periodo academico"})
         }
 
         // Verificar si todos los enrollments tienen grade y OBS
@@ -78,12 +78,12 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             }
         }
 
-        return res.status(200).json({ message: "Correos electrónicos enviados con éxito." });
+        return res.status(200).send( "Correos electrónicos enviados con éxito." );
 
         
     } catch (error) {
         console.error('Error al enviar correos electrónicos:', error);
-        return res.status(500).json({ message: 'Error interno del servidor' });
+        return res.status(500).json({ error: 'Error interno del servidor' });
         
     }
 }

@@ -5,6 +5,7 @@
     const {id:idUser} = req.user;
     const {identificationCode, sectionId, grade, obs} = req.body;
 
+
     try {
         //Obtener la seccion del docente
         const section = await prisma.section.findFirst({
@@ -39,7 +40,7 @@
             }
         });
 
-        return res.status(200).json({ message: 'Calificaciones actualizadas exitosamente.' });
+        return res.status(200).send( 'Calificaciones actualizadas exitosamente.' );
     } catch (error) {
         console.error('Error al enviar las calificaciones:', error);
         return res.status(500).json({ error: 'Error interno del servidor.' });

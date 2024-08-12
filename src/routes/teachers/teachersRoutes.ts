@@ -19,7 +19,7 @@ router.get('/', authenticate, authorizeRole(['DEPARTMENT_HEAD']) ,getTeachers);
 
 /**
 {
-    'identificationCode': number,
+    'identificationCode': 'number',
     'sectionId': number,
     'grade': double,
     'obs': 'APR'
