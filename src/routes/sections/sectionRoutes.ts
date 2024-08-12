@@ -1,7 +1,9 @@
 // src/routes/sectionRoutes.ts
 import express from 'express';
+import multer from 'multer';
 import {
   checkActiveProcesMatricula, 
+  checkActiveProcessByTypeIdMiddleware, 
   checkActiveProcessesByTypeIdMiddlewareOR, 
   checkActiveProcessPeriod} 
   from '../../middleware/checkActiveProcessGeneric'
@@ -25,6 +27,7 @@ import {
   getEnrollmentByDepartmentController,
   getTeachersByDepartmentPageController,
   getSectionEnrollmentsExcel,
+  getSectionsByStudentIdController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -57,8 +60,10 @@ import {
 
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
+import { deleteFileController, uploadFileController } from '../../controllers/resources/resourcesController';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() }); // Usar almacenamiento en memoria
 router.get('/validar/',authenticate, getUserData)
 //CREAR SECCIONES
 router.post('/',
@@ -100,11 +105,21 @@ router.get('/enrollments/current/',
   authenticate, 
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getEnrollmentByDepartmentController)
+
 //OBTENER SECCIONES POR MAESTRO
 router.get('/teacher/', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  checkActiveProcessByTypeIdMiddleware(5),
   getSectionsByTeacherIdController);
+
+//OBTENER SECCIONES POR STUDENT
+router.get('/student/', 
+  authenticate,
+  authorizeRole([RoleEnum.STUDENT]),
+  checkActiveProcessByTypeIdMiddleware(5),
+  getSectionsByStudentIdController);
+
 //OBTENER SECCIONES POR MAESTRO SIGUIENTE PERIODO
 router.get('/teacher/next', 
   authenticate,
@@ -205,6 +220,14 @@ router.put('/deactivate/:id',
 
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
+
+router.post('/resources/:id', 
+  //authenticate,
+  //authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  upload.single('file'), 
+  uploadFileController);
+
+router.delete('/resources/:id', deleteFileController);
 
 export default router;
 
