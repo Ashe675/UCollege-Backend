@@ -21,6 +21,7 @@ import {
   getTeachersByDepartmentPagination,
   downloadSectionEnrollmentsExcel,
   getSectionsByStudentId,
+  getSectionByUsertId,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -150,6 +151,15 @@ export const getSectionsByTeacherIdController = async (req: Request, res: Respon
   try {
     const sections = await getSectionsByTeacherId(req);
     res.status(200).json(sections);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const getSectionByUserIdController = async (req: Request, res: Response) => {
+  try {
+    const section = await getSectionByUsertId(req);
+    res.status(200).json(section);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

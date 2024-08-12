@@ -705,7 +705,7 @@ export const getSectionsByStudentId = async (req: Request) => {
 
   const student = await prisma.student.findUnique({
     where: {
-      userId: userid,
+      userId: Number(userid),
     }
   })
 
@@ -735,6 +735,11 @@ export const getSectionsByStudentId = async (req: Request) => {
     },
     include: {
       section_Day: { select: { day: { select: { name: true } } } },
+      resources: {
+        where: {
+          frontSection: true
+        }
+      },
       class: {
         include: {
           departament: {
@@ -788,6 +793,97 @@ export const getSectionsByStudentId = async (req: Request) => {
   return sectionsWithDetails;
 };
 
+export const getSectionByUsertId = async (req: Request) => {
+  const userid = req.user?.id;
+  const sectionId = req.params.id
+
+  if (!sectionId || isNaN(+sectionId)) {
+    throw new Error('El id de la seccion es invalido')
+  }
+
+  const periodoActual = await prisma.academicPeriod.findFirst({
+    where: {
+      process: {
+        active: true,
+        startDate: { lte: new Date() },
+        finalDate: { gte: new Date() }
+      }
+    }
+  });
+  const idPeriodo = periodoActual.id;
+
+  const section = await prisma.section.findUnique({
+    where: {
+      OR: [{
+        teacherId: userid,
+      }, {
+        enrollments: {
+          some: {
+            student: {
+              userId: userid
+            }
+          }
+        }
+      }],
+      academicPeriodId: idPeriodo,
+      active: true,
+      id: Number(sectionId)
+    },
+    include: {
+      resources: true,
+      section_Day: { select: { day: { select: { name: true } } } },
+      class: {
+        include: {
+          departament: {
+            include: {
+              career: true,
+              regionalCenterFacultyCareer: {
+                select: {
+                  RegionalCenterFacultyCareer: {
+                    select: {
+                      regionalCenter_Faculty: {
+                        select: {
+                          faculty: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      classroom: {
+        include: {
+          building: {
+            include: {
+              regionalCenter: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!section) {
+    throw new Error('La sección no existe o no tienes acceso a ella.')
+  }
+
+  const [waitingListStudents, matriculados] = await Promise.all([
+    getEnListadeEspera(section.id),
+    getMatriculados(section.id)
+  ]);
+
+
+  return {
+    ...section,
+    matriculados: matriculados,
+    waitingListStudents,
+    quotasAvailability: section.capacity - matriculados.length,
+    factulty: section.class.departament.regionalCenterFacultyCareer[0].RegionalCenterFacultyCareer.regionalCenter_Faculty.faculty
+  };;
+}
 
 export const getSectionsByTeacherId = async (req: Request) => {
   const userid = req.user?.id;
@@ -805,6 +901,11 @@ export const getSectionsByTeacherId = async (req: Request) => {
   const sections = await prisma.section.findMany({
     where: { teacherId: userid, academicPeriodId: idPeriodo, active: true },
     include: {
+      resources: {
+        where: {
+          frontSection: true
+        }
+      },
       section_Day: { select: { day: { select: { name: true } } } },
       class: {
         include: {

@@ -28,6 +28,7 @@ import {
   getTeachersByDepartmentPageController,
   getSectionEnrollmentsExcel,
   getSectionsByStudentIdController,
+  getSectionByUserIdController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -112,6 +113,13 @@ router.get('/teacher/',
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
   checkActiveProcessByTypeIdMiddleware(5),
   getSectionsByTeacherIdController);
+
+  
+//OBTENER SECCION POR USUARIO
+router.get('/space/:id', 
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER, RoleEnum.STUDENT]),
+  getSectionByUserIdController);
 
 //OBTENER SECCIONES POR STUDENT
 router.get('/student/', 
