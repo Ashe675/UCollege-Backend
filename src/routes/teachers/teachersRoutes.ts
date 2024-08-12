@@ -12,6 +12,7 @@ import { validateSectionId } from '../../validators/sections/sectionValidator';
 import { validateSectionIdData } from '../../middleware/teacher/validateSectionId';
 import { getSectionsByTeacherId } from '../../services/sections/sectionService';
 import { getSectionController } from '../../controllers/teachers/getSectionController';
+import { sendEmailStudentController } from '../../controllers/teachers/sendEmailStudentsController';
 const router = Router();
 
 router.get('/', authenticate, authorizeRole(['DEPARTMENT_HEAD']) ,getTeachers);
@@ -28,6 +29,7 @@ router.post('/submit-grades',
     authenticate, 
     authorizeRole(['DEPARTMENT_HEAD', 'TEACHER', 'COORDINATOR']),
     checkActiveProcessByTypeIdMiddleware(4),
+    checkActiveProcessByTypeIdMiddleware(5),
     validateObsData,
     validateCodeIdentificationData,
     validateGradeData,
@@ -41,6 +43,15 @@ router.get('/sections',
     authenticate,
     authorizeRole(['DEPARTMENT_HEAD', 'TEACHER', 'COORDINATOR']),
     getSectionController,
+)
+
+
+router.post('/complete-grade-entry',
+    authenticate, 
+    authorizeRole(['DEPARTMENT_HEAD', 'TEACHER', 'COORDINATOR']),
+    checkActiveProcessByTypeIdMiddleware(4),
+    checkActiveProcessByTypeIdMiddleware(5),
+    sendEmailStudentController,
 )
 
 export default router;
