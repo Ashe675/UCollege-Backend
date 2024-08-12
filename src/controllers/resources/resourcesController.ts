@@ -29,8 +29,9 @@ export const uploadFileController = async (req: Request, res: Response) => {
     try {
 
       const fileType = file.mimetype;
+      const fileBuffer = new Uint8Array(file.buffer);
       
-      await writeFile(tempFilePath, file.buffer);
+      await writeFile(tempFilePath, fileBuffer);
 
       // Validar el tamaño del archivo (1GB máximo para videos)
       const maxVideoSize = 1024 * 1024 * 1024; // 1GB en bytes

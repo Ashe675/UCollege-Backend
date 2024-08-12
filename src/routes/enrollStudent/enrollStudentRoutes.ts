@@ -38,7 +38,7 @@ router.get('/student',
 router.get('/student/enroll',
         authenticate,
         authorizeRole(['STUDENT']),
-        checkActiveProcessByTypeIdMiddleware(5),
+        checkActiveProcessByTypeIdMiddleware(3),
         getEnrolledClassesForStudentController
 );
 

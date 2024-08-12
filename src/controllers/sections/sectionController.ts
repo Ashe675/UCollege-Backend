@@ -20,6 +20,7 @@ import {
   getEnrollmentsActual,
   getTeachersByDepartmentPagination,
   downloadSectionEnrollmentsExcel,
+  getSectionsByStudentId,
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -148,6 +149,15 @@ export const deleteSectionController = async (req: Request, res: Response) => {
 export const getSectionsByTeacherIdController = async (req: Request, res: Response) => {
   try {
     const sections = await getSectionsByTeacherId(req);
+    res.status(200).json(sections);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const getSectionsByStudentIdController = async (req: Request, res: Response) => {
+  try {
+    const sections = await getSectionsByStudentId(req);
     res.status(200).json(sections);
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -28,62 +28,60 @@ export const uploadFileService = async (
   }
 
   let uploadResult;
-  try {
-    if (resourceType === 'VIDEO') {
 
-      // Crear una promesa para manejar el stream de subida
-      uploadResult = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_large(filePath,
-          {
-            resource_type: 'video',
-            folder: 'SECTION_RESOURCES', // Opcional: Especifica una carpeta en Cloudinary
-          },
-          (error, result) => {
-            if (error) {
-              reject(error)
-            }
-            resolve(result);
+  if (resourceType === 'VIDEO') {
+
+    // Crear una promesa para manejar el stream de subida
+    uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_large(filePath,
+        {
+          resource_type: 'video',
+          folder: 'SECTION_RESOURCES', // Opcional: Especifica una carpeta en Cloudinary
+        },
+        (error, result) => {
+          if (error) {
+            reject(error)
           }
-        )
-        // Convertir el buffer en un stream de lectura y enviarlo a Cloudinary
-        // const readableStream = new Readable();
-        // readableStream.push(fileBuffer);
-        // readableStream.push(null);
-        // readableStream.pipe(uploadStream);
-      });
-    } else {
-
-      // Subir imágenes usando upload normal
-      uploadResult = await cloudinary.uploader.upload(filePath, {
-        resource_type: 'image',
-        folder: 'SECTION_RESOURCES',
-      });
-    }
-    const fileUrl = uploadResult.secure_url || '';
-    const publicId = uploadResult.public_id || '';
-
-    // Si la subida falla y no se obtiene una URL o un publicId, evitar crear un recurso en la base de datos
-    if (!fileUrl || !publicId) {
-      throw new Error('La subida a Cloudinary falló, no se obtuvo un URL o publicId válido.');
-    }
-
-    // Guardar en la base de datos usando Prisma
-    const resource = await prisma.resource.create({
-      data: {
-        url: fileUrl,
-        publicId: publicId,
-        name: fileName,
-        type: resourceType,
-        sectionId: sectionId,
-      },
+          resolve(result);
+        }
+      )
+      // Convertir el buffer en un stream de lectura y enviarlo a Cloudinary
+      // const readableStream = new Readable();
+      // readableStream.push(fileBuffer);
+      // readableStream.push(null);
+      // readableStream.pipe(uploadStream);
     });
+  } else {
 
-    return resource;
-
-  } finally {
-    // Eliminar el archivo temporal después de la subida
-    await unlink(filePath);
+    // Subir imágenes usando upload normal
+    uploadResult = await cloudinary.uploader.upload(filePath, {
+      resource_type: 'image',
+      folder: 'SECTION_RESOURCES',
+    });
   }
+  const fileUrl = uploadResult.secure_url || '';
+  const publicId = uploadResult.public_id || '';
+
+  // Si la subida falla y no se obtiene una URL o un publicId, evitar crear un recurso en la base de datos
+  if (!fileUrl || !publicId) {
+    throw new Error('La subida a Cloudinary falló, no se obtuvo un URL o publicId válido.');
+  }
+
+  // Guardar en la base de datos usando Prisma
+  const resource = await prisma.resource.create({
+    data: {
+      url: fileUrl,
+      publicId: publicId,
+      name: fileName,
+      type: resourceType,
+      sectionId: sectionId,
+    },
+  });
+
+  // Eliminar el archivo temporal después de la subida
+  await unlink(filePath);
+
+  return resource;
 };
 
 export const deleteFileService = async (resourceId: number) => {

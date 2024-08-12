@@ -3,6 +3,7 @@ import express from 'express';
 import multer from 'multer';
 import {
   checkActiveProcesMatricula, 
+  checkActiveProcessByTypeIdMiddleware, 
   checkActiveProcessesByTypeIdMiddlewareOR, 
   checkActiveProcessPeriod} 
   from '../../middleware/checkActiveProcessGeneric'
@@ -26,6 +27,7 @@ import {
   getEnrollmentByDepartmentController,
   getTeachersByDepartmentPageController,
   getSectionEnrollmentsExcel,
+  getSectionsByStudentIdController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -103,11 +105,21 @@ router.get('/enrollments/current/',
   authenticate, 
   authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
   getEnrollmentByDepartmentController)
+
 //OBTENER SECCIONES POR MAESTRO
 router.get('/teacher/', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  checkActiveProcessByTypeIdMiddleware(5),
   getSectionsByTeacherIdController);
+
+//OBTENER SECCIONES POR STUDENT
+router.get('/student/', 
+  authenticate,
+  authorizeRole([RoleEnum.STUDENT]),
+  checkActiveProcessByTypeIdMiddleware(5),
+  getSectionsByStudentIdController);
+
 //OBTENER SECCIONES POR MAESTRO SIGUIENTE PERIODO
 router.get('/teacher/next', 
   authenticate,
