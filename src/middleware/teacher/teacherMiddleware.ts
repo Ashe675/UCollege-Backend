@@ -46,6 +46,12 @@ export const authorizeTeacherMiddlewareDelete = async (req: Request, res: Respon
     if (isNaN(resourceId)) {
         return res.status(400).json({ error: 'ID de recurso inválido.' });
     }
+    const resource = await prisma.resource.findFirst({
+        where:{id: resourceId}
+    })
+    if (!resource) {
+        return res.status(400).json({ error: 'El recurso no existe.' });
+    }
 
     try {
         // Obtener el teacherId de la sección

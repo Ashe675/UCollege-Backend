@@ -3,7 +3,11 @@ import { prisma } from '../../config/db';
 import { Request, Response, NextFunction } from 'express';
 import { checkActiveProcessByTypeId } from '../../middleware/checkActiveProcessGeneric';
 import ExcelJS from 'exceljs';
+import { unlink } from 'fs/promises'; // Importar el método unlink para eliminar archivos locales
+import cloudinary from '../../utils/cloudinary/resources';
+
 import { getEnListadeEspera, getMatriculados, getPeriodoActual, getSiguientePeriodo, validateUserAndSection } from "../../utils/section/sectionUtils";
+import { deleteFileService } from '../Resources/resourcesService';
 
 interface CreateSectionInput {
   IH: number;
@@ -652,6 +656,8 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
 
 export const deleteSection = async (id: number, justification: string) => {
   const now = new Date();
+
+  // Obtener el período académico actual
   const currentAcademicPeriod = await prisma.process.findFirst({
     where: {
       processTypeId: 5,
@@ -662,6 +668,7 @@ export const deleteSection = async (id: number, justification: string) => {
     select: { academicPeriod: { select: { id: true } } }
   });
 
+  // Obtener el siguiente período académico
   const nextAcademicPeriod = await prisma.process.findFirst({
     where: {
       processTypeId: 5,
@@ -674,17 +681,41 @@ export const deleteSection = async (id: number, justification: string) => {
     },
   });
 
-
+  // Verificar si la sección pertenece al período académico actual o siguiente
   const academicPeriodSection = await prisma.section.findFirst({
-    where: { id: id, OR: [{ academicPeriodId: currentAcademicPeriod.academicPeriod.id }, { academicPeriodId: nextAcademicPeriod ? nextAcademicPeriod.academicPeriod.id : -1 }] },
-  })
+    where: { 
+      id: id, 
+      OR: [
+        { academicPeriodId: currentAcademicPeriod?.academicPeriod.id }, 
+        { academicPeriodId: nextAcademicPeriod ? nextAcademicPeriod.academicPeriod.id : -1 }
+      ]
+    },
+  });
 
   if (!academicPeriodSection) {
-    throw new Error('No se puede eliminar esta seccion porque pertenece a un periodo academico anterior');
-  };
+    throw new Error('No se puede eliminar esta sección porque pertenece a un período académico anterior');
+  }
+
+  // Obtener los recursos relacionados con la sección
+  const resources = await prisma.resource.findMany({
+    where: { sectionId: id }
+  });
+
+  // Eliminar los recursos usando la función deleteFileService
+  await Promise.all(resources.map(async (resource) => {
+    try {
+      await deleteFileService(resource.id); // Elimina el recurso de la base de datos y Cloudinary
+    } catch (error) {
+      console.error(`Error al eliminar el recurso con ID ${resource.id}:`, error);
+    }
+  }));
+
+  // Eliminar las inscripciones
   await prisma.enrollment.deleteMany({
     where: { sectionId: id }
-  })
+  });
+
+  // Desactivar la sección
   return await prisma.section.update({
     where: { id },
     data: {

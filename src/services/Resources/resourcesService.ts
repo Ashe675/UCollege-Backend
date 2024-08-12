@@ -106,9 +106,26 @@ export const deleteFileService = async (resourceId: number) => {
     throw new Error('Recurso no encontrado en la base de datos');
   }
 
+  let resourceType: 'image' | 'video' | 'raw';
+
+  switch (resource.type) {
+    case 'PHOTO':
+      resourceType = 'image';
+      break;
+    case 'VIDEO':
+      resourceType = 'video';
+      break;
+    case 'DOCUMENT':
+      resourceType = 'raw';
+      break;
+    default:
+      throw new Error('Tipo de recurso no soportado');
+  };
+
+
   // Eliminar el archivo de Cloudinary
   await new Promise<void>((resolve, reject) => {
-    cloudinary.uploader.destroy(resource.publicId, (error) => {
+    cloudinary.uploader.destroy(resource.publicId,{ resource_type: resourceType }, (error) => {
       if (error) {
         return reject(new Error(`Error eliminando de Cloudinary: ${error.message}`));
       }

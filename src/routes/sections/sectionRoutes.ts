@@ -36,6 +36,7 @@ import {
   validateSectionId, 
   createSectionValidators, 
   validateSectionCapacity,
+  validateSectionIdActive,
 } from '../../validators/sections/sectionValidator';
 import { 
   checkAcademicPeriodValid,
@@ -230,6 +231,7 @@ router.post('/resources/:id',
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
   validateSectionId, 
+  validateSectionIdActive,
   authorizeTeacherMiddleware,
   upload.single('file'), 
   validateFrontSection,
