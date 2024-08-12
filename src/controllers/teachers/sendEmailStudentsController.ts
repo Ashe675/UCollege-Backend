@@ -51,6 +51,18 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             return res.status(402).json({messeage: "No se encontraron secciones o no existen en este periodo academico"})
         }
 
+        // Verificar si todos los enrollments tienen grade y OBS
+        const allEnrollmentsComplete = sections.every(section =>
+            section.enrollments.every(enroll =>
+                enroll.grade !== null && enroll.grade !== undefined &&
+                enroll.OBS !== null && enroll.OBS !== undefined
+            )
+        );
+
+        if (!allEnrollmentsComplete) {
+            return res.status(400).json({ message: "No se han completado todas las notas y observaciones de los estudiantes." });
+        }
+
         // Enviar correos electrónicos a los estudiantes
         for (const section of sections) {
             let clase = section.class.name
