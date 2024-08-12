@@ -7,6 +7,7 @@ import {
   checkActiveProcessesByTypeIdMiddlewareOR, 
   checkActiveProcessPeriod} 
   from '../../middleware/checkActiveProcessGeneric'
+import { validateFrontSection } from "../../middleware/resource/resourceMiddleware";
 import {
   createSectionController,
   getAllSectionsController,
@@ -61,6 +62,7 @@ import {
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
 import { deleteFileController, uploadFileController } from '../../controllers/resources/resourcesController';
+import { authorizeTeacherMiddleware, authorizeTeacherMiddlewareDelete } from '../../middleware/teacher/teacherMiddleware';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() }); // Usar almacenamiento en memoria
@@ -222,12 +224,19 @@ router.put('/deactivate/:id',
 router.get('/waiting-list/:sectionId', getWaitingListController);
 
 router.post('/resources/:id', 
-  //authenticate,
-  //authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  validateSectionId, 
+  authorizeTeacherMiddleware,
   upload.single('file'), 
+  validateFrontSection,
   uploadFileController);
 
-router.delete('/resources/:id', deleteFileController);
+router.delete('/resources/:id',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  authorizeTeacherMiddlewareDelete,
+  deleteFileController);
 
 export default router;
 
