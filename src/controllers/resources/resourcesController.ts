@@ -32,7 +32,7 @@ export const uploadFileController = async (req: Request, res: Response) => {
     try {
 
       const fileType = file.mimetype;
-      console.log(fileType);
+      
       const fileBuffer = new Uint8Array(file.buffer);
       
       await writeFile(tempFilePath, fileBuffer);
@@ -43,8 +43,8 @@ export const uploadFileController = async (req: Request, res: Response) => {
         throw new Error('El tamaño del video excede el límite de 1GB.');
       }
   
-      const resource = await uploadFileService(tempFilePath, fileType, sectionId, fileName, frontSection);
-      res.status(201).json(resource);
+      await uploadFileService(tempFilePath, fileType, sectionId, fileName, frontSection);
+      res.status(201).send('¡Video Subido Correctamente!');
     } catch (error) {
       // Eliminar el archivo temporal en caso de error
       await unlink(tempFilePath);
@@ -61,7 +61,7 @@ export const deleteFileController = async (req: Request, res: Response) => {
   
     try {
       await deleteFileService(resourceId);
-      res.status(200).json({ message: 'Archivo eliminado exitosamente' });
+      res.status(200).send('Archivo eliminado exitosamente');
     } catch (error) {
       res.status(500).json({ error: `Error al eliminar el archivo: ${error.message}` });
     }

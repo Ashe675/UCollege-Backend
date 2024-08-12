@@ -15,7 +15,7 @@ export const updateSectionController = async (req: Request, res: Response) => {
 
     try {
         const updatedSection = await updateSection(sectionId, title ?? null, description ?? null);
-        res.status(200).json(updatedSection);
+        res.status(200).send('Información Actualizada Correctamente');
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
