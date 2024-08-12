@@ -5,6 +5,7 @@ import { sendEmailGrades } from "../../services/mail/emailService";
 
 export const sendEmailStudentController=async(req:Request, res:Response)=>{
     const {id:userId} = req.user;
+    const {sectioId} = req.body;
     
 
     try {
@@ -22,14 +23,10 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
 
         
         //obtener todas las secciones que pertenezcan al proceso de tipo perioado academico y que sean del docente
-        const sections = await prisma.section.findMany({
+        const section = await prisma.section.findUnique({
             where: {
+                id: sectioId,
                 teacherId: userId,
-                academicPeriod: {
-                    process: {
-                        id: processId
-                    }
-                }
             },
             include: {
                 enrollments: {
@@ -47,36 +44,36 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             }
         });
 
-        if(sections.length===0){
+        if(!section){
             return res.status(402).json({error: "No se encontraron secciones o no existen en este periodo academico"})
         }
 
         // Verificar si todos los enrollments tienen grade y OBS
-        const allEnrollmentsComplete = sections.every(section =>
+        const allEnrollmentsComplete = 
             section.enrollments.every(enroll =>
                 enroll.grade !== null && enroll.grade !== undefined &&
                 enroll.OBS !== null && enroll.OBS !== undefined
-            )
-        );
+            );
+        
 
         if (!allEnrollmentsComplete) {
-            return res.status(400).json({ message: "No se han completado todas las notas y observaciones de los estudiantes." });
+            return res.status(400).json({ error: "No se han completado todas las notas y observaciones de los estudiantes." });
         }
 
         // Enviar correos electrónicos a los estudiantes
-        for (const section of sections) {
-            let clase = section.class.name
-            for (const enrollment of section.enrollments) {
-                const student = enrollment.student;
-                const email = student.user.person.email;
-                const firstName = student.user.person.firstName;
-                const lastName = student.user.person.lastName;
+        
+        let clase = section.class.name
+        for (const enrollment of section.enrollments) {
+            const student = enrollment.student;
+            const email = student.user.person.email;
+            const firstName = student.user.person.firstName;
+            const lastName = student.user.person.lastName;
 
-                const url = `http://localhost:5173/auth/login`; // Ajusta la URL según tu plataforma
+            const url = `http://localhost:5173/auth/login`; // Ajusta la URL según tu plataforma
 
-                await sendEmailGrades(firstName, lastName, url, email, clase);
-            }
+            await sendEmailGrades(firstName, lastName, url, email, clase);
         }
+        
 
         return res.status(200).send( "Correos electrónicos enviados con éxito." );
 
