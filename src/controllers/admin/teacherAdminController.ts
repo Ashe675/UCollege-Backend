@@ -709,12 +709,14 @@ export const desactiveTeacher = async (req: Request, res: Response) => {
 
     if (personExists) {
 
+      let roleTeacher = await prisma.role.findFirst({where:{name:"TEACHER"}})
       await prisma.user.update({
         where: {
           id: teacher.id,
         },
         data:{
-          active: false
+          active: false,
+          roleId: roleTeacher.id
         }
       });
     } else {

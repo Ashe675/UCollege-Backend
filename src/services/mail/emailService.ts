@@ -57,3 +57,43 @@ export async function sendEmailResults(grade: GradesUser) {
         html: htmlContent
     });
 }
+
+export const sendEmailGrades = async (firstName: string, lastName: string, url: string, email:string, clase: string, ) => {
+  try {
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Resultados</title>
+      </head>
+      <body style="font-family: sans-serif;">
+        <div style="">
+          <h1 style="color: #242323; padding: 5px; text-align: center; width: 100%; display: flex; justify-content: center;">Notificacion de Notas</h1>
+          <p style="color: #444; font-size: 24px;">
+            Hola ${firstName} ${lastName} ,
+            Se le informa que ya se han subido las notas de su clase ${clase} a la plataforma de 
+            <span style="color: #730dd9; font-weight: 900;">UCollege</span>, 
+            Puede revisarla usando el siguiente enlace:
+          </p>
+          </br>
+          <a href="${url}" target="_blank">Revisar Calificaciones</a>
+
+          
+        </div>
+      </body>
+    </html>`;
+
+      await transporter.sendMail({
+        from: '"UCOLLEGE 👻" <no-reply@gmail.com>', // sender address
+        to: email, // list of receivers
+        subject: "Notas subidas correctamente", // Subject line
+        html: htmlContent
+      });
+  } catch (error) {
+      console.error('Error al enviar correo:', error);
+      throw new Error('Error al enviar correo');
+  }
+};
