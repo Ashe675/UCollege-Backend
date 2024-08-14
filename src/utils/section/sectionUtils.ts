@@ -160,12 +160,18 @@ export const getPeriodoActual = async () => {
   };
 
   export const validateUserAndSection = async (userId: number, sectionId: number) => {
-    // Obtener el regionalCenter_Faculty_CareerId del usuario
+    // Obtener la información del usuario
     const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
       where: { teacherId: userId },
       select: {
+        teacher: {
+          select: {
+            roleId: true
+          }
+        },
         regionalCenterFacultyCareerDepartment: {
           select: {
+            departmentId: true,
             regionalCenter_Faculty_CareerId: true
           }
         }
@@ -177,11 +183,21 @@ export const getPeriodoActual = async () => {
     }
   
     const userFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
+    const userRoleId = user.teacher.roleId;
+    const userDepartmentId = user.regionalCenterFacultyCareerDepartment.departmentId;
   
-    // Obtener el regionalCenter_Faculty_CareerId de la sección
+    // Obtener la información de la sección
     const section = await prisma.section.findFirst({
       where: { id: sectionId },
-      select: { regionalCenter_Faculty_CareerId: true }
+      select: {
+        regionalCenter_Faculty_CareerId: true,
+        class: {
+          select: {
+            departamentId: true
+          }
+        },
+        teacherId: true
+      }
     });
   
     if (!section) {
@@ -189,9 +205,22 @@ export const getPeriodoActual = async () => {
     }
   
     const sectionFacultyCareerId = section.regionalCenter_Faculty_CareerId;
+    const sectionDepartmentId = section.class.departamentId;
+    const sectionTeacherId = section.teacherId;
   
-    // Comparar los IDs
-    if (userFacultyCareerId !== sectionFacultyCareerId) {
-      throw new Error('El usuario no tiene acceso a esta sección.');
+    // Si el usuario es el maestro de la sección
+    if (userId === sectionTeacherId) {
+      return; // Acceso concedido
     }
+  
+    // Si el usuario no es el maestro, validar rol y coincidencia de centro y departamento
+    if (userRoleId === 2) {
+      if (userFacultyCareerId !== sectionFacultyCareerId || userDepartmentId !== sectionDepartmentId) {
+        throw new Error('El usuario no tiene acceso a esta sección.');
+      }
+      return; // Acceso concedido si el rol es 2 y está en el mismo centro y departamento
+    }
+  
+    // Si el usuario no es el maestro y no tiene rol 2, denegar acceso
+    throw new Error('El usuario no tiene acceso a esta sección.');
   };

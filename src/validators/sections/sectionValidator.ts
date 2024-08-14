@@ -20,6 +20,25 @@ export const validateSectionId = async (req: Request, res: Response, next: NextF
   next();
 };
 
+export const validateSectionIdActive = async (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(Number(id))) {
+    return res.status(400).json({ error: 'ID de sección inválido o faltante.' });
+  }
+
+  const section = await prisma.section.findFirst({
+    where:{id: Number(id), active: true}, 
+  })
+  if (!section) {
+    return res.status(404).json({ error: 'La seccion no se encuentra activa.' });
+  }
+
+  next();
+};
+
+
+
 export const validateSectionCapacity = [
   body('increment')
     .isNumeric().withMessage('Increment must be a number')

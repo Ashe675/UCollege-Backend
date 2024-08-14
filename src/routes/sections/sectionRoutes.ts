@@ -7,6 +7,7 @@ import {
   checkActiveProcessesByTypeIdMiddlewareOR, 
   checkActiveProcessPeriod} 
   from '../../middleware/checkActiveProcessGeneric'
+import { validateFrontSection } from "../../middleware/resource/resourceMiddleware";
 import {
   createSectionController,
   getAllSectionsController,
@@ -28,12 +29,15 @@ import {
   getTeachersByDepartmentPageController,
   getSectionEnrollmentsExcel,
   getSectionsByStudentIdController,
+  getSectionByUserIdController,
+  getGradesBySectionIdController,
 } from '../../controllers/sections/sectionController';
 
 import { 
   validateSectionId, 
   createSectionValidators, 
   validateSectionCapacity,
+  validateSectionIdActive,
 } from '../../validators/sections/sectionValidator';
 import { 
   checkAcademicPeriodValid,
@@ -61,6 +65,7 @@ import {
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
 import { deleteFileController, uploadFileController } from '../../controllers/resources/resourcesController';
+import { authorizeTeacherMiddleware, authorizeTeacherMiddlewareDelete } from '../../middleware/teacher/teacherMiddleware';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() }); // Usar almacenamiento en memoria
@@ -112,6 +117,13 @@ router.get('/teacher/',
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
   checkActiveProcessByTypeIdMiddleware(5),
   getSectionsByTeacherIdController);
+
+  
+//OBTENER SECCION POR USUARIO
+router.get('/space/:id', 
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER, RoleEnum.STUDENT]),
+  getSectionByUserIdController);
 
 //OBTENER SECCIONES POR STUDENT
 router.get('/student/', 
@@ -213,21 +225,31 @@ router.put('/deactivate/:id',
   checkSectionandCenterDepartment,
   validateSectionId, 
   deleteSectionController);
-// router.get('/grades/:sectionId', 
-//   authenticate, 
-//   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
-//   getGradesBySectionIdController); 
+
+//OBTENER NOTAS DE UNA SECCION
+router.get('/grades/:sectionId', 
+authenticate, 
+authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+getGradesBySectionIdController); 
 
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
 
 router.post('/resources/:id', 
-  //authenticate,
-  //authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  validateSectionId, 
+  validateSectionIdActive,
+  authorizeTeacherMiddleware,
   upload.single('file'), 
+  validateFrontSection,
   uploadFileController);
 
-router.delete('/resources/:id', deleteFileController);
+router.delete('/resources/:id',
+  authenticate,
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  authorizeTeacherMiddlewareDelete,
+  deleteFileController);
 
 export default router;
 

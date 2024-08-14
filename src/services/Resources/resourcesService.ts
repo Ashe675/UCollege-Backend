@@ -9,12 +9,18 @@ export const uploadFileService = async (
   filePath: string,
   fileType: string,
   sectionId: number,
-  fileName: string // Nombre descriptivo para la base de datos
+  fileName: string, // Nombre descriptivo para la base de datos
+  frontSection: boolean = false // Parámetro opcional para indicar si es frontSection
 ) => {
   // Validar el tipo de archivo
-  const allowedFileTypes = ['image/jpg', 'image/jpeg', 'image/png', 'video/mp4'];
+  const allowedFileTypes = [
+    'image/jpg', 'image/jpeg', 'image/png','image/webp',
+    'video/mp4', 'video/mkv', 'video/webm', // Añade otros formatos de video permitidos
+    'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // Permitir PDF, DOC y DOCX
+  ];
+
   if (!allowedFileTypes.includes(fileType)) {
-    throw new Error('Tipo de archivo no permitido. Solo se permiten JPG, PNG o MP4.');
+    throw new Error('Tipo de archivo no permitido. Solo se permiten JPG, PNG, MP4, MKV, WEBM, PDF, DOC y DOCX.');
   }
 
   // Determinar el tipo de recurso usando el enum de Prisma
@@ -23,46 +29,52 @@ export const uploadFileService = async (
     resourceType = 'VIDEO';
   } else if (fileType.startsWith('image/')) {
     resourceType = 'PHOTO';
-  } else {
+  } else if (fileType.startsWith('application/')) {
     resourceType = 'DOCUMENT';
+  } else {
+    throw new Error('Tipo de archivo no reconocido.');
   }
 
   let uploadResult;
 
   if (resourceType === 'VIDEO') {
-
-    // Crear una promesa para manejar el stream de subida
     uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_large(filePath,
         {
           resource_type: 'video',
-          folder: 'SECTION_RESOURCES', // Opcional: Especifica una carpeta en Cloudinary
+          folder: 'SECTION_RESOURCES',
         },
         (error, result) => {
           if (error) {
-            reject(error)
+            reject(error);
           }
           resolve(result);
         }
-      )
-      // Convertir el buffer en un stream de lectura y enviarlo a Cloudinary
-      // const readableStream = new Readable();
-      // readableStream.push(fileBuffer);
-      // readableStream.push(null);
-      // readableStream.pipe(uploadStream);
+      );
     });
-  } else {
+  } else if (resourceType === 'PHOTO') {
+    // Transformación para ajustar la imagen si es una foto de portada
+    const transformation = frontSection
+      ? [{ width: 1200, height: 800, crop: 'fill' }] // Ajusta a las dimensiones requeridas
+      : [];
 
-    // Subir imágenes usando upload normal
     uploadResult = await cloudinary.uploader.upload(filePath, {
       resource_type: 'image',
       folder: 'SECTION_RESOURCES',
+      transformation: transformation
     });
+  } else if (resourceType === 'DOCUMENT') {
+    uploadResult = await cloudinary.uploader.upload(filePath, {
+      resource_type: 'raw',
+      folder: 'SECTION_RESOURCES',
+    });
+  } else {
+    throw new Error('Tipo de recurso no soportado.');
   }
+
   const fileUrl = uploadResult.secure_url || '';
   const publicId = uploadResult.public_id || '';
 
-  // Si la subida falla y no se obtiene una URL o un publicId, evitar crear un recurso en la base de datos
   if (!fileUrl || !publicId) {
     throw new Error('La subida a Cloudinary falló, no se obtuvo un URL o publicId válido.');
   }
@@ -75,10 +87,10 @@ export const uploadFileService = async (
       name: fileName,
       type: resourceType,
       sectionId: sectionId,
+      frontSection: frontSection && resourceType === 'PHOTO' ? true : false, // Solo establecer frontSection si es una foto
     },
   });
 
-  // Eliminar el archivo temporal después de la subida
   await unlink(filePath);
 
   return resource;
@@ -94,9 +106,26 @@ export const deleteFileService = async (resourceId: number) => {
     throw new Error('Recurso no encontrado en la base de datos');
   }
 
+  let resourceType: 'image' | 'video' | 'raw';
+
+  switch (resource.type) {
+    case 'PHOTO':
+      resourceType = 'image';
+      break;
+    case 'VIDEO':
+      resourceType = 'video';
+      break;
+    case 'DOCUMENT':
+      resourceType = 'raw';
+      break;
+    default:
+      throw new Error('Tipo de recurso no soportado');
+  };
+
+
   // Eliminar el archivo de Cloudinary
   await new Promise<void>((resolve, reject) => {
-    cloudinary.uploader.destroy(resource.publicId, (error) => {
+    cloudinary.uploader.destroy(resource.publicId,{ resource_type: resourceType }, (error) => {
       if (error) {
         return reject(new Error(`Error eliminando de Cloudinary: ${error.message}`));
       }
