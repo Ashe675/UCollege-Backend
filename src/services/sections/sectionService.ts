@@ -683,10 +683,10 @@ export const deleteSection = async (id: number, justification: string) => {
 
   // Verificar si la sección pertenece al período académico actual o siguiente
   const academicPeriodSection = await prisma.section.findFirst({
-    where: { 
-      id: id, 
+    where: {
+      id: id,
       OR: [
-        { academicPeriodId: currentAcademicPeriod?.academicPeriod.id }, 
+        { academicPeriodId: currentAcademicPeriod?.academicPeriod.id },
         { academicPeriodId: nextAcademicPeriod ? nextAcademicPeriod.academicPeriod.id : -1 }
       ]
     },
@@ -862,6 +862,20 @@ export const getSectionByUsertId = async (req: Request) => {
     },
     include: {
       resources: true,
+      teacher: {
+        select: {
+          institutionalEmail : true,
+          identificationCode : true,
+          id : true,
+          person: true,
+          images: {
+            where: {
+              avatar: true
+            },
+            take: 1
+          }
+        },
+      },
       section_Day: { select: { day: { select: { name: true } } } },
       class: {
         include: {
@@ -911,6 +925,7 @@ export const getSectionByUsertId = async (req: Request) => {
     ...section,
     matriculados: matriculados,
     waitingListStudents,
+    teacher : section.teacher,
     quotasAvailability: section.capacity - matriculados.length,
     factulty: section.class.departament.regionalCenterFacultyCareer[0].RegionalCenterFacultyCareer.regionalCenter_Faculty.faculty
   };;

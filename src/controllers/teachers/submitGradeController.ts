@@ -24,7 +24,7 @@
         const studentId = (await prisma.user.findUnique({where:{identificationCode: identificationCode}, include: {student:true}})).student.id;
 
         if(!section){
-            return res.status(404).json({ error: 'Seccion no activa o no existe esta seccion con el docente actual o no existe' });
+            return res.status(404).json({ error: 'La sección no existe' });
         }
 
         await prisma.enrollment.update({
@@ -40,7 +40,7 @@
             }
         });
 
-        return res.status(200).send( 'Calificaciones actualizadas exitosamente.' );
+        return res.status(200).send( 'Calificación actualizadas exitosamente.' );
     } catch (error) {
         console.error('Error al enviar las calificaciones:', error);
         return res.status(500).json({ error: 'Error interno del servidor.' });
