@@ -282,8 +282,16 @@ enum TipoSolicitud {
   PAGO_REPOSICION
 }
 
+
+
 enum TipoArchivo {
   raw
+}
+
+enum estadoSolicitud {
+  APROBADA
+  RECHAZADA
+  PENDIENTE
 }
 
 model Solicitud {
@@ -292,7 +300,7 @@ model Solicitud {
   tipoSolicitud   TipoSolicitud
   justificacion   String          @db.VarChar(500)
   respuesta       String?         @db.VarChar(500)
-  estado          Boolean         @default(false)
+  estado          estadoSolicitud
   teacherId       Int
   studentId       Int
   archivos        ArchivoSolicitud[]
