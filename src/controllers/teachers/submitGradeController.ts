@@ -27,6 +27,19 @@
             return res.status(404).json({ error: 'La sección no existe' });
         }
 
+        if(grade >= 65 && (obs !== 'APR')){
+            return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
+        }
+
+        if(grade > 0 && grade < 65 && obs !== 'REP' && obs !== 'ABD'){
+            return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
+        }
+
+        if(grade === 0 && (obs !== 'NSP')){
+            return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
+        }
+
+
         await prisma.enrollment.update({
             where:{
                 sectionId_studentId: {
@@ -40,7 +53,7 @@
             }
         });
 
-        return res.status(200).send( 'Calificación actualizadas exitosamente.' );
+        return res.status(200).send( 'Calificación actualizada exitosamente.' );
     } catch (error) {
         console.error('Error al enviar las calificaciones:', error);
         return res.status(500).json({ error: 'Error interno del servidor.' });

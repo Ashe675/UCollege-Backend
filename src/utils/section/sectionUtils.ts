@@ -12,6 +12,8 @@ export const getMatriculados = async (sectionId: number) => {
   const enrollments = await prisma.enrollment.findMany({
     where: { sectionId: sectionId, waitingListId: null },
     select: {
+      grade : true,
+      OBS : true,
       student: {
         select: {
           user: {
@@ -48,6 +50,8 @@ export const getMatriculados = async (sectionId: number) => {
       id: enrollment.student.user.id,
       identificationCode: enrollment.student.user.identificationCode,
       institutionalEmail: enrollment.student.user.institutionalEmail,
+      grade : enrollment.grade,
+      OBS : enrollment.OBS,
       avatar: avatarImage, // Incluye el campo avatar
       person: {
         dni: enrollment.student.user.person.dni,
@@ -66,6 +70,8 @@ export const getEnListadeEspera = async (sectionId: number) => {
   const enrollments = await prisma.enrollment.findMany({
     where: { sectionId: sectionId, waitingListId: { not: null } },
     select: {
+      grade : true,
+      OBS : true,
       student: {
         select: {
           user: {
@@ -109,7 +115,9 @@ export const getEnListadeEspera = async (sectionId: number) => {
         middleName: enrollment.student.user.person.middleName,
         lastName: enrollment.student.user.person.lastName,
         secondLastName: enrollment.student.user.person.secondLastName
-      }
+      },
+      grade : enrollment.grade,
+      OBS : enrollment.OBS,
     };
   });
 

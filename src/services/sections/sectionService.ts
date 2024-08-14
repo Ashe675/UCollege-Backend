@@ -864,9 +864,9 @@ export const getSectionByUsertId = async (req: Request) => {
       resources: true,
       teacher: {
         select: {
-          institutionalEmail : true,
-          identificationCode : true,
-          id : true,
+          institutionalEmail: true,
+          identificationCode: true,
+          id: true,
           person: true,
           images: {
             where: {
@@ -911,6 +911,8 @@ export const getSectionByUsertId = async (req: Request) => {
     }
   });
 
+
+
   if (!section) {
     throw new Error('La sección no existe o no tienes acceso a ella.')
   }
@@ -920,12 +922,23 @@ export const getSectionByUsertId = async (req: Request) => {
     getMatriculados(section.id)
   ]);
 
+  const isSubmitGradeActive = await prisma.process.findFirst({
+    where: {
+      processTypeId: 4,
+      processId: periodoActual.processId,
+      active: true
+    }
+  })
+
+  const allNotesUpload = matriculados.every(mat => mat.grade !== null)
 
   return {
     ...section,
     matriculados: matriculados,
+    isSubmitGradeActive: isSubmitGradeActive ? true : false,
     waitingListStudents,
-    teacher : section.teacher,
+    teacher: section.teacher,
+    allNotesUpload,
     quotasAvailability: section.capacity - matriculados.length,
     factulty: section.class.departament.regionalCenterFacultyCareer[0].RegionalCenterFacultyCareer.regionalCenter_Faculty.faculty
   };;
@@ -1445,7 +1458,7 @@ export const downloadSectionEnrollmentsExcel = async (sectionId: number, res: Re
     include: { class: true }
   });
   const matriculados = await prisma.enrollment.findMany({
-    where: { sectionId },
+    where: { sectionId, waitingListId: null },
     include: {
       student: {
         select: {

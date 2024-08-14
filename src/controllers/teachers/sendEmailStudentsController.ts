@@ -5,8 +5,11 @@ import { sendEmailGrades } from "../../services/mail/emailService";
 
 export const sendEmailStudentController=async(req:Request, res:Response)=>{
     const {id:userId} = req.user;
-    const {sectioId} = req.body;
+    const {sectionId} = req.body;
     
+    if(!sectionId) {
+        return res.status(402).json({error: "Se necesita el id de la sección..."})
+    }
 
     try {
         //obtener el id del proceso de periodo academo activo
@@ -25,11 +28,14 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
         //obtener todas las secciones que pertenezcan al proceso de tipo perioado academico y que sean del docente
         const section = await prisma.section.findUnique({
             where: {
-                id: sectioId,
+                id: sectionId,
                 teacherId: userId,
             },
             include: {
                 enrollments: {
+                    where :{
+                      waitingListId : null  
+                    },
                     include: {
                         student: {
                             include: {
@@ -45,7 +51,7 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
         });
 
         if(!section){
-            return res.status(402).json({error: "No se encontraron secciones o no existen en este periodo academico"})
+            return res.status(402).json({error: "No se encontró la sección."})
         }
 
         // Verificar si todos los enrollments tienen grade y OBS
@@ -69,9 +75,8 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             const firstName = student.user.person.firstName;
             const lastName = student.user.person.lastName;
 
-            const url = `http://localhost:5173/auth/login`; // Ajusta la URL según tu plataforma
 
-            await sendEmailGrades(firstName, lastName, url, email, clase);
+            await sendEmailGrades(firstName, lastName, email, clase);
         }
         
 

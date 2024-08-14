@@ -1,26 +1,26 @@
 import { transporter } from "../../config/mailt";
 
 type GradesUser = {
-    results: {
-        message: string;
-        score: number;
-        admissionTest: {
-            name: string;
-            code: string;
-        };
-    }[];
-    opinion: {
-        message: string;
+  results: {
+    message: string;
+    score: number;
+    admissionTest: {
+      name: string;
+      code: string;
     };
-    person: {
-        email: string;
-        firstName: string;
-        lastName: string;
-    };
+  }[];
+  opinion: {
+    message: string;
+  };
+  person: {
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export async function sendEmailResults(grade: GradesUser) {
-    const htmlContent = `
+  const htmlContent = `
     <!DOCTYPE html>
     <html lang="en">
       <head>
@@ -35,14 +35,14 @@ export async function sendEmailResults(grade: GradesUser) {
             Hola ${grade.person.firstName} ${grade.person.lastName} te saludamos de parte de <span style="color: #730dd9; font-weight: 900;">UCollege</span>, tus resultados de las pruebas de admisión fueron los siguientes:
           </p>
           ${grade.results.map(result => (
-            `<div style="background: #eee; padding: 5px;">
+    `<div style="background: #eee; padding: 5px;">
               <h2 style="font-size: 24px;">${result.admissionTest.name} - ${result.admissionTest.code}:</h2>
               <p style="color: #444; font-size: 18px;"><span style="color: #2a2929; font-size: 18px; font-weight: 700;">Nota:</span> ${result.score} puntos</p>
               <p style="color: #444; font-size: 18px;">
                 <span style="color: #2a2929; font-size: 18px; font-weight: 700;">Dictamen:</span> ${result.message}
               </p>
             </div>`
-          )).join('')}
+  )).join('')}
           <h3 style="font-size: 24px; font-weight: 900; margin: 0;">Dictamen Final</h3>
           <h4 style="color: #730dd9; font-size: 24px; font-weight: 900; margin: 0;">${grade.opinion.message}</h4>
         </div>
@@ -50,16 +50,18 @@ export async function sendEmailResults(grade: GradesUser) {
     </html>`;
 
 
-    const info = await transporter.sendMail({
-        from: '"UCOLLEGE 👻" <no-reply@gmail.com>', // sender address
-        to: grade.person.email, // list of receivers
-        subject: "Resultados de Examen de Admisión UCollege", // Subject line
-        html: htmlContent
-    });
+  const info = await transporter.sendMail({
+    from: '"UCOLLEGE 👻" <no-reply@gmail.com>', // sender address
+    to: grade.person.email, // list of receivers
+    subject: "Resultados de Examen de Admisión UCollege", // Subject line
+    html: htmlContent
+  });
 }
 
-export const sendEmailGrades = async (firstName: string, lastName: string, url: string, email:string, clase: string, ) => {
+export const sendEmailGrades = async (firstName: string, lastName: string, email: string, clase: string,) => {
   try {
+
+    const url = process.env.FRONTEND_URL
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -79,21 +81,19 @@ export const sendEmailGrades = async (firstName: string, lastName: string, url: 
             Puede revisarla usando el siguiente enlace:
           </p>
           </br>
-          <a href="${url}" target="_blank">Revisar Calificaciones</a>
-
-          
+          <a href="${url}" target="_blank" style="color: #730dd9; font-weight: 900;font-size: 18px;">Revisar Calificaciones</a>
         </div>
       </body>
     </html>`;
 
-      await transporter.sendMail({
-        from: '"UCOLLEGE 👻" <no-reply@gmail.com>', // sender address
-        to: email, // list of receivers
-        subject: "Notas subidas correctamente", // Subject line
-        html: htmlContent
-      });
+    await transporter.sendMail({
+      from: '"UCOLLEGE 👻" <no-reply@gmail.com>', // sender address
+      to: email, // list of receivers
+      subject: "Notas subidas correctamente", // Subject line
+      html: htmlContent
+    });
   } catch (error) {
-      console.error('Error al enviar correo:', error);
-      throw new Error('Error al enviar correo');
+    console.error('Error al enviar correo:', error);
+    throw new Error('Error al enviar correo');
   }
 };

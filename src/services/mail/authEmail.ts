@@ -57,6 +57,7 @@ export class AuthEmail {
                         font-weight: 900;
                         font-size: 18px;
                         "
+                        target="_blank"
                     >
                         Restablecer Contraseña
                     </a>
