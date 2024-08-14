@@ -7,6 +7,9 @@ import {  checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkAct
 
 //controllers
 import { exportExcel, exportPdf } from '../../controllers/coordinator/exportAcademicLoadController';
+import { validateCodeIdentificationData } from '../../middleware/codeIdentification/validateCodeIdentificationData';
+import { isStudentCode } from '../../validators/departmentHead/isStudentCode';
+import { getAcademicHistory } from '../../controllers/departmentHead/departmentHeadController';
 
 
 
@@ -24,6 +27,14 @@ router.get('/get-academicLoad/export/pdf',
     authorizeRole([RoleEnum.COORDINATOR]),
     checkActiveProcessByTypeIdMiddleware(5),
     exportPdf
+);
+
+router.get('/student-history/:identificationCode',
+    authenticate, 
+    authorizeRole([RoleEnum.COORDINATOR]),
+    validateCodeIdentificationData,
+    isStudentCode,
+    getAcademicHistory,
 );
 
 

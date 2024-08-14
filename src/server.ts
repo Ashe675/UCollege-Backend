@@ -65,7 +65,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use('/api/enroll-student', enrollStudentRoutes);
-app.use('/api', userRoutes);
+app.use('/api/user', userRoutes);
 
 app.use('/api/coordinator', coordinatorRoutes)
 
