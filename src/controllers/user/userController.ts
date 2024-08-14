@@ -57,26 +57,32 @@ export const getProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
+    const avatarUrl = userData.images.find(image => image.avatar)?.url || null;
+
+
     const simplifiedData = {
       id: userData.id,
       identificationCode: userData.identificationCode,
       active: userData.active,
       institutionalEmail: userData.institutionalEmail,
+      avatar: avatarUrl,
       person: {
         firstName: userData.person.firstName,
         lastName: userData.person.lastName,
-        email: userData.person.email
+        email: userData.person.email,
       },
       carrers: userData.carrers.map(career => ({
         id: career.regionalCenter_Faculty_Career.career.id,
-        name: career.regionalCenter_Faculty_Career.career.name
+        name: career.regionalCenter_Faculty_Career.career.name,
       })),
-      images: userData.images.map(image=>({
-        id: image.idImage,
-        url: image.url,
-        avatar: image.avatar,
-      }))
+      images: userData.images
+        .filter(image => !image.avatar)  // Filtrar los que no son avatar
+        .map(image => ({
+          id: image.idImage,
+          url: image.url,
+        })),
     };
+    
 
     res.status(200).json(simplifiedData);
   } catch (error) {
