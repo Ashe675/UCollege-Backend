@@ -124,8 +124,6 @@ export const exportExcel = async (req: Request, res: Response) => {
     }
 };
 
-
-
 export const exportPdf = async (req: Request, res: Response) => {
     try {
         const { id: userId } = req.user;
@@ -186,19 +184,17 @@ export const exportPdf = async (req: Request, res: Response) => {
                     include: { building: true }
                 },
                 regionalCenter_Faculty_Career: true
-                
             }
         });
         
         const period = await prisma.academicPeriod.findFirst({
             where:{
-                process:{active:true, processTypeId: 5},
-                
+                process:{active:true, processTypeId: 5}
             },
             include:{
                 process:true
             }
-        })
+        });
 
         // Crear un nuevo documento PDF con tamaño personalizado
         const doc = new PDFDocument({ 
@@ -214,8 +210,8 @@ export const exportPdf = async (req: Request, res: Response) => {
             teacherCode: 100,
             teacherName: 90,
             studentCount: 90,
-            capacity: 90,
-            classroom: 90,
+            capacity: 70,  // Reducido para hacer espacio para 'Aula'
+            classroom: 70, // Ancho para 'Aula'
             building: 90,
         };
 
@@ -227,7 +223,7 @@ export const exportPdf = async (req: Request, res: Response) => {
         doc.pipe(res);
 
         // Título del documento
-        doc.fontSize(18).text(`Carga Acádemica - ${careerData.RegionalCenterFacultyCareer.career.name}\nPeriodo ${period.number} - Año ${period.process.startDate.getFullYear()}`, { align: 'center' });
+        doc.fontSize(18).text(`Carga Académica - ${careerData.RegionalCenterFacultyCareer.career.name}\nPeriodo ${period.number} - Año ${period.process.startDate.getFullYear()}`, { align: 'center' });
         doc.moveDown(2);
 
         // Dibujar encabezados de tabla
@@ -301,9 +297,9 @@ function drawTableRow(doc: PDFKit.PDFDocument, y: number, id: string, classCode:
     doc.text(teacherCode, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className, y, { width: columnWidths.teacherCode, align: 'left' });
     doc.text(teacherName, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode, y, { width: columnWidths.teacherName, align: 'left' });
     doc.text(studentCount, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName, y, { width: columnWidths.studentCount, align: 'right' });
-    doc.text(capacity, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount, y, { width: columnWidths.capacity, align: 'right' });
-    doc.text(classroom, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount + columnWidths.capacity, y, { width: columnWidths.classroom, align: 'left' });
-    doc.text(building, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount + columnWidths.capacity + columnWidths.classroom, y, { width: columnWidths.building, align: 'left' });
+    doc.text(capacity, 40 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount, y, { width: columnWidths.capacity, align: 'right' });
+    doc.text(classroom, 30 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount + columnWidths.capacity, y, { width: columnWidths.classroom, align: 'right' });
+    doc.text(building, 40 + columnWidths.id + columnWidths.classCode + columnWidths.className + columnWidths.teacherCode + columnWidths.teacherName + columnWidths.studentCount + columnWidths.capacity + columnWidths.classroom, y, { width: columnWidths.building, align: 'center' });
 }
 
 // Función para dibujar una línea entre las filas de la tabla
