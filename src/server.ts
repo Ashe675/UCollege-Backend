@@ -26,6 +26,8 @@ import statisticsRoutes from './routes/statistics/statisticsRoutes';
 
 import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
+import coordinatorRoutes from './routes/coordinator/coordinatorRoutes'
+
 import { corsConfig } from './config/cors';
 
 
@@ -64,5 +66,7 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/enroll-student', enrollStudentRoutes);
 app.use('/api', userRoutes);
+
+app.use('/api/coordinator', coordinatorRoutes)
 
 export default app
