@@ -41,14 +41,16 @@ export const getProfile = async (req: Request, res: Response) => {
       include: {
         person: true,
         images: true,
+        teacherDepartments:{include:{regionalCenterFacultyCareerDepartment:{include:{RegionalCenterFacultyCareer:{include:{regionalCenter_Faculty:{include:{regionalCenter:true}}}}}}}},
         carrers: {
           include:{
             regionalCenter_Faculty_Career:{
               include:{
-                career:true
+                career:true,
+                regionalCenter_Faculty:{include:{regionalCenter:true}}
               }
             }
-          }
+          },
         },
       },
     });
@@ -58,19 +60,33 @@ export const getProfile = async (req: Request, res: Response) => {
     }
 
     const avatarUrl = userData.images.find(image => image.avatar)?.url || null;
-
+    let regionalCenterName = userData.carrers.find(career => 
+      career.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
+    )?.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name;
+    
+    if (!regionalCenterName) {
+      regionalCenterName = userData.teacherDepartments.find(item => 
+        item.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name
+      )?.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name;
+    }
+    
 
     const simplifiedData = {
-      id: userData.id,
+      
+      userId: userData.id,
+      dni: userData.person.dni,
+      firstName: userData.person.firstName,
+      midleName: userData.person.middleName,
+      lastName: userData.person.lastName,
+      secondLastName: userData.person.secondLastName,
+      email: userData.person.email,
+      phone: userData.person.phoneNumber,
       identificationCode: userData.identificationCode,
-      active: userData.active,
       institutionalEmail: userData.institutionalEmail,
+      regionalCenter: regionalCenterName,
       avatar: avatarUrl,
-      person: {
-        firstName: userData.person.firstName,
-        lastName: userData.person.lastName,
-        email: userData.person.email,
-      },
+      active: userData.active,
+      
       carrers: userData.carrers.map(career => ({
         id: career.regionalCenter_Faculty_Career.career.id,
         name: career.regionalCenter_Faculty_Career.career.name,
