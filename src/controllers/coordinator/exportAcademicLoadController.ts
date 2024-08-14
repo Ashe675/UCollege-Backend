@@ -9,67 +9,67 @@ export const exportExcel = async (req: Request, res: Response) => {
     try {
         const { id: userId } = req.user;
 
-    // Buscar información del docente con sus departamentos y relaciones
-    const teacher = await prisma.user.findUnique({
-        where: { id: userId },
-        include: {
-            teacherDepartments: {
-                include: {
-                    regionalCenterFacultyCareerDepartment: {
-                        include: {
-                            RegionalCenterFacultyCareer: true, // Corregido el nombre y formato
+        // Buscar información del docente con sus departamentos y relaciones
+        const teacher = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                teacherDepartments: {
+                    include: {
+                        regionalCenterFacultyCareerDepartment: {
+                            include: {
+                                RegionalCenterFacultyCareer: true, // Corregido el nombre y formato
+                            }
                         }
                     }
                 }
             }
+        });
+
+        // Verificar si el teacher existe antes de continuar
+        if (!teacher) {
+            return res.status(404).json({ error: 'Docente no encontrado' });
         }
-    });
 
-    // Verificar si el teacher existe antes de continuar
-    if (!teacher) {
-        return res.status(404).json({ message: 'Docente no encontrado' });
-    }
-
-    // Buscar el ID de la carrera asociada al docente
-    const careerData = await prisma.regionalCenter_Faculty_Career_Department.findFirst({
-        where: {
-            RegionalCenterFacultyCareerDepartmentTeacher: {
-                some: { teacherId: teacher.id }
-            }
-        },
-        include: {
-            RegionalCenterFacultyCareer: true
-        }
-    });
-
-    // Validar si se encontró la carrera
-    if (!careerData || !careerData.RegionalCenterFacultyCareer) {
-        return res.status(404).json({ message: 'No se encontró la carrera asociada al docente' });
-    }
-
-    const carrerIdTeacher = careerData.RegionalCenterFacultyCareer.careerId;
-
-    // Buscar las secciones asociadas a la carrera del docente
-    const sections = await prisma.section.findMany({
-        where: {
-            regionalCenter_Faculty_Career: { careerId: carrerIdTeacher },
-            academicPeriod:{
-                process:{active:true, processTypeId: 5}
-            }
-        },
-        include: {
-            class: true,
-            teacher: {
-                include: {
-                    person: true
+        // Buscar el ID de la carrera asociada al docente
+        const careerData = await prisma.regionalCenter_Faculty_Career_Department.findFirst({
+            where: {
+                RegionalCenterFacultyCareerDepartmentTeacher: {
+                    some: { teacherId: teacher.id }
                 }
             },
-            enrollments: true,
-            classroom: {
-                include: { building: true }
+            include: {
+                RegionalCenterFacultyCareer: true
             }
+        });
+
+        // Validar si se encontró la carrera
+        if (!careerData || !careerData.RegionalCenterFacultyCareer) {
+            return res.status(404).json({ error: 'No se encontró la carrera asociada al docente' });
         }
-    });
+
+        const carrerIdTeacher = careerData.RegionalCenterFacultyCareer.careerId;
+
+        // Buscar las secciones asociadas a la carrera del docente
+        const sections = await prisma.section.findMany({
+            where: {
+                regionalCenter_Faculty_Career: { careerId: carrerIdTeacher },
+                academicPeriod: {
+                    process: { active: true, processTypeId: 5 }
+                }
+            },
+            include: {
+                class: true,
+                teacher: {
+                    include: {
+                        person: true
+                    }
+                },
+                enrollments: true,
+                classroom: {
+                    include: { building: true }
+                }
+            }
+        });
 
         // Crear un nuevo libro de Excel
         const workbook = new ExcelJS.Workbook();
@@ -118,7 +118,6 @@ export const exportExcel = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error exporting Excel:', error);
         res.status(500).json({
-            message: 'Error al generar el archivo Excel',
             error: error.message || 'Error interno del servidor',
         });
     }
@@ -145,7 +144,7 @@ export const exportPdf = async (req: Request, res: Response) => {
         });
 
         if (!teacher) {
-            return res.status(404).json({ message: 'Docente no encontrado' });
+            return res.status(404).json({ error: 'Docente no encontrado' });
         }
 
         const careerData = await prisma.regionalCenter_Faculty_Career_Department.findFirst({
@@ -155,12 +154,12 @@ export const exportPdf = async (req: Request, res: Response) => {
                 }
             },
             include: {
-                RegionalCenterFacultyCareer: {include:{career:true}}
+                RegionalCenterFacultyCareer: { include: { career: true } }
             }
         });
 
         if (!careerData || !careerData.RegionalCenterFacultyCareer) {
-            return res.status(404).json({ message: 'No se encontró la carrera asociada al docente' });
+            return res.status(404).json({ error: 'No se encontró la carrera asociada al docente' });
         }
 
         const carrerIdTeacher = careerData.RegionalCenterFacultyCareer.careerId;
@@ -168,8 +167,8 @@ export const exportPdf = async (req: Request, res: Response) => {
         const sections = await prisma.section.findMany({
             where: {
                 regionalCenter_Faculty_Career: { careerId: carrerIdTeacher },
-                academicPeriod:{
-                    process:{active:true, processTypeId: 5}
+                academicPeriod: {
+                    process: { active: true, processTypeId: 5 }
                 }
             },
             include: {
@@ -186,21 +185,21 @@ export const exportPdf = async (req: Request, res: Response) => {
                 regionalCenter_Faculty_Career: true
             }
         });
-        
+
         const period = await prisma.academicPeriod.findFirst({
-            where:{
-                process:{active:true, processTypeId: 5}
+            where: {
+                process: { active: true, processTypeId: 5 }
             },
-            include:{
-                process:true
+            include: {
+                process: true
             }
         });
 
         // Crear un nuevo documento PDF con tamaño personalizado
-        const doc = new PDFDocument({ 
+        const doc = new PDFDocument({
             size: [700, 900], // Personaliza el tamaño de la página según sea necesario
-            margin: 30, 
-            layout: 'landscape' 
+            margin: 30,
+            layout: 'landscape'
         });
         const tableTop = 80;
         const columnWidths = {
@@ -282,7 +281,6 @@ export const exportPdf = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error exporting PDF:', error);
         res.status(500).json({
-            message: 'Error al generar el archivo PDF',
             error: error.message || 'Error interno del servidor',
         });
     }

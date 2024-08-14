@@ -30,8 +30,7 @@ export const getProfile = async (req: Request, res: Response) => {
   if (req.params.userId) {
     userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
-      //return res.status(400).json({ message: 'Invalid userId' });
-      userId = req.user.id; // Suponiendo que el middleware 'authenticate' asigna 'req.user'
+      return res.status(400).json({ error: 'Usuario no encontrado!' });
     }
   } 
 
@@ -39,9 +38,10 @@ export const getProfile = async (req: Request, res: Response) => {
     const userData = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        role : true,
         person: true,
         images: true,
-        teacherDepartments:{include:{regionalCenterFacultyCareerDepartment:{include:{RegionalCenterFacultyCareer:{include:{regionalCenter_Faculty:{include:{regionalCenter:true}}}}}}}},
+        teacherDepartments:{include:{regionalCenterFacultyCareerDepartment:{include:{ Departament: true ,RegionalCenterFacultyCareer:{include:{regionalCenter_Faculty:{include:{regionalCenter:true}}}}}}}},
         carrers: {
           include:{
             regionalCenter_Faculty_Career:{
@@ -56,18 +56,25 @@ export const getProfile = async (req: Request, res: Response) => {
     });
 
     if (!userData) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
     const avatarUrl = userData.images.find(image => image.avatar)?.url || null;
     let regionalCenterName = userData.carrers.find(career => 
       career.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
     )?.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name;
+
+    let depto = ""
     
     if (!regionalCenterName) {
       regionalCenterName = userData.teacherDepartments.find(item => 
         item.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name
       )?.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name;
+
+      depto = userData.teacherDepartments.find(career => career.regionalCenterFacultyCareerDepartment.Departament.name).regionalCenterFacultyCareerDepartment.Departament.name
+
+
+      
     }
     
 
@@ -86,7 +93,8 @@ export const getProfile = async (req: Request, res: Response) => {
       regionalCenter: regionalCenterName,
       avatar: avatarUrl,
       active: userData.active,
-      
+      role : userData.role.name,
+      depto : depto ? depto : null,
       carrers: userData.carrers.map(career => ({
         id: career.regionalCenter_Faculty_Career.career.id,
         name: career.regionalCenter_Faculty_Career.career.name,
@@ -103,6 +111,6 @@ export const getProfile = async (req: Request, res: Response) => {
     res.status(200).json(simplifiedData);
   } catch (error) {
     console.error('Error al obtener perfil:', error);
-    res.status(500).json({ message: 'Error interno del servidor' });
+    res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
