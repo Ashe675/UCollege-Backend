@@ -51,6 +51,7 @@ model Career {
   studyPlanes                    StudyPlan[]
 
   @@index([id], name: "pk_Career_idx")
+  Solicitudes Solicitud[]
 }
 
 // Modelo Inscription
@@ -179,6 +180,7 @@ model RegionalCenter {
   buildings                Building[]
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
+  Solicitudes Solicitud[]
 }
 
 model ProcessType {
@@ -231,6 +233,7 @@ model User {
   carrers            RegionalCenter_Faculty_Career_User[]
   carrersOptions     OptionCareer[]
   teacherDepartments RegionalCenter_Faculty_Career_Department_Teacher[]
+  solicitudes        Solicitud[] // Relación con Solicitudes
 
   @@index([personId], name: "fk_User_Person_idx")
   @@index([roleId], name: "fk_User_Role_idx")
@@ -269,7 +272,56 @@ model Student {
   userId        Int          @unique
   user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   enrollments   Enrollment[]
+  solicitudes   Solicitud[] // Relación con Solicitudes
 }
+
+enum TipoSolicitud {
+  CAMBIO_DE_CARRERA
+  CAMBIO_DE_CENTRO
+  CANCELACION_EXCEPCIONAL
+  PAGO_REPOSICION
+}
+
+enum TipoArchivo {
+  raw
+}
+
+model Solicitud {
+  id              Int             @id @default(autoincrement())
+  date            DateTime        @default(now()) // Campo para la fecha de la solicitud
+  tipoSolicitud   TipoSolicitud
+  justificacion   String          @db.VarChar(500)
+  respuesta       String?         @db.VarChar(500)
+  estado          Boolean         @default(false)
+  teacherId       Int
+  studentId       Int
+  archivos        ArchivoSolicitud[]
+  enrollments     Enrollment[]
+  teacher         User            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student         Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  careerId        Int?            // Campo opcional para relacionar con Career
+  regionalCenterId Int?           // Campo opcional para relacionar con RegionalCenter
+  career          Career?         @relation(fields: [careerId], references: [id])
+  regionalCenter  RegionalCenter? @relation(fields: [regionalCenterId], references: [id])
+
+  @@index([teacherId])
+  @@index([studentId])
+   @@index([careerId])
+  @@index([regionalCenterId])
+}
+
+model ArchivoSolicitud {
+  id            Int          @id @default(autoincrement())
+  url           String       @db.VarChar(255)
+  public_id     String       @db.VarChar(255)
+  name          String       @db.VarChar(255)
+  tipoArchivo   TipoArchivo
+  solicitudId   Int
+  solicitud     Solicitud    @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  
+  @@index([solicitudId])
+}
+
 
 model UserToken {
   token     String   @unique
@@ -445,7 +497,8 @@ model Enrollment {
   waitingList   WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
   waitingListId Int?
   OBS           Observation? // Campo de observación con Enum y valor por defecto nulo
-
+  solicitudId    Int?         // Clave foránea opcional a Solicitud
+  solicitud      Solicitud?   @relation(fields: [solicitudId], references: [id], onDelete: SetNull) // Relación con Solicitud
   @@id([sectionId, studentId])
 }
 
