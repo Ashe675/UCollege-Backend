@@ -27,7 +27,7 @@ export const getSolicitudesCancelacion = async (teacherId: number, filter: strin
                     }
                 }}
             }}
-        },
+        },archivos: {select: {url: true}},
         enrollments: {select: {section: {
             select:{
                 IH: true,
@@ -46,6 +46,9 @@ export const getSolicitudesCancelacion = async (teacherId: number, filter: strin
         const studentId = solicitud.student.id;
         const identificationCode = solicitud.student.user.identificationCode;
         const institutionalEmail = solicitud.student.user.institutionalEmail;
+        const archivos  = solicitud.archivos.map(archivo => {
+            return archivo.url;
+        });
         // Formatear las secciones de las solicitudes
         const classesToCancel = solicitud.enrollments.map(enrollment => {
             const section = enrollment.section;
@@ -67,6 +70,7 @@ export const getSolicitudesCancelacion = async (teacherId: number, filter: strin
             studentId,
             identificationCode,
             institutionalEmail,
+            archivos,
             classesToCancel
         };
     });
@@ -170,6 +174,7 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
             id: true,
             estado: true,
             justificacion: true,
+            archivos: {select: {url: true}},
             career: {select:{id: true,code: true, name: true}},
             student: {
             select:{
@@ -210,6 +215,9 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
             const CarreraActual = carrera.regionalCenter_Faculty_Career.career;
             const CarreraSolicitada = solicitud.career;
             const institutionalEmail = solicitud.student.user.institutionalEmail;
+            const archivos  = solicitud.archivos.map(archivo => {
+                return archivo.url;
+            });
             return {
                 id: solicitud.id,
                 date: solicitud.date,
@@ -221,6 +229,7 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
                 institutionalEmail,
                 CarreraActual,
                 CarreraSolicitada,
+                archivos
             };
         })
     );

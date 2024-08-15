@@ -153,6 +153,7 @@ export const getSiguientePeriodo = async () => {
   return idPeriodo;
 }
 
+
 export const getPeriodoActual = async () => {
   const academicPeriod = await prisma.process.findFirst({
     where: { processTypeId: 5, active: true, finalDate: { gte: new Date() }, startDate: { lte: new Date() } },
