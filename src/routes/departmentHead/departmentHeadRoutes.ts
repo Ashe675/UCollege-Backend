@@ -39,7 +39,7 @@ router.get('/classes',
 
 router.get('/student-history/:identificationCode',
     authenticate, 
-    authorizeRole([RoleEnum.DEPARTMENT_HEAD]),
+    authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR]),
     validateCodeIdentificationData,
     isStudentCode,
     getAcademicHistory,

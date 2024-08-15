@@ -1221,6 +1221,7 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
   const notas = await prisma.enrollment.findMany({
     where: {
       sectionId: sectionId,
+      waitingList : null,
       section: { academicPeriodId: academicPeriodId }
     },
     select: {

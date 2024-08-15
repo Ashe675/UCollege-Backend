@@ -299,14 +299,16 @@ model Solicitud {
   justificacion    String             @db.VarChar(500)
   respuesta        String?            @db.VarChar(500)
   estado           estadoSolicitud
-  teacherId        Int
+  teacherId        Int?
   studentId        Int
   archivos         ArchivoSolicitud[]
   enrollments      Enrollment[]
-  teacher          User               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacher          User?               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   student          Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
   careerId         Int? // Campo opcional para relacionar con Career
   regionalCenterId Int? // Campo opcional para relacionar con RegionalCenter
+  regionalCenterFacultyCareerId Int // Campo opcional para relacionar con RegionalCenterCareer
+  regionalCenterFacultyCareer   RegionalCenter_Faculty_Career   @relation(fields: [regionalCenterFacultyCareerId], references: [id], onDelete: Cascade)
   career           Career?            @relation(fields: [careerId], references: [id], onDelete: Cascade)
   regionalCenter   RegionalCenter?    @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
 
@@ -314,8 +316,8 @@ model Solicitud {
   @@index([studentId])
   @@index([careerId])
   @@index([regionalCenterId])
+  @@index([regionalCenterFacultyCareerId])
 }
-
 model ArchivoSolicitud {
   id          Int         @id @default(autoincrement())
   url         String      @db.VarChar(255)
@@ -374,8 +376,8 @@ model RegionalCenter_Faculty_Career {
   users                                   RegionalCenter_Faculty_Career_User[]
   usersOptions                            OptionCareer[]
   departments                             RegionalCenter_Faculty_Career_Department[]
+  Solicitudes                             Solicitud[]
 }
-
 model Departament {
   id                          Int                                        @id @default(autoincrement())
   name                        String                                     @db.VarChar(80)

@@ -64,10 +64,17 @@ export const exportExcel = async (req: Request, res: Response) => {
                         person: true
                     }
                 },
-                enrollments: true,
+                enrollments: {
+                    where: {
+                        waitingList: null
+                    }
+                },
                 classroom: {
                     include: { building: true }
                 }
+            },
+            orderBy : {
+                code : 'asc'
             }
         });
 
@@ -96,7 +103,7 @@ export const exportExcel = async (req: Request, res: Response) => {
                 : 'No asignado';
 
             worksheet.addRow({
-                id: section.id,
+                id: section.code,
                 classCode: section.class?.code || '',
                 className: section.class?.name || '',
                 teacherCode: section.teacher?.identificationCode || '',
@@ -178,11 +185,18 @@ export const exportPdf = async (req: Request, res: Response) => {
                         person: true
                     }
                 },
-                enrollments: true,
+                enrollments: {
+                    where: {
+                        waitingList: null
+                    }
+                },
                 classroom: {
                     include: { building: true }
                 },
                 regionalCenter_Faculty_Career: true
+            },
+            orderBy : {
+                code : 'asc'
             }
         });
 
@@ -203,7 +217,7 @@ export const exportPdf = async (req: Request, res: Response) => {
         });
         const tableTop = 80;
         const columnWidths = {
-            id: 40,
+            id: 100,
             classCode: 100,
             className: 150,
             teacherCode: 100,
@@ -238,7 +252,7 @@ export const exportPdf = async (req: Request, res: Response) => {
 
             // Calcula la altura de la fila en función del contenido más alto
             const rowHeight = calculateRowHeight(doc, [
-                section.id.toString(),
+                section.code.toString(),
                 section.class?.code || '',
                 section.class?.name || '',
                 section.teacher?.identificationCode || '',
@@ -252,7 +266,7 @@ export const exportPdf = async (req: Request, res: Response) => {
             drawTableRow(
                 doc,
                 position,
-                section.id.toString(),
+                section.code.toString(),
                 section.class?.code || '',
                 section.class?.name || '',
                 section.teacher?.identificationCode || '',
