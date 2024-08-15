@@ -7,6 +7,6 @@ const router = Router();
 
 router.get('/cancelaciones',authenticate, authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCancelacionController);
 router.get('/carreras' ,authenticate,authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCambioCarreraController);
-router.post('/carreras',authenticate, authorizeRole([RoleEnum.STUDENT]), checkSolicitudPendCancelacion,createSolicitudCancelacionExcepcionalController);
+router.post('/cancelaciones',authenticate, authorizeRole([RoleEnum.STUDENT]), checkSolicitudPendCancelacion,createSolicitudCancelacionExcepcionalController);
 
 export default router;

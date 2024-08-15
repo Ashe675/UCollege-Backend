@@ -7,11 +7,7 @@ export const getSolicitudesCancelacionController = async (req: Request, res: Res
         const { filter } = req.query;
     try {
         // Llamar al servicio para obtener las solicitudes de cancelación
-        if (filter !== "PEND") {
-            return res.status(400).json({
-                error: 'El filtro solo puede ser "PEND".'
-            });
-        }
+       
         const solicitudes = await getSolicitudesCancelacion(teacherId, filter as string);
         
         // Devolver la respuesta en formato JSON
@@ -53,12 +49,7 @@ export const getSolicitudesCambioCarreraController = async (req: Request, res: R
     const teacherId = req.user.id;
     const { filter } = req.query;
     try {
-        if (filter !== "PEND") {
-            return res.status(400).json({
-                success: false,
-                error: 'El filtro solo puede ser "PEND".'
-            });
-        }
+       
         // Llamar al servicio para obtener las solicitudes de cancelación
         const solicitudes = await getSolicitudesCambioCarrera(teacherId, filter as string);
 
