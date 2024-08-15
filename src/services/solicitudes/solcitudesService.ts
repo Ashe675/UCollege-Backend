@@ -1,44 +1,54 @@
 import { RoleEnum } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { getRegionalCenterFacultyCareerTeacher } from "../../utils/teacher/getTeacherCenter";
+import { uploadPdf } from "../../utils/cloudinary";
 
 export const getSolicitudesCancelacion = async (teacherId: number, filter: string) => {
     const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},  
+        where: { tipoSolicitud: "CANCELACION_EXCEPCIONAL", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' }) },
         select: {
             date: true,
             id: true,
             estado: true,
             justificacion: true,
             student: {
-            select:{
-                id: true,
-                user:{
-                select:{
-                    identificationCode: true,
-                    institutionalEmail: true
-                    ,person:{
-                    select:{
-                        firstName: true,
-                        middleName: true,
-                        lastName: true,
-                        secondLastName: true,
+                select: {
+                    id: true,
+                    user: {
+                        select: {
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
                     }
-                }}
-            }}
-        },archivos: {select: {url: true}},
-        enrollments: {select: {section: {
-            select:{
-                IH: true,
-                FH: true,
-                code: true,
-                class: {select: {
-                    code: true,
-                    name: true}}
+                }
+            }, archivos: { select: { url: true } },
+            enrollments: {
+                select: {
+                    section: {
+                        select: {
+                            IH: true,
+                            FH: true,
+                            code: true,
+                            class: {
+                                select: {
+                                    code: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        }}}
-    }
+        }
     })
     const formattedResponse = solicitudes.map(solicitud => {
         const studentInfo = solicitud.student.user.person;
@@ -46,7 +56,7 @@ export const getSolicitudesCancelacion = async (teacherId: number, filter: strin
         const studentId = solicitud.student.id;
         const identificationCode = solicitud.student.user.identificationCode;
         const institutionalEmail = solicitud.student.user.institutionalEmail;
-        const archivos  = solicitud.archivos.map(archivo => {
+        const archivos = solicitud.archivos.map(archivo => {
             return archivo.url;
         });
         // Formatear las secciones de las solicitudes
@@ -82,32 +92,34 @@ export const getSolicitudesCancelacion = async (teacherId: number, filter: strin
 
 export const getSolicitudesCambioCentro = async () => {
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CAMBIO_DE_CENTRO"},
+        where: { tipoSolicitud: "CAMBIO_DE_CENTRO" },
         select: {
             date: true,
             id: true,
             estado: true,
             justificacion: true,
-            regionalCenter: {select: {id: true, name: true,town: {select: {name: true, countryDepartment: {select:{name: true}}}}}},
+            regionalCenter: { select: { id: true, name: true, town: { select: { name: true, countryDepartment: { select: { name: true } } } } } },
             student: {
-            select:{
-                id: true,
-                user:{
-                select:{
+                select: {
                     id: true,
-                    identificationCode: true,
-                    institutionalEmail: true
-                    ,person:{
-                    select:{
-                        firstName: true,
-                        middleName: true,
-                        lastName: true,
-                        secondLastName: true,
+                    user: {
+                        select: {
+                            id: true,
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
                     }
-                }}
-            }}
-        },
-    }
+                }
+            },
+        }
     });
     const formattedResponse = await Promise.all(
         solicitudes.map(async (solicitud) => {
@@ -145,8 +157,8 @@ export const getSolicitudesCambioCentro = async () => {
             const CentroActual = CentroRegional.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter;
             const CentroSolicitado = solicitud.regionalCenter;
             const institutionalEmail = solicitud.student.user.institutionalEmail;
-            
-    
+
+
             return {
                 id: solicitud.id,
                 date: solicitud.date,
@@ -168,33 +180,35 @@ export const getSolicitudesCambioCentro = async () => {
 export const getSolicitudesCambioCarrera = async (teacherId: number, filter: string) => {
     const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CAMBIO_DE_CARRERA", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},
+        where: { tipoSolicitud: "CAMBIO_DE_CARRERA", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' }) },
         select: {
             date: true,
             id: true,
             estado: true,
             justificacion: true,
-            archivos: {select: {url: true}},
-            career: {select:{id: true,code: true, name: true}},
+            archivos: { select: { url: true } },
+            career: { select: { id: true, code: true, name: true } },
             student: {
-            select:{
-                id: true,
-                user:{
-                select:{
+                select: {
                     id: true,
-                    identificationCode: true,
-                    institutionalEmail: true
-                    ,person:{
-                    select:{
-                        firstName: true,
-                        middleName: true,
-                        lastName: true,
-                        secondLastName: true,
+                    user: {
+                        select: {
+                            id: true,
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
                     }
-                }}
-            }}
-        },
-    }
+                }
+            },
+        }
     });
     const formattedResponse = await Promise.all(
         solicitudes.map(async (solicitud) => {
@@ -203,7 +217,7 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
                 select: {
                     regionalCenter_Faculty_Career: {
                         select: {
-                            career: {select:{id: true, name: true, code: true}}
+                            career: { select: { id: true, name: true, code: true } }
                         }
                     }
                 }
@@ -215,7 +229,7 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
             const CarreraActual = carrera.regionalCenter_Faculty_Career.career;
             const CarreraSolicitada = solicitud.career;
             const institutionalEmail = solicitud.student.user.institutionalEmail;
-            const archivos  = solicitud.archivos.map(archivo => {
+            const archivos = solicitud.archivos.map(archivo => {
                 return archivo.url;
             });
             return {
@@ -239,30 +253,32 @@ export const getSolicitudesCambioCarrera = async (teacherId: number, filter: str
 
 export const getSolicitudesPagoReposicion = async () => {
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL"},
+        where: { tipoSolicitud: "CANCELACION_EXCEPCIONAL" },
         select: {
             date: true,
             id: true,
             estado: true,
             justificacion: true,
             student: {
-            select:{
-                id: true,
-                user:{
-                select:{
-                    identificationCode: true,
-                    institutionalEmail: true
-                    ,person:{
-                    select:{
-                        firstName: true,
-                        middleName: true,
-                        lastName: true,
-                        secondLastName: true,
+                select: {
+                    id: true,
+                    user: {
+                        select: {
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
                     }
-                }}
-            }}
-        },
-    }
+                }
+            },
+        }
     })
     const formattedResponse = solicitudes.map(solicitud => {
         const studentInfo = solicitud.student.user.person;
@@ -344,112 +360,154 @@ export const getCoordinadorCarrera = async (studentId: number) => {
 export const createSolicitudCancelacionExcepcional = async (data: {
     justificacion: string;
     studentId: number;
-    enrollments: { sectionId: number; studentId: number }[]; // Clave compuesta de IDs
-  }) => {
-    const coordinadorId= await getCoordinadorCarrera(data.studentId);
-    const user = await prisma.student.findFirst({
-        where: {id: data.studentId},
-        select: {userId: true}
-    });
-    const regionalCenter_Faculty_Career = await prisma.regionalCenter_Faculty_Career_User.findFirst({
-        where: {userId: user.userId},
-        select: {regionalCenter_Faculty_CareerId: true}
-    });
-
+    enrollments: { sectionId: number; studentId: number }[];
+    files: { originalName: string; buffer: Buffer; mimeType: string }[]; // Manejo detallado de archivos
+}) => {
     try {
-      // Crear la solicitud
-      const nuevaSolicitud = await prisma.solicitud.create({
-        data: {
-          justificacion: data.justificacion,
-          tipoSolicitud: "CANCELACION_EXCEPCIONAL",
-          estado : 'PENDIENTE',
-          studentId: data.studentId,
-          regionalCenterFacultyCareerId: regionalCenter_Faculty_Career.regionalCenter_Faculty_CareerId,
-          enrollments: {
-            connect: data.enrollments.map(enrollment => ({
-              sectionId_studentId: { // Usar el formato correcto de la clave compuesta
-                sectionId: enrollment.sectionId,
-                studentId: enrollment.studentId,
-              },
+        // Obtener el ID del usuario a partir del studentId
+        const user = await prisma.student.findFirst({
+            where: { id: data.studentId },
+            select: { userId: true },
+        });
+
+        if (!user) {
+            throw new Error('Usuario no encontrado.');
+        }
+
+        // Obtener el RegionalCenter_Faculty_Career del usuario
+        const regionalCenter_Faculty_Career = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+            where: { userId: user.userId },
+            select: { regionalCenter_Faculty_CareerId: true },
+        });
+
+        if (!regionalCenter_Faculty_Career) {
+            throw new Error('No se encontró información del centro regional para el usuario.');
+        }
+
+        // Subir los archivos PDF antes de crear la solicitud
+        const archivosSubidos = await Promise.all(
+            data.files.map(async (file) => {
+                if (!file.buffer) {
+                    throw new Error(`El archivo ${file.originalName} no contiene datos.`);
+                }
+
+                // Aquí asumimos que tienes una función `uploadPdf` que maneja la subida
+                const uploadResult = await uploadPdf(file.buffer, file.originalName);
+
+                return {
+                    url: uploadResult.secure_url,
+                    public_id: uploadResult.public_id,
+                    name: file.originalName,
+                    tipoArchivo: 'raw' as const,
+                };
+            })
+        );
+
+        // Crear la solicitud de cancelación excepcional
+        const nuevaSolicitud = await prisma.solicitud.create({
+            data: {
+                justificacion: data.justificacion,
+                tipoSolicitud: 'CANCELACION_EXCEPCIONAL',
+                estado: 'PENDIENTE',
+                studentId: data.studentId,
+                regionalCenterFacultyCareerId: regionalCenter_Faculty_Career.regionalCenter_Faculty_CareerId,
+                enrollments: {
+                    connect: data.enrollments.map(enrollment => ({
+                        sectionId_studentId: {
+                            sectionId: enrollment.sectionId,
+                            studentId: enrollment.studentId,
+                        },
+                    })),
+                },
+            },
+            include: {
+                student: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                identificationCode: true,
+                                institutionalEmail: true,
+                                person: {
+                                    select: {
+                                        firstName: true,
+                                        middleName: true,
+                                        lastName: true,
+                                        secondLastName: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                enrollments: {
+                    select: {
+                        section: {
+                            select: {
+                                IH: true,
+                                FH: true,
+                                code: true,
+                                class: {
+                                    select: {
+                                        code: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Guardar los archivos subidos en la tabla ArchivoSolicitud
+        await prisma.archivoSolicitud.createMany({
+            data: archivosSubidos.map(file => ({
+                url: file.url,
+                public_id: file.public_id,
+                name: file.name,
+                tipoArchivo: file.tipoArchivo,
+                solicitudId: nuevaSolicitud.id,
             })),
-          },
-        },
-        include: {
-          student: {
-            select: {
-              user: {
-                select: {
-                  id: true,
-                  identificationCode: true,
-                  institutionalEmail: true,
-                  person: {
-                    select: {
-                      firstName: true,
-                      middleName: true,
-                      lastName: true,
-                      secondLastName: true,
-                    },
-                  },
+        });
+
+        // Formatear la respuesta
+        return {
+            success: true,
+            message: 'Solicitud de cancelación excepcional creada con éxito.',
+            data: {
+                id: nuevaSolicitud.id,
+                date: nuevaSolicitud.date,
+                justificacion: nuevaSolicitud.justificacion,
+                estado: nuevaSolicitud.estado,
+                student: {
+                    userId: nuevaSolicitud.student.user.id,
+                    name: `${nuevaSolicitud.student.user.person.firstName} ${nuevaSolicitud.student.user.person.middleName || ''} ${nuevaSolicitud.student.user.person.lastName} ${nuevaSolicitud.student.user.person.secondLastName || ''}`.trim(),
+                    identificationCode: nuevaSolicitud.student.user.identificationCode,
+                    institutionalEmail: nuevaSolicitud.student.user.institutionalEmail,
                 },
-              },
+                classesToCancel: nuevaSolicitud.enrollments.map(enrollment => {
+                    const section = enrollment.section;
+                    return {
+                        IH: section.IH,
+                        FH: section.FH,
+                        code: section.code,
+                        classCode: section.class.code,
+                        className: section.class.name,
+                    };
+                }),
             },
-          },
-          enrollments: {
-            select: {
-              section: {
-                select: {
-                  IH: true,
-                  FH: true,
-                  code: true,
-                  class: {
-                    select: {
-                      code: true,
-                      name: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-  
-      // Formatear la respuesta
-      return {
-        success: true,
-        message: "Solicitud de cancelación excepcional creada con éxito.",
-        data: {
-          id: nuevaSolicitud.id,
-          date: nuevaSolicitud.date,
-          justificacion: nuevaSolicitud.justificacion,
-          estado: nuevaSolicitud.estado,
-          student: {
-            userId: nuevaSolicitud.student.user.id,
-            name: `${nuevaSolicitud.student.user.person.firstName} ${nuevaSolicitud.student.user.person.middleName || ''} ${nuevaSolicitud.student.user.person.lastName} ${nuevaSolicitud.student.user.person.secondLastName || ''}`.trim(),
-            identificationCode: nuevaSolicitud.student.user.identificationCode,
-            institutionalEmail: nuevaSolicitud.student.user.institutionalEmail,
-          },
-          classesToCancel: nuevaSolicitud.enrollments.map(enrollment => {
-            const section = enrollment.section;
-            return {
-              IH: section.IH,
-              FH: section.FH,
-              code: section.code,
-              classCode: section.class.code,
-              className: section.class.name,
-            };
-          }),
-        },
-      };
+        };
     } catch (error) {
-      console.error('Error al crear la solicitud de cancelación excepcional:', error);
-      return {
-        success: false,
-        message: 'No se pudo crear la solicitud de cancelación excepcional.',
-        error: error.message,
-      };
+        console.error('Error al crear la solicitud de cancelación excepcional:', error);
+        return {
+            success: false,
+            message: 'No se pudo crear la solicitud de cancelación excepcional.',
+            error: error.message,
+        };
     }
-  };
-  
-  
+};
+
+
+
 

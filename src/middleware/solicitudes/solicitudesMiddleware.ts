@@ -10,7 +10,7 @@ export const checkSolicitudPendCancelacion = async (req: Request, res: Response,
     const studentId = student.id;
     try {
         const existingSolicitud = await prisma.solicitud.findFirst({
-            where:{estado: 'PENDIENTE', studentId: studentId}
+            where:{estado: 'PENDIENTE', studentId: studentId, tipoSolicitud: 'CANCELACION_EXCEPCIONAL'}
         })
         if (existingSolicitud) {
             return res.status(400).json({ error: 'Ya tiene una solicitud pendiente para cancelar clases' });
