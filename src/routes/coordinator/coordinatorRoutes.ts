@@ -10,6 +10,7 @@ import { exportExcel, exportPdf } from '../../controllers/coordinator/exportAcad
 import { validateCodeIdentificationData } from '../../middleware/codeIdentification/validateCodeIdentificationData';
 import { isStudentCode } from '../../validators/departmentHead/isStudentCode';
 import { getAcademicHistory } from '../../controllers/departmentHead/departmentHeadController';
+import { accetSolicitudCarrer, accetSolicitudClass, declineSolicitud } from '../../controllers/coordinator/solicitudController';
 
 
 
@@ -40,25 +41,25 @@ router.get('/student-history/:identificationCode',
 router.put('/solicitude/career-change/accept/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    accetSolicitudCarrer
 );
 
 router.put('/solicitude/career-change/decline/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    declineSolicitud
 );
 
 router.put('/solicitude/class-cancel/accept/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    accetSolicitudClass
 );
 
 router.put('/solicitude/class-cancel/decline/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    declineSolicitud,
 );
 
 
