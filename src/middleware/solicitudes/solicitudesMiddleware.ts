@@ -3,14 +3,14 @@ import { prisma } from "../../config/db";
 
 
 export const checkSolicitudPendCancelacion = async (req: Request, res: Response, next: NextFunction) => {
-    const userId= req.user.id;
+    const userId = req.user.id;
     const student = await prisma.student.findFirst({
-        where:{userId: userId}
+        where: { userId: userId }
     });
     const studentId = student.id;
     try {
         const existingSolicitud = await prisma.solicitud.findFirst({
-            where:{estado: 'PENDIENTE', studentId: studentId, tipoSolicitud: 'CANCELACION_EXCEPCIONAL'}
+            where: { estado: 'PENDIENTE', studentId: studentId, tipoSolicitud: 'CANCELACION_EXCEPCIONAL' }
         })
         if (existingSolicitud) {
             return res.status(400).json({ error: 'Ya tiene una solicitud pendiente para cancelar clases' });
@@ -19,14 +19,33 @@ export const checkSolicitudPendCancelacion = async (req: Request, res: Response,
     } catch (error) {
         res.status(500).json({ error: 'Internal server erroree Jose' });
     }
-  };
+};
+
+export const checkSolicitudPendCambioCarrera = async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user.id;
+    const student = await prisma.student.findFirst({
+        where: { userId: userId }
+    });
+    const studentId = student.id;
+    try {
+        const existingSolicitud = await prisma.solicitud.findFirst({
+            where: { estado: 'PENDIENTE', studentId: studentId, tipoSolicitud: 'CAMBIO_DE_CARRERA' }
+        })
+        if (existingSolicitud) {
+            return res.status(400).json({ error: 'Ya tiene una solicitud pendiente para cambio de carrera' });
+        }
+        next();
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server erroree Jose' });
+    }
+};
 
 const getCoordinadorCarreraActualTeacher = async (userId: number) => {
 
     // Obtener el regionalCenter_Faculty_CareerId asociado al userId
     const carreraTeacher = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
         where: { teacherId: userId },
-        select: { regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}} }
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
 
     if (!carreraTeacher) {

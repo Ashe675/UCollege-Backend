@@ -1,4 +1,4 @@
-import { createSolicitudCancelacionExcepcional, getSolicitudesCambioCarrera, getSolicitudesCambioCentro, getSolicitudesCancelacion, getSolicitudesPagoReposicion } from "../../services/solicitudes/solcitudesService";
+import { createSolicitudCambiodeCarrera, createSolicitudCambiodeCentro, createSolicitudCancelacionExcepcional, createSolicitudPagoReposicion, getSolicitudesCambioCarrera, getSolicitudesCambioCentro, getSolicitudesCancelacion, getSolicitudesPagoReposicion } from "../../services/solicitudes/solcitudesService";
 import { prisma } from "../../config/db";
 import { Request, Response } from 'express';
 
@@ -158,4 +158,130 @@ export const createSolicitudCancelacionExcepcionalController = async (req: Reque
         });
     }
 };
+
+export const createSolicitudCambiodeCarreraController = async (req: Request, res: Response) => {
+    try {
+        const { justificacion, careerId } = req.body;
+        const userId = req.user.id;
+
+        // Obtener el ID del estudiante a partir del userId
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = student.id;
+
+        // Llamar al servicio para crear la solicitud de cambio de carrera
+        const result = await createSolicitudCambiodeCarrera({
+            justificacion,
+            studentId,
+            careerId,
+        });
+
+        if (result.success) {
+            return res.status(201).json(result);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Error al crear la solicitud de cambio de carrera.',
+                error: result.error,
+            });
+        }
+    } catch (error) {
+        console.error('Error en el controlador createSolicitudCambiodeCarrera:', error);
+        return res.status(500).json({
+            message: 'Error interno del servidor.',
+            error: error.message,
+        });
+    }
+};
+
+export const createSolicitudCambiodeCentroController = async (req: Request, res: Response) => {
+    try {
+        const { justificacion, regionalCenterId } = req.body;
+        const userId = req.user.id;
+
+        // Obtener el ID del estudiante a partir del userId
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = student.id;
+
+        // Llamar al servicio para crear la solicitud de cambio de centro
+        const result = await createSolicitudCambiodeCentro({
+            justificacion,
+            studentId,
+            regionalCenterId,
+        });
+
+        if (result.success) {
+            return res.status(201).json(result);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Error al realizar el cambio de centro.',
+                error: result.error,
+            });
+        }
+    } catch (error) {
+        console.error('Error en el controlador createSolicitudCambiodeCentro:', error);
+        return res.status(500).json({
+            message: 'Error interno del servidor.',
+            error: error.message,
+        });
+    }
+};
+
+export const createSolicitudPagoReposicionController = async (req: Request, res: Response) => {
+    try {
+        const { justificacion } = req.body;
+        const userId = req.user.id;
+
+        // Obtener el ID del estudiante a partir del userId
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = student.id;
+
+        // Llamar al servicio para crear la solicitud de cambio de centro
+        const result = await createSolicitudPagoReposicion({
+            justificacion,
+            studentId,
+        });
+
+        if (result.success) {
+            return res.status(201).json(result);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Error al realizar la solicitud.',
+                error: result.error,
+            });
+        }
+    } catch (error) {
+        console.error('Error en el controlador createSolicitudCambiodeCentro:', error);
+        return res.status(500).json({
+            message: 'Error interno del servidor.',
+            error: error.message,
+        });
+    }
+};
+
 

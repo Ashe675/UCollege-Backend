@@ -508,6 +508,270 @@ export const createSolicitudCancelacionExcepcional = async (data: {
     }
 };
 
+export const createSolicitudCambiodeCarrera = async (data: {
+    justificacion: string;
+    studentId: number;
+    careerId: number;
+}) => {
+    try {
+        // Obtener el ID del usuario a partir del studentId
+        const user = await prisma.student.findFirst({
+            where: { id: data.studentId },
+            select: { userId: true },
+        });
+
+        if (!user) {
+            throw new Error('Usuario no encontrado.');
+        }
+
+        // Obtener el RegionalCenter_Faculty_Career del usuario
+        const regionalCenter_Faculty = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+            where: { userId: user.userId },
+            select: { regionalCenter_Faculty_Career: {select: {regionalCenter_Faculty_FacultyId: true, regionalCenter_Faculty_RegionalCenterId: true}} },
+        });
+        if (!regionalCenter_Faculty) {
+            throw new Error('No se encontró información del centro regional para el usuario.');
+        }
+        const regionalCenter_Faculty_Career_Destino = await prisma.regionalCenter_Faculty_Career.findFirst({
+            where: { regionalCenter_Faculty_RegionalCenterId: regionalCenter_Faculty.regionalCenter_Faculty_Career.regionalCenter_Faculty_RegionalCenterId, careerId: data.careerId},
+            select:{id: true}
+        });
+        if (!regionalCenter_Faculty_Career_Destino) {
+            throw new Error('Esta carrera no se encuentra en este centro');
+        }
+        const regionalCenter_Faculty_Career_DestinoId = regionalCenter_Faculty_Career_Destino.id;    
+        // Crear la solicitud de cancelación excepcional
+        const nuevaSolicitud = await prisma.solicitud.create({
+            data: {
+                justificacion: data.justificacion,
+                tipoSolicitud: 'CAMBIO_DE_CARRERA',
+                estado: 'PENDIENTE',
+                studentId: data.studentId,
+                careerId: data.careerId,
+                regionalCenterFacultyCareerId: regionalCenter_Faculty_Career_DestinoId,
+            },
+            include: {
+                student: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                identificationCode: true,
+                                institutionalEmail: true,
+                                person: {
+                                    select: {
+                                        firstName: true,
+                                        middleName: true,
+                                        lastName: true,
+                                        secondLastName: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Formatear la respuesta
+        return {
+            success: true,
+            message: 'Solicitud de cambio de carrera creada con éxito.',
+            data: {
+                id: nuevaSolicitud.id,
+                date: nuevaSolicitud.date,
+                justificacion: nuevaSolicitud.justificacion,
+                estado: nuevaSolicitud.estado,
+                carrera: nuevaSolicitud.careerId,
+                student: {
+                    userId: nuevaSolicitud.student.user.id,
+                    name: `${nuevaSolicitud.student.user.person.firstName} ${nuevaSolicitud.student.user.person.middleName || ''} ${nuevaSolicitud.student.user.person.lastName} ${nuevaSolicitud.student.user.person.secondLastName || ''}`.trim(),
+                    identificationCode: nuevaSolicitud.student.user.identificationCode,
+                    institutionalEmail: nuevaSolicitud.student.user.institutionalEmail,
+                },
+            },
+        };
+    } catch (error) {
+        console.error('Error al crear la solicitud de cambio de carrera:', error);
+        return {
+            success: false,
+            message: 'No se pudo crear la solicitud de cambio de carrera.',
+            error: error.message,
+        };
+    }
+};
+
+export const createSolicitudCambiodeCentro = async (data: {
+    justificacion: string;
+    studentId: number;
+    regionalCenterId: number;
+}) => {
+    try {
+        // Obtener el ID del usuario a partir del studentId
+        const user = await prisma.student.findFirst({
+            where: { id: data.studentId },
+            select: { userId: true },
+        });
+
+        if (!user) {
+            throw new Error('Usuario no encontrado.');
+        }
+
+        // Obtener la carrera del usuario
+        const regionalCenter_Faculty = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+            where: { userId: user.userId },
+            select: { regionalCenter_Faculty_Career:{select:{careerId:true}}, id: true},
+        });
+        if (!regionalCenter_Faculty) {
+            throw new Error('No se encontró información del centro regional para el usuario.');
+        }
+        const careerIdActual = regionalCenter_Faculty.regionalCenter_Faculty_Career.careerId;
+        const regionalCenter_Faculty_Career_User_Id= regionalCenter_Faculty.id;
+        // Obtener RegionalCenterFacultiyCareerId del destino
+        const regionalCenter_Faculty_Career = await prisma.regionalCenter_Faculty_Career.findFirst({
+            where:{regionalCenter_Faculty: {regionalCenterId: data.regionalCenterId}, careerId: careerIdActual},
+            select:{id: true},
+        });
+        if (!regionalCenter_Faculty_Career) {
+            throw new Error('Su carrera no se encuentra en el centro de destino');
+        };
+        const regionalCenter_Faculty_Career_DestinoId = regionalCenter_Faculty_Career.id;
+        // Crear la solicitud de cancelación excepcional
+        const nuevaSolicitud = await prisma.solicitud.create({
+            data: {
+                justificacion: data.justificacion,
+                tipoSolicitud: 'CAMBIO_DE_CENTRO',
+                estado: 'PENDIENTE',
+                studentId: data.studentId,
+                regionalCenterFacultyCareerId: regionalCenter_Faculty_Career_DestinoId,
+            },
+            include: {
+                student: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                identificationCode: true,
+                                institutionalEmail: true,
+                                person: {
+                                    select: {
+                                        firstName: true,
+                                        middleName: true,
+                                        lastName: true,
+                                        secondLastName: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!nuevaSolicitud) {
+            throw new Error('Error al crear la solicitud');
+        };
+        await prisma.regionalCenter_Faculty_Career_User.update({
+            where: { id : regionalCenter_Faculty_Career_User_Id },
+            data: { regionalCenter_Faculty_CareerId: regionalCenter_Faculty_Career_DestinoId },
+        });
+        // Modificar el estado de la solicitud a APROBADA
+        await prisma.solicitud.update({
+            where: { id: nuevaSolicitud.id },
+            data: { estado: 'APROBADA' },
+        });
+
+        // Retornar el mensaje de éxito
+        return {
+            success: true,
+            message: 'Cambio de centro realizado exitosamente.',
+        };
+    } catch (error) {
+        console.error('Error al crear la solicitud de cambio de centro:', error);
+        return {
+            success: false,
+            message: 'No se pudo crear la solicitud de cambio de centro.',
+            error: error.message,
+        };
+    }
+};
+
+export const createSolicitudPagoReposicion = async (data: {
+    justificacion: string;
+    studentId: number;
+}) => {
+    try {
+        // Obtener el ID del usuario a partir del studentId
+        const user = await prisma.student.findFirst({
+            where: { id: data.studentId },
+            select: { userId: true },
+        });
+
+        if (!user) {
+            throw new Error('Usuario no encontrado.');
+        }
+
+        // Obtener la carrera del usuario
+        const regionalCenter_Faculty = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+            where: { userId: user.userId },
+            select: { regionalCenter_Faculty_Career:{select:{careerId:true}}, id: true},
+        });
+        if (!regionalCenter_Faculty) {
+            throw new Error('No se encontró información del centro regional para el usuario.');
+        }
+
+        // Crear la solicitud de cancelación excepcional
+        const nuevaSolicitud = await prisma.solicitud.create({
+            data: {
+                justificacion: data.justificacion,
+                tipoSolicitud: 'PAGO_REPOSICION',
+                estado: 'APROBADA',
+                studentId: data.studentId,
+                regionalCenterFacultyCareerId: regionalCenter_Faculty.id,
+            },
+            include: {
+                student: {
+                    select: {
+                        user: {
+                            select: {
+                                id: true,
+                                identificationCode: true,
+                                institutionalEmail: true,
+                                person: {
+                                    select: {
+                                        firstName: true,
+                                        middleName: true,
+                                        lastName: true,
+                                        secondLastName: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+        if (!nuevaSolicitud) {
+            throw new Error('Error al crear la solicitud');
+        };
+
+        // Retornar el mensaje de éxito
+        return {
+            success: true,
+            message: 'Solicitud de pago de reposicion creada existosamente',
+        };
+    } catch (error) {
+        console.error('Error al crear la solicitud de pago de reposicion:', error);
+        return {
+            success: false,
+            message: 'No se pudo crear la solicitud de pago de reposicion.',
+            error: error.message,
+        };
+    }
+};
+
+
+
+
 
 
 
