@@ -43,9 +43,7 @@ export const checkActiveProcessByTypeId = async (processTypeId: number) => {
 export const checkActiveProcessByTypeIdMiddleware = (processTypeId: number) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if(processTypeId === 0 ){
-        next();
-      }
+      
       const process = await checkActiveProcessByTypeId(processTypeId);
       if (!process) {
         const processType = await prisma.processType.findUnique({ where: { id: processTypeId } })

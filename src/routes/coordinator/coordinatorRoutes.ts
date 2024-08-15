@@ -41,14 +41,14 @@ router.get('/student-history/:identificationCode',
 router.put('/solicitude/career-change/accept/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    checkActiveProcessByTypeIdMiddleware(0),
+    
     accetSolicitudCarrer
 );
 
 router.put('/solicitude/career-change/decline/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    checkActiveProcessByTypeIdMiddleware(0),
+    
     declineSolicitud
 );
 
