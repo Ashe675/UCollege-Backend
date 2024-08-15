@@ -318,7 +318,6 @@ model Solicitud {
   @@index([regionalCenterId])
   @@index([regionalCenterFacultyCareerId])
 }
-
 model ArchivoSolicitud {
   id          Int         @id @default(autoincrement())
   url         String      @db.VarChar(255)
@@ -379,7 +378,6 @@ model RegionalCenter_Faculty_Career {
   departments                             RegionalCenter_Faculty_Career_Department[]
   Solicitudes                             Solicitud[]
 }
-
 model Departament {
   id                          Int                                        @id @default(autoincrement())
   name                        String                                     @db.VarChar(80)

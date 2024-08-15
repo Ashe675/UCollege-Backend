@@ -96,7 +96,7 @@ export const createProcess = async (data: ProcessData) => {
     restData.processId = lastActiveInscriptionProcess.id;
   }
 
-  if (processTypeId === 4) {
+  if (processTypeId === 4 || processTypeId === 7 ||  processTypeId === 8 ) {
     const lastAcademicPeriodProcess = await prisma.process.findFirst({
       where: {
         processTypeId: 5,
@@ -121,7 +121,7 @@ export const createProcess = async (data: ProcessData) => {
     // Verificar si ya existe un proceso de entrega de notas asociado a este periodo
     const existingUploadGradeProcess = await prisma.process.findFirst({
       where: {
-        processTypeId: 4,
+        processTypeId: processTypeId,
         processId: lastAcademicPeriodProcess.id,
       },
     });
