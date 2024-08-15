@@ -5,10 +5,8 @@ import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { RoleEnum } from '@prisma/client';
 const router = Router();
 
-router.get('/cancelaciones' ,getSolicitudesCancelacionController);
-router.get('/centros' ,getSolicitudesCambioCentroController);
-router.get('/carreras' ,getSolicitudesCambioCarreraController);
-router.get('/reposicion' ,getSolicitudesCambioCarreraController);
-router.post('/cancelaciones',authenticate, checkSolicitudPendCancelacion,createSolicitudCancelacionExcepcionalController);
+router.get('/cancelaciones',authenticate, authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCancelacionController);
+router.get('/carreras' ,authenticate,authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCambioCarreraController);
+router.post('/carreras',authenticate, authorizeRole([RoleEnum.STUDENT]), checkSolicitudPendCancelacion,createSolicitudCancelacionExcepcionalController);
 
 export default router;

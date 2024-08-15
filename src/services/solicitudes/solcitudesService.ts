@@ -1,9 +1,11 @@
 import { RoleEnum } from "@prisma/client";
 import { prisma } from "../../config/db";
+import { getRegionalCenterFacultyCareerTeacher } from "../../utils/teacher/getTeacherCenter";
 
-export const getSolicitudesCancelacion = async () => {
+export const getSolicitudesCancelacion = async (teacherId: number, filter: string) => {
+    const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL"},
+        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},  
         select: {
             date: true,
             id: true,
@@ -71,6 +73,8 @@ export const getSolicitudesCancelacion = async () => {
 
     return formattedResponse;
 };
+
+
 
 export const getSolicitudesCambioCentro = async () => {
     const solicitudes = await prisma.solicitud.findMany({
@@ -157,9 +161,10 @@ export const getSolicitudesCambioCentro = async () => {
     return formattedResponse;
 };
 
-export const getSolicitudesCambioCarrera = async () => {
+export const getSolicitudesCambioCarrera = async (teacherId: number, filter: string) => {
+    const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CAMBIO_DE_CARRERA"},
+        where: {tipoSolicitud: "CAMBIO_DE_CARRERA", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},
         select: {
             date: true,
             id: true,
@@ -273,13 +278,75 @@ export const getSolicitudesPagoReposicion = async () => {
     return formattedResponse;
 };
 
+//Funcion de apoyo
+export const getCoordinadorCarrera = async (studentId: number) => {
+    // Obtener el userId asociado al studentId
+    const student = await prisma.student.findFirst({
+        where: { id: studentId },
+        select: { userId: true }
+    });
+
+    if (!student) {
+        throw new Error('Student not found');
+    }
+
+    const userId = student.userId;
+
+    // Obtener el regionalCenter_Faculty_CareerId asociado al userId
+    const carreraEstudiante = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+        where: { userId: userId },
+        select: { regionalCenter_Faculty_CareerId: true }
+    });
+
+    if (!carreraEstudiante) {
+        throw new Error('No career found for this student');
+    }
+
+    const regionalCenterFacultyCareerId = carreraEstudiante.regionalCenter_Faculty_CareerId;
+
+    // Obtener los maestros asociados a la carrera
+    const maestrosCarrera = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findMany({
+        where: {
+            regionalCenterFacultyCareerDepartment: {
+                regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId
+            }
+        },
+        select: { teacherId: true }
+    });
+
+    const teacherIds = maestrosCarrera.map((m) => m.teacherId);
+
+    // Buscar al coordinador de carrera (roleId: 3) que tenga un teacherId en la lista obtenida
+    const coordinador = await prisma.user.findFirst({
+        where: {
+            id: { in: teacherIds },
+            roleId: 3
+        },
+        select: { id: true } // Puedes ajustar los campos según necesites
+    });
+
+    if (!coordinador) {
+        throw new Error('No hay un coordinador de carrera para este estudiante');
+    }
+
+    return coordinador.id;
+};
 
 export const createSolicitudCancelacionExcepcional = async (data: {
     justificacion: string;
-    teacherId: number;
     studentId: number;
     enrollments: { sectionId: number; studentId: number }[]; // Clave compuesta de IDs
   }) => {
+    const coordinadorId= await getCoordinadorCarrera(data.studentId);
+    const user = await prisma.student.findFirst({
+        where: {id: data.studentId},
+        select: {userId: true}
+    });
+    const regionalCenter_Faculty_Career = await prisma.regionalCenter_Faculty_Career_User.findFirst({
+        where: {userId: user.userId},
+        select: {regionalCenter_Faculty_CareerId: true}
+    });
+
     try {
       // Crear la solicitud
       const nuevaSolicitud = await prisma.solicitud.create({
@@ -287,8 +354,8 @@ export const createSolicitudCancelacionExcepcional = async (data: {
           justificacion: data.justificacion,
           tipoSolicitud: "CANCELACION_EXCEPCIONAL",
           estado : 'PENDIENTE',
-          teacherId: data.teacherId,
           studentId: data.studentId,
+          regionalCenterFacultyCareerId: regionalCenter_Faculty_Career.regionalCenter_Faculty_CareerId,
           enrollments: {
             connect: data.enrollments.map(enrollment => ({
               sectionId_studentId: { // Usar el formato correcto de la clave compuesta
@@ -303,6 +370,7 @@ export const createSolicitudCancelacionExcepcional = async (data: {
             select: {
               user: {
                 select: {
+                  id: true,
                   identificationCode: true,
                   institutionalEmail: true,
                   person: {
@@ -347,6 +415,7 @@ export const createSolicitudCancelacionExcepcional = async (data: {
           justificacion: nuevaSolicitud.justificacion,
           estado: nuevaSolicitud.estado,
           student: {
+            userId: nuevaSolicitud.student.user.id,
             name: `${nuevaSolicitud.student.user.person.firstName} ${nuevaSolicitud.student.user.person.middleName || ''} ${nuevaSolicitud.student.user.person.lastName} ${nuevaSolicitud.student.user.person.secondLastName || ''}`.trim(),
             identificationCode: nuevaSolicitud.student.user.identificationCode,
             institutionalEmail: nuevaSolicitud.student.user.institutionalEmail,
