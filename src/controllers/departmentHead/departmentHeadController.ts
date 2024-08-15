@@ -147,9 +147,11 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
         for (let year in academicHistory['years']) {
             // Recorre cada inscripción en el array 'enrollments' de ese año
             academicHistory['years'][year].enrollments.forEach(enrollment => {
-                
-                totalUV += enrollment["uv/ca"]; // Suma las UV
-                academicHistory['SumUVxNota'] += enrollment.Nota*enrollment["uv/ca"];
+                if(enrollment.Nota != 0){
+
+                    totalUV += enrollment["uv/ca"]; // Suma las UV
+                    academicHistory['SumUVxNota'] += enrollment.Nota*enrollment["uv/ca"];
+                }
             });
         }
 
@@ -157,7 +159,15 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
         
         academicHistory['academicIndex'] = Math.round(academicHistory['SumUVxNota'] / totalUV);
 
-
+        
+        await prisma.student.update({
+            where:{
+                id:student.student.id
+            },
+            data:{
+                globalAverage: academicHistory['academicIndex']
+            }
+        })
         
         
 
