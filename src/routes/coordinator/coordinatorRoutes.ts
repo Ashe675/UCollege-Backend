@@ -37,5 +37,29 @@ router.get('/student-history/:identificationCode',
     getAcademicHistory,
 );
 
+router.put('/solicitude/career-change/accept/:idSolicitud',
+    authenticate,
+    authorizeRole([RoleEnum.COORDINATOR]),
+    
+);
+
+router.put('/solicitude/career-change/decline/:idSolicitud',
+    authenticate,
+    authorizeRole([RoleEnum.COORDINATOR]),
+    
+);
+
+router.put('/solicitude/class-cancel/accept/:idSolicitud',
+    authenticate,
+    authorizeRole([RoleEnum.COORDINATOR]),
+    
+);
+
+router.put('/solicitude/class-cancel/decline/:idSolicitud',
+    authenticate,
+    authorizeRole([RoleEnum.COORDINATOR]),
+    
+);
+
 
 export default router;
