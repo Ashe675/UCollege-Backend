@@ -23,6 +23,7 @@ import userRoutes from "./routes/user/userRoutes";
 import authRoutes from './routes/auth/authRoutes';
 import adminRoutes from './routes/admin/adminRoutes';
 import statisticsRoutes from './routes/statistics/statisticsRoutes';
+import solicitudesRoutes from './routes/solicitudes/solcitudesRoutes'
 
 import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
@@ -60,6 +61,7 @@ app.use('/api/section', sectionRoutes);
 app.use('/api/department-head', departmentHeadRoutes);
 
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/solicitudes', solicitudesRoutes);
 
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
