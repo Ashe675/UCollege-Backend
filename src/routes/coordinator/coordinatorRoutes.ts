@@ -11,6 +11,7 @@ import { validateCodeIdentificationData } from '../../middleware/codeIdentificat
 import { isStudentCode } from '../../validators/departmentHead/isStudentCode';
 import { getAcademicHistory } from '../../controllers/departmentHead/departmentHeadController';
 import { accetSolicitudCarrer, accetSolicitudClass, declineSolicitud } from '../../controllers/coordinator/solicitudController';
+import { validatEnrollCurrent } from '../../middleware/validateEnrollCurrent';
 
 
 
@@ -41,14 +42,14 @@ router.get('/student-history/:identificationCode',
 router.put('/solicitude/career-change/accept/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    //validatEnrollCurrent,
     accetSolicitudCarrer
 );
 
 router.put('/solicitude/career-change/decline/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    
+    validatEnrollCurrent,
     declineSolicitud
 );
 

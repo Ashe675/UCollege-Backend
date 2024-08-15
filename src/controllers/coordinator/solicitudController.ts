@@ -96,7 +96,7 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         const regionalCenterFacultyCareerUser = await prisma.regionalCenter_Faculty_Career_User.findFirst({
             where: {
                 userId: solicitud.student.user.id,
-                regionalCenter_Faculty_CareerId: solicitud.regionalCenterFacultyCareerId,
+                finalDate: null,
             },
         });
 
