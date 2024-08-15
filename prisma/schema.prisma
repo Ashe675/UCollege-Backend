@@ -49,9 +49,9 @@ model Career {
   regionalCenter_Faculty_Careers RegionalCenter_Faculty_Career[]
   departament                    Departament?
   studyPlanes                    StudyPlan[]
+  Solicitudes                    Solicitud[]
 
   @@index([id], name: "pk_Career_idx")
-  Solicitudes Solicitud[]
 }
 
 // Modelo Inscription
@@ -178,9 +178,9 @@ model RegionalCenter {
   inscriptions             Inscription[]
   regionalCenter_Faculties RegionalCenter_Faculty[]
   buildings                Building[]
+  Solicitudes              Solicitud[]
 
   @@index([townId], name: "fk_RegionalCenter_Town1_idx")
-  Solicitudes Solicitud[]
 }
 
 model ProcessType {
@@ -282,8 +282,6 @@ enum TipoSolicitud {
   PAGO_REPOSICION
 }
 
-
-
 enum TipoArchivo {
   raw
 }
@@ -295,41 +293,40 @@ enum estadoSolicitud {
 }
 
 model Solicitud {
-  id              Int             @id @default(autoincrement())
-  date            DateTime        @default(now()) // Campo para la fecha de la solicitud
-  tipoSolicitud   TipoSolicitud
-  justificacion   String          @db.VarChar(500)
-  respuesta       String?         @db.VarChar(500)
-  estado          estadoSolicitud
-  teacherId       Int
-  studentId       Int
-  archivos        ArchivoSolicitud[]
-  enrollments     Enrollment[]
-  teacher         User            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  student         Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  careerId        Int?            // Campo opcional para relacionar con Career
-  regionalCenterId Int?           // Campo opcional para relacionar con RegionalCenter
-  career          Career?         @relation(fields: [careerId], references: [id])
-  regionalCenter  RegionalCenter? @relation(fields: [regionalCenterId], references: [id])
+  id               Int                @id @default(autoincrement())
+  date             DateTime           @default(now()) // Campo para la fecha de la solicitud
+  tipoSolicitud    TipoSolicitud
+  justificacion    String             @db.VarChar(500)
+  respuesta        String?            @db.VarChar(500)
+  estado           estadoSolicitud
+  teacherId        Int
+  studentId        Int
+  archivos         ArchivoSolicitud[]
+  enrollments      Enrollment[]
+  teacher          User               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student          Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  careerId         Int? // Campo opcional para relacionar con Career
+  regionalCenterId Int? // Campo opcional para relacionar con RegionalCenter
+  career           Career?            @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  regionalCenter   RegionalCenter?    @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
 
   @@index([teacherId])
   @@index([studentId])
-   @@index([careerId])
+  @@index([careerId])
   @@index([regionalCenterId])
 }
 
 model ArchivoSolicitud {
-  id            Int          @id @default(autoincrement())
-  url           String       @db.VarChar(255)
-  public_id     String       @db.VarChar(255)
-  name          String       @db.VarChar(255)
-  tipoArchivo   TipoArchivo
-  solicitudId   Int
-  solicitud     Solicitud    @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
-  
+  id          Int         @id @default(autoincrement())
+  url         String      @db.VarChar(255)
+  public_id   String      @db.VarChar(255)
+  name        String      @db.VarChar(255)
+  tipoArchivo TipoArchivo
+  solicitudId Int
+  solicitud   Solicitud   @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
   @@index([solicitudId])
 }
-
 
 model UserToken {
   token     String   @unique
@@ -417,7 +414,7 @@ model Resource {
   name         String       @db.VarChar(100) // Nombre del recurso
   publicId     String       @db.VarChar(255) // ID público para identificar el recurso externamente
   url          String       @db.VarChar(255)
-  frontSection Boolean?            
+  frontSection Boolean?
   type         ResourceType
   sectionId    Int
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
@@ -494,19 +491,21 @@ enum Observation {
 }
 
 model Enrollment {
-  section       Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  sectionId     Int
-  date          DateTime     @default(now()) @db.Date
-  grade         Float?
-  TeacherGrade  Float? // Campo opcional para la evaluación del docente
-  message       String?      @db.VarChar(45)
-  student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId     Int
-  waitingList   WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
-  waitingListId Int?
-  OBS           Observation? // Campo de observación con Enum y valor por defecto nulo
-  solicitudId    Int?         // Clave foránea opcional a Solicitud
-  solicitud      Solicitud?   @relation(fields: [solicitudId], references: [id], onDelete: SetNull) // Relación con Solicitud
+  section          Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sectionId        Int
+  date             DateTime     @default(now()) @db.Date
+  grade            Float?
+  TeacherGrade     Float? // Campo opcional para la evaluación del docente
+  message          String?      @db.VarChar(45)
+  student          Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId        Int
+  waitingList      WaitingList? @relation(fields: [waitingListId], references: [id], onDelete: Cascade)
+  gradeNofificated Boolean?     @default(false)
+  waitingListId    Int?
+  OBS              Observation? // Campo de observación con Enum y valor por defecto nulo
+  solicitudId      Int? // Clave foránea opcional a Solicitud
+  solicitud        Solicitud?   @relation(fields: [solicitudId], references: [id], onDelete: SetNull) // Relación con Solicitud
+
   @@id([sectionId, studentId])
 }
 
