@@ -36,7 +36,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         if (typeof decoded === 'object' && decoded.id) {
             
-            const user = await prisma.user.findUnique({ where: { id: decoded.id, verified : true }, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
+            const user = await prisma.user.findUnique({ where: { id: decoded.id, verified : true, active : true }, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
             if (user) {
                 
                 const avatar = user.images.length ? user.images[0].url : null
@@ -76,7 +76,7 @@ export const authenticateVerifiedLess = async (req: Request, res: Response, next
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
         if (typeof decoded === 'object' && decoded.id) {
-            const user = await prisma.user.findUnique({ where: { id: decoded.id}, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
+            const user = await prisma.user.findUnique({ where: { id: decoded.id, active : true}, select: { id: true, institutionalEmail: true, identificationCode: true, role: { select : { name : true }  }, verified: true, person: { select : { firstName : true, lastName : true } }, images : { select : { url : true }, where : { avatar : true } } } })
             if (user) {
                 if(user.verified){
                     return res.status(400).json({ error: 'No permitido' })

@@ -14,6 +14,7 @@ export const getMatriculados = async (sectionId: number) => {
     select: {
       grade : true,
       OBS : true,
+      gradeNofificated : true,
       student: {
         select: {
           user: {
@@ -52,6 +53,7 @@ export const getMatriculados = async (sectionId: number) => {
       institutionalEmail: enrollment.student.user.institutionalEmail,
       grade : enrollment.grade,
       OBS : enrollment.OBS,
+      gradeNofificated : enrollment.gradeNofificated,
       avatar: avatarImage, // Incluye el campo avatar
       person: {
         dni: enrollment.student.user.person.dni,
@@ -72,6 +74,7 @@ export const getEnListadeEspera = async (sectionId: number) => {
     select: {
       grade : true,
       OBS : true,
+      gradeNofificated : true,
       student: {
         select: {
           user: {
@@ -109,6 +112,7 @@ export const getEnListadeEspera = async (sectionId: number) => {
       identificationCode: enrollment.student.user.identificationCode,
       institutionalEmail: enrollment.student.user.institutionalEmail,
       avatar: avatarImage, // Incluye el campo avatar
+      gradeNofificated : enrollment.gradeNofificated,
       person: {
         dni: enrollment.student.user.person.dni,
         firstName: enrollment.student.user.person.firstName,

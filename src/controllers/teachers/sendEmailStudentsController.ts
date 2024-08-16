@@ -54,6 +54,17 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             return res.status(402).json({error: "No se encontró la sección."})
         }
 
+
+        const allEnrollmentsNotificated = 
+            section.enrollments.every(enroll =>
+                enroll.gradeNofificated
+            );
+        
+
+        if (allEnrollmentsNotificated) {
+            return res.status(400).json({ error: "Ya se enviaron todas las notas por correo." });
+        }
+
         // Verificar si todos los enrollments tienen grade y OBS
         const allEnrollmentsComplete = 
             section.enrollments.every(enroll =>
@@ -79,6 +90,14 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             await sendEmailGrades(firstName, lastName, email, clase);
         }
         
+        await prisma.enrollment.updateMany({
+            where : {
+                sectionId : section.id
+            },
+            data : {
+                gradeNofificated : true
+            }
+        })
 
         return res.status(200).send( "Correos electrónicos enviados con éxito." );
 

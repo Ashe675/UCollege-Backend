@@ -42,7 +42,7 @@ router.get('/student-history/:identificationCode',
 router.put('/solicitude/career-change/accept/:idSolicitud',
     authenticate,
     authorizeRole([RoleEnum.COORDINATOR]),
-    //validatEnrollCurrent,
+    validatEnrollCurrent,
     accetSolicitudCarrer
 );
 

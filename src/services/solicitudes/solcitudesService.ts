@@ -2,10 +2,10 @@ import { RoleEnum } from "@prisma/client";
 import { prisma } from "../../config/db";
 import { getRegionalCenterFacultyCareerTeacher } from "../../utils/teacher/getTeacherCenter";
 
-export const getSolicitudesCancelacion = async (teacherId: number, filter: string) => {
+export const getSolicitudesCancelacion = async (teacherId: number) => {
     const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},  
+        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId},  
         select: {
             date: true,
             id: true,
@@ -165,10 +165,10 @@ export const getSolicitudesCambioCentro = async () => {
     return formattedResponse;
 };
 
-export const getSolicitudesCambioCarrera = async (teacherId: number, filter: string) => {
+export const getSolicitudesCambioCarrera = async (teacherId: number) => {
     const regionalCenter_Faculty_CareerId = await getRegionalCenterFacultyCareerTeacher(teacherId);
     const solicitudes = await prisma.solicitud.findMany({
-        where: {tipoSolicitud: "CAMBIO_DE_CARRERA", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId, ...(filter === 'PEND' && { estado: 'PENDIENTE' })},
+        where: {tipoSolicitud: "CAMBIO_DE_CARRERA", regionalCenterFacultyCareerId: regionalCenter_Faculty_CareerId},
         select: {
             date: true,
             id: true,

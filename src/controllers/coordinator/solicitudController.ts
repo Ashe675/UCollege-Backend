@@ -84,7 +84,7 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         }
 
         if (teacherDepartmentCarrer.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.career.id === regionalCenterCarrerStudent.regionalCenter_Faculty_Career.careerId) {
-            return res.status(400).json({ error: "El docente no es de la misma carrera que el estudiante" });
+            return res.status(400).json({ error: "El docente es de la misma carrera que el estudiante" });
         }
 
         const newCarrer = await prisma.career.findUnique({ where: { id: solicitud.career?.id } });
@@ -107,9 +107,14 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         const today = new Date();
 
         // Actualizar la fecha de finalización
-        await prisma.regionalCenter_Faculty_Career_User.update({
+        // await prisma.regionalCenter_Faculty_Career_User.update({
+        //     where: { id: regionalCenterFacultyCareerUser.id },
+        //     data: { finalDate: today },
+        // });
+
+        // ELIMINAR ANTIGUA CARRERA
+        await prisma.regionalCenter_Faculty_Career_User.delete({
             where: { id: regionalCenterFacultyCareerUser.id },
-            data: { finalDate: today },
         });
 
         // Crear un nuevo registro
@@ -210,6 +215,7 @@ export const accetSolicitudClass = async (req: Request, res: Response) => {
                 },
                 data: {
                     grade: 0,
+                    OBS : 'NSP'
                 },
             })
         );

@@ -65,42 +65,39 @@ export const submitGradesController = async (req: Request, res: Response) => {
 
         // Calcular el nuevo índice global del estudiante
         const studentClasses = await prisma.enrollment.findMany({
-            where: { studentId: studentId },
+            where: { studentId: studentId, grade: { not: null } },
             include: {
                 section: { include: { class: true } }
             }
         });
 
         // Si el estudiante no tiene más clases, no calcular el índice global
-        if (studentClasses.length === 0) {
-            return res.status(400).json({ error: 'El estudiante no tiene clases registradas.' });
-        }
+        if (studentClasses.length > 0) {
+            let totalUV = 0;
+            let total = 0;
 
-        let totalUV = 0;
-        let total = 0;
+            studentClasses.forEach(clase => {
+                if (clase.grade !== 0 && clase.grade !== null) { // Solo considerar las clases donde tiene una calificación
+                    totalUV += clase.section.class.UV;
+                    total += clase.grade * clase.section.class.UV;
+                }
+            });
 
-        studentClasses.forEach(clase => {
-            if (clase.grade !== 0) { // Solo considerar las clases donde tiene una calificación
-                totalUV += clase.section.class.UV;
-                total += clase.grade * clase.section.class.UV;
+            if (totalUV > 0) {
+                const globalGrade = Math.round(total / totalUV);
+
+                // Actualizar el índice global del estudiante
+                await prisma.student.update({
+                    where: {
+                        id: studentId
+                    },
+                    data: {
+                        globalAverage: globalGrade
+                    }
+                });
             }
-        });
 
-        if (totalUV === 0) {
-            return res.status(400).json({ error: 'No se pueden calcular promedios, no hay UV registradas.' });
         }
-
-        const globalGrade = Math.round(total / totalUV);
-
-        // Actualizar el índice global del estudiante
-        await prisma.student.update({
-            where: {
-                id: studentId
-            },
-            data: {
-                globalAverage: globalGrade
-            }
-        });
 
         return res.status(200).send('Calificación actualizada exitosamente.');
     } catch (error) {

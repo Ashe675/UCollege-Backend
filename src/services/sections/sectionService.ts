@@ -931,6 +931,7 @@ export const getSectionByUsertId = async (req: Request) => {
   })
 
   const allNotesUpload = matriculados.every(mat => mat.grade !== null)
+  const allNotesNotificated = matriculados.every(mat => mat.gradeNofificated)
 
   return {
     ...section,
@@ -938,6 +939,7 @@ export const getSectionByUsertId = async (req: Request) => {
     isSubmitGradeActive: isSubmitGradeActive ? true : false,
     waitingListStudents,
     teacher: section.teacher,
+    allNotesNotificated : allNotesNotificated,
     allNotesUpload,
     quotasAvailability: section.capacity - matriculados.length,
     factulty: section.class.departament.regionalCenterFacultyCareer[0].RegionalCenterFacultyCareer.regionalCenter_Faculty.faculty

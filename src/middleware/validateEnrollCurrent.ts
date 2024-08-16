@@ -7,7 +7,7 @@ export const validatEnrollCurrent = async (req: Request, res: Response, next: Ne
         const solicitudId = parseInt(req.params.idSolicitud);
         
         if (isNaN(solicitudId)) {
-            return res.status(400).json({ message: 'ID de sección inválido' });
+            return res.status(400).json({ error: 'ID de sección inválido' });
         }
 
         // Encontrar la solicitud
@@ -17,7 +17,7 @@ export const validatEnrollCurrent = async (req: Request, res: Response, next: Ne
         });
 
         if (!solicitud) {
-            return res.status(404).json({ message: 'Solicitud no encontrada' });
+            return res.status(404).json({ error: 'Solicitud no encontrada' });
         }
 
         // Buscar si el estudiante tiene clases matriculadas en el periodo académico actual
@@ -36,7 +36,7 @@ export const validatEnrollCurrent = async (req: Request, res: Response, next: Ne
 
         // Si el estudiante ya tiene clases matriculadas, enviar mensaje
         if (enrollStudent.length > 0) {
-            return res.status(400).json({ message: 'El estudiante ya tiene clases matriculadas en este periodo' });
+            return res.status(400).json({ error: 'El estudiante tiene clases matriculadas en este periodo, se recomienda realizar el cambio al finalizar el periodo actual.' });
         }
 
         // Si no tiene clases matriculadas, continuar con la siguiente función de middleware
