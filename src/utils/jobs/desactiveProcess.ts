@@ -20,6 +20,23 @@ export const scheduleProcessVerification = () => {// Definir el trabajo que se e
       // Crear una lista de promesas para actualizar los procesos
       const updatePromises = processes.map(async (element) => {
         if (!(now >= element.startDate && now <= element.finalDate)) {
+          // si el proceso es de matricula vamos a eliminar los enrollments que estan en lista de espera
+          if(element.processTypeId === 3){
+            await prisma.enrollment.deleteMany({
+              where : {
+                waitingListId : {
+                  not : null
+                },
+                section : {
+                  academicPeriod : {
+                    process : {
+                      active : true
+                    }
+                  }
+                }
+              }
+            })
+          }
           return prisma.process.update({
             where: { id: element.id },
             data: { active: false }
@@ -29,6 +46,8 @@ export const scheduleProcessVerification = () => {// Definir el trabajo que se e
 
       // Ejecutar todas las actualizaciones en paralelo
       await Promise.all(updatePromises);
+
+      
 
       const now2 = DateTime.now().toUTC();
 
