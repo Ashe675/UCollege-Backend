@@ -57,6 +57,7 @@ import {
   checkClassroomAvailabilityUpdateNext,
   checkTeacherScheduleConflictUpdateNext,
   validateCapacityChange,
+  checkIsAccessToSeccion,
 
  } from "../../middleware/section/sectionMiddleware";
 
@@ -123,6 +124,7 @@ router.get('/teacher/',
 router.get('/space/:id', 
   authenticate,
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER, RoleEnum.STUDENT]),
+  checkIsAccessToSeccion,
   getSectionByUserIdController);
 
 //OBTENER SECCIONES POR STUDENT
@@ -227,7 +229,7 @@ router.put('/deactivate/:id',
   deleteSectionController);
 
 //OBTENER NOTAS DE UNA SECCION
-router.get('/grades/:sectionId', 
+router.get('/grades/:id', 
 authenticate, 
 authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
 getGradesBySectionIdController); 

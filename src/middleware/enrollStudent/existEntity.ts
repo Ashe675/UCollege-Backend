@@ -120,7 +120,8 @@ export const notAlreadyEnrolled = async (req: Request, res: Response, next: Next
         sectionId_studentId: {
           studentId,
           sectionId
-        }
+        },
+        active : true
       }
     });
 

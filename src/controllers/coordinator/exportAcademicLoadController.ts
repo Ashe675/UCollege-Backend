@@ -47,12 +47,12 @@ export const exportExcel = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'No se encontró la carrera asociada al docente' });
         }
 
-        const carrerIdTeacher = careerData.RegionalCenterFacultyCareer.careerId;
+        const carrerRegionalIdTeacher = careerData.RegionalCenterFacultyCareer.id;
 
         // Buscar las secciones asociadas a la carrera del docente
         const sections = await prisma.section.findMany({
             where: {
-                regionalCenter_Faculty_Career: { careerId: carrerIdTeacher },
+                regionalCenter_Faculty_Career: { id: carrerRegionalIdTeacher },
                 academicPeriod: {
                     process: { active: true, processTypeId: 5 }
                 }
@@ -66,7 +66,8 @@ export const exportExcel = async (req: Request, res: Response) => {
                 },
                 enrollments: {
                     where: {
-                        waitingList: null
+                        waitingList: null,
+                        active : true
                     }
                 },
                 classroom: {
@@ -169,11 +170,11 @@ export const exportPdf = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'No se encontró la carrera asociada al docente' });
         }
 
-        const carrerIdTeacher = careerData.RegionalCenterFacultyCareer.careerId;
+        const centerCarrerIdTeacher = careerData.RegionalCenterFacultyCareer.id;
 
         const sections = await prisma.section.findMany({
             where: {
-                regionalCenter_Faculty_Career: { careerId: carrerIdTeacher },
+                regionalCenter_Faculty_Career: { id: centerCarrerIdTeacher },
                 academicPeriod: {
                     process: { active: true, processTypeId: 5 }
                 }
@@ -187,7 +188,8 @@ export const exportPdf = async (req: Request, res: Response) => {
                 },
                 enrollments: {
                     where: {
-                        waitingList: null
+                        waitingList: null,
+                        active : true
                     }
                 },
                 classroom: {

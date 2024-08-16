@@ -1,46 +1,55 @@
 import { prisma } from '../../config/db';
 import { Request } from 'express';
-export const getTotalMatriculadosDepartment = async (req:Request)=>{
+export const getTotalMatriculadosDepartment = async (req: Request) => {
     const userId = req.user.id;
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     })
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const matriculados = await prisma.enrollment.count({
-        where:{section:{regionalCenter_Faculty_Career:{id: regionalCenterFacultyCareerId}}}
+        where: {
+            waitingListId: null,
+            active: true,
+            section: { regionalCenter_Faculty_Career: { id: regionalCenterFacultyCareerId } }
+        }
     });
     return matriculados;
 };
 
-export const getTotalMatriculadosDepartmentActual = async (req:Request)=>{
+export const getTotalMatriculadosDepartmentActual = async (req: Request) => {
     const userId = req.user.id;
     const periodo = await getPeriodoUltimo();
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     })
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const matriculados = await prisma.enrollment.count({
-        where:{section:{regionalCenter_Faculty_Career:{id: regionalCenterFacultyCareerId},academicPeriodId: periodo}}
+        where: { 
+            waitingListId: null,
+            active: true,
+            section: { regionalCenter_Faculty_Career: { id: regionalCenterFacultyCareerId }, academicPeriodId: periodo } }
     });
     return matriculados;
 };
-export const getTotalAprobadosDepartment = async (req:Request)=>{
+export const getTotalAprobadosDepartment = async (req: Request) => {
     const userId = req.user.id;
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const cantidadAprobados = await prisma.enrollment.count({
         where: {
-          section:{regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId},
-          grade: {
-            gte: 65,
-          },
+            waitingListId: null,
+            active: true,
+            section: { regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId },
+            grade: {
+                gte: 65,
+            },
         },
-      });
+    });
     return cantidadAprobados;
 };
 export const getPeriodoUltimo = async () => {
@@ -52,7 +61,7 @@ export const getPeriodoUltimo = async () => {
                     lt: new Date(), // Asegúrate de que el período haya finalizado antes o en la fecha actual
                 },
                 processTypeId: 5,
-            },  
+            },
         },
         orderBy: {
             process: {
@@ -70,66 +79,70 @@ export const getPeriodoUltimo = async () => {
     return periodoId;
 };
 
-export const getTotalAprobadosDepartmentActual = async (req:Request)=>{
+export const getTotalAprobadosDepartmentActual = async (req: Request) => {
     const userId = req.user.id;
     const periodo = await getPeriodoUltimo();
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const cantidadAprobados = await prisma.enrollment.count({
         where: {
-          section:{regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId, academicPeriodId: periodo},
-          grade: {
-            gte: 65,
-          },
-          
+            waitingListId: null,
+            active: true,
+            section: { regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId, academicPeriodId: periodo },
+            grade: {
+                gte: 65,
+            },
+
         },
-      });
+    });
     return cantidadAprobados;
 }
 
-export const getTotalReprobadosDepartmentActual = async (req:Request)=>{
+export const getTotalReprobadosDepartmentActual = async (req: Request) => {
     const userId = req.user.id;
     const periodo = await getPeriodoUltimo();
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const cantidadReprobados = await prisma.enrollment.count({
         where: {
-          section:{regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId, academicPeriodId: periodo},
-          grade: {
-            lt: 65,
-          },
-          
+            waitingListId: null,
+            active: true,
+            section: { regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId, academicPeriodId: periodo },
+            grade: {
+                lt: 65,
+            },
+
         },
-      });
+    });
     return cantidadReprobados;
 };
-export const getTotalReprobadosDepartment = async (req:Request)=>{
+export const getTotalReprobadosDepartment = async (req: Request) => {
     const userId = req.user.id;
-    const user=await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
-        where:{teacherId: userId},
-        select: {regionalCenterFacultyCareerDepartment:{select:{regionalCenter_Faculty_CareerId:true}}}
+    const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
+        where: { teacherId: userId },
+        select: { regionalCenterFacultyCareerDepartment: { select: { regionalCenter_Faculty_CareerId: true } } }
     });
     const regionalCenterFacultyCareerId = user.regionalCenterFacultyCareerDepartment.regionalCenter_Faculty_CareerId;
     const cantidadReprobados = await prisma.enrollment.count({
         where: {
-          section:{regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId},
-          grade: {
-            lt: 65,
-          },
+            section: { regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId },
+            grade: {
+                lt: 65,
+            },
         },
-      });
+    });
     return cantidadReprobados;
 };
 export const getClaseConMasReprobados = async (req: Request) => {
     const userId = req.user.id;
     const periodoId = await getPeriodoUltimo();
-    
+
     // Obtener el ID del departamento
     const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
         where: { teacherId: userId },
@@ -160,6 +173,8 @@ export const getClaseConMasReprobados = async (req: Request) => {
         secciones.map(async (seccion) => {
             const cantidadReprobados = await prisma.enrollment.count({
                 where: {
+                    waitingListId: null,
+                    active: true,
                     sectionId: seccion.id,
                     grade: {
                         lt: 65,
@@ -171,7 +186,7 @@ export const getClaseConMasReprobados = async (req: Request) => {
     );
 
     // Encontrar la sección con la mayor cantidad de estudiantes reprobados
-    const seccionConMasReprobados = reprobadosPorSeccion.reduce((prev, current) => 
+    const seccionConMasReprobados = reprobadosPorSeccion.reduce((prev, current) =>
         (prev.cantidadReprobados > current.cantidadReprobados) ? prev : current
     );
 
@@ -180,7 +195,7 @@ export const getClaseConMasReprobados = async (req: Request) => {
 export const getClaseConMasAprobados = async (req: Request) => {
     const userId = req.user.id;
     const periodoId = await getPeriodoUltimo();
-    
+
     // Obtener el ID del departamento
     const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
         where: { teacherId: userId },
@@ -199,7 +214,7 @@ export const getClaseConMasAprobados = async (req: Request) => {
             regionalCenter_Faculty_CareerId: regionalCenterFacultyCareerId,
             academicPeriodId: periodoId,
         },
-        select: { class:{select:{name : true}},code : true, id: true},
+        select: { class: { select: { name: true } }, code: true, id: true },
     });
 
     if (secciones.length === 0) {
@@ -210,19 +225,21 @@ export const getClaseConMasAprobados = async (req: Request) => {
     const aprobadosPorSeccion = await Promise.all(
         secciones.map(async (seccion) => {
             const cantidadAprobados = await prisma.enrollment.count({
-                where: {
+                where: { 
+                    waitingListId: null,
+                    active: true,
                     sectionId: seccion.id,
                     grade: {
                         gte: 65,
                     },
                 },
             });
-            return { sectionId: seccion.id,sectionCode: seccion.code, sectionClass: seccion.class.name, cantidadAprobados };
+            return { sectionId: seccion.id, sectionCode: seccion.code, sectionClass: seccion.class.name, cantidadAprobados };
         })
     );
 
     // Encontrar la sección con la mayor cantidad de estudiantes aprobados
-    const seccionConMasAprobados = aprobadosPorSeccion.reduce((prev, current) => 
+    const seccionConMasAprobados = aprobadosPorSeccion.reduce((prev, current) =>
         (prev.cantidadAprobados > current.cantidadAprobados) ? prev : current
     );
 

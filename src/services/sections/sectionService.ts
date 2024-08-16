@@ -252,7 +252,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
         top: 0,
       }
     });
-    console.log("Hola");
+    
     return {
       message: 'Sección creada correctamente',
       section: newSection
@@ -348,7 +348,8 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     const matriculados = await prisma.enrollment.count({
       where: {
         sectionId: section.id,
-        waitingListId: null
+        waitingListId: null,
+        active : true
       }
     });
     const availableSlots = newCapacity - matriculados;
@@ -760,7 +761,8 @@ export const getSectionsByStudentId = async (req: Request) => {
       enrollments: {
         some: {
           studentId: student.id,
-          waitingListId: null
+          waitingListId: null,
+          active : true
         }
       }, academicPeriodId: idPeriodo, active: true
     },
@@ -850,6 +852,7 @@ export const getSectionByUsertId = async (req: Request) => {
       }, {
         enrollments: {
           some: {
+            active : true,
             student: {
               userId: userid
             }
@@ -931,7 +934,8 @@ export const getSectionByUsertId = async (req: Request) => {
   })
 
   const allNotesUpload = matriculados.every(mat => mat.grade !== null)
-  const allNotesNotificated = matriculados.every(mat => mat.gradeNofificated)
+  const allNotesNotificated = matriculados.every(mat => mat.gradeNofificated === true)
+ 
 
   return {
     ...section,
@@ -1224,6 +1228,7 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
     where: {
       sectionId: sectionId,
       waitingList : null,
+      active : true,
       section: { academicPeriodId: academicPeriodId }
     },
     select: {
@@ -1369,6 +1374,7 @@ export const getEnrollmentsActual = async (req: Request) => {
   const enrollments = await prisma.enrollment.findMany({
     where: {
       waitingListId: null,
+      active : true,
       section: {
         academicPeriodId: academicPeriodId,
         regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
@@ -1436,6 +1442,8 @@ export const getEnrollmentsActual = async (req: Request) => {
   // Contar el total de inscripciones para la paginación
   const totalEnrollments = await prisma.enrollment.count({
     where: {
+      active : true,
+      waitingListId : null,
       section: {
         academicPeriodId: academicPeriodId,
         regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
@@ -1461,7 +1469,7 @@ export const downloadSectionEnrollmentsExcel = async (sectionId: number, res: Re
     include: { class: true }
   });
   const matriculados = await prisma.enrollment.findMany({
-    where: { sectionId, waitingListId: null },
+    where: { sectionId, waitingListId: null, active : true },
     include: {
       student: {
         select: {

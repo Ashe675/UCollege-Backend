@@ -34,7 +34,8 @@ export const sendEmailStudentController=async(req:Request, res:Response)=>{
             include: {
                 enrollments: {
                     where :{
-                      waitingListId : null  
+                      waitingListId : null,
+                      active: true,
                     },
                     include: {
                         student: {

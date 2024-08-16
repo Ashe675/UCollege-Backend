@@ -24,6 +24,7 @@ export const validatEnrollCurrent = async (req: Request, res: Response, next: Ne
         const enrollStudent = await prisma.enrollment.findMany({
             where: {
                 studentId: solicitud.studentId,
+                active: true,
                 section: {
                     academicPeriod: {
                         process: {

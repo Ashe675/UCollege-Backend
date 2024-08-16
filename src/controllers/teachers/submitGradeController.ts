@@ -65,7 +65,10 @@ export const submitGradesController = async (req: Request, res: Response) => {
 
         // Calcular el nuevo índice global del estudiante
         const studentClasses = await prisma.enrollment.findMany({
-            where: { studentId: studentId, grade: { not: null } },
+            where: {
+                studentId: studentId, grade: { not: null }, waitingListId: null,
+                active: true,
+            },
             include: {
                 section: { include: { class: true } }
             }

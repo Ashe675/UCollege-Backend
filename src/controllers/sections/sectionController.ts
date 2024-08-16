@@ -259,7 +259,7 @@ export const getWaitingListController = async (req: Request, res: Response) => {
 export const getGradesBySectionIdController = async (req: Request, res: Response) => {
   try {
     // Obtén el ID de la sección del parámetro de la solicitud
-    const sectionId = parseInt(req.params.sectionId, 10);
+    const sectionId = parseInt(req.params.id, 10);
     
     if (isNaN(sectionId)) {
       return res.status(400).json({ message: 'ID de sección inválido' });

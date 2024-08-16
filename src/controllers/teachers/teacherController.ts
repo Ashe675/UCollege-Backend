@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { updateSection } from '../../services/teacher/teacherService';
 
-export const updateSectionController = async (req: Request, res: Response) => {
+export const updateSectionInfoController = async (req: Request, res: Response) => {
     const sectionId = parseInt(req.params.id, 10);
     const { title, description } = req.body;
 

@@ -306,27 +306,28 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
       let enrollData = await prisma.enrollment.findFirst({
         where: {
           studentId: studentId,
-          sectionId: section.id,
+          sectionId: section.id
         }, include: {
           section: true,
         }
       })
 
-      if (enrollData && !enrollData.waitingListId) {
+      if (enrollData && !enrollData.waitingListId && enrollData.active) {
         inEnroll = true;
       }
 
-      if (enrollData && enrollData.waitingListId) {
+      if (enrollData && enrollData.waitingListId && enrollData.active) {
         inWaitingList = true;
       }
 
-      if (enrollData && enrollData.section.classId == section.classId) {
+      if (enrollData && enrollData.section.classId == section.classId && enrollData.active) {
         allReadyClassEnroll = true
       }
 
       const matriculados = await prisma.enrollment.count({
         where: {
           sectionId: section.id,
+          active : true,
           waitingListId: null
         }
       });
@@ -334,6 +335,7 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
       const listadeespera = await prisma.enrollment.count({
         where: {
           sectionId: section.id,
+          active : true,
           waitingListId: section.waitingList.id
         }
       });
@@ -445,7 +447,9 @@ export const getEnrolledClassesForStudent = async (studentId: number) => {
             regionalCenterId: centroEstudiante
           }
         }
-      }, waitingListId: null,
+      }, 
+      waitingListId: null,
+      active : true,
     },
     include: {
       section: {

@@ -83,7 +83,9 @@ export const getAcademicHistory = async (req: Request, res: Response) => {
         // Realiza la consulta para obtener las inscripciones
         const enrollments = await prisma.enrollment.findMany({
             where: {
-            studentId: student.student.id
+            studentId: student.student.id,
+            waitingListId : null,
+            active :  true
             },
             include:{
                 section:{

@@ -7,7 +7,7 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
     let idSolicitud = parseInt(req.params.idSolicitud);
 
     // Validar si el idSolicitud es un número válido
-    
+
     try {
         if (isNaN(idSolicitud)) {
             return res.status(400).json({ error: "ID de solicitud inválido" });
@@ -52,11 +52,12 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         }
 
         const teacher = await prisma.user.findUnique({
-            where: { id: userId,
-                role:{
-                    name:"COORDINATOR"
+            where: {
+                id: userId,
+                role: {
+                    name: "COORDINATOR"
                 }
-             },
+            },
             include: { teacherDepartments: true }
         });
 
@@ -96,7 +97,6 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         const regionalCenterFacultyCareerUser = await prisma.regionalCenter_Faculty_Career_User.findFirst({
             where: {
                 userId: solicitud.student.user.id,
-                finalDate: null,
             },
         });
 
@@ -120,7 +120,7 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         // Crear un nuevo registro
         const newRegionalCFCU = await prisma.regionalCenter_Faculty_Career_User.create({
             data: {
-                userId: userId,
+                userId: solicitud.student.userId,
                 startDate: today,
                 regionalCenter_Faculty_CareerId: solicitud.regionalCenterFacultyCareerId,
             },
@@ -129,7 +129,7 @@ export const accetSolicitudCarrer = async (req: Request, res: Response) => {
         // Actualizar el estado de la solicitud
         await prisma.solicitud.update({
             where: { id: solicitud.id },
-            data: { estado: "APROBADA" },
+            data: { estado: "APROBADA", teacherId: userId },
         });
 
         // Verifica que no se hayan enviado encabezados antes de enviar la respuesta
@@ -155,7 +155,7 @@ export const declineSolicitud = async (req: Request, res: Response) => {
     try {
         // Verificar si la solicitud existe
         const solicitudExistente = await prisma.solicitud.findUnique({
-            where: { id: idSolicitud },
+            where: { id: idSolicitud, estado: 'PENDIENTE' },
         });
 
         if (!solicitudExistente) {
@@ -167,6 +167,7 @@ export const declineSolicitud = async (req: Request, res: Response) => {
             where: { id: idSolicitud },
             data: {
                 estado: "RECHAZADA",
+                teacherId: userId
             },
         });
 
@@ -187,7 +188,7 @@ export const accetSolicitudClass = async (req: Request, res: Response) => {
     try {
         // Verificar si la solicitud existe
         const solicitudExistente = await prisma.solicitud.findUnique({
-            where: { id: idSolicitud },
+            where: { id: idSolicitud, estado: 'PENDIENTE' },
         });
 
         if (!solicitudExistente) {
@@ -197,7 +198,7 @@ export const accetSolicitudClass = async (req: Request, res: Response) => {
         // Buscar solicitud con los datos necesarios
         const solicitud = await prisma.solicitud.findUnique({
             where: { id: idSolicitud },
-            include:{
+            include: {
                 student: true,
                 career: true,
                 enrollments: true,
@@ -215,7 +216,8 @@ export const accetSolicitudClass = async (req: Request, res: Response) => {
                 },
                 data: {
                     grade: 0,
-                    OBS : 'NSP'
+                    OBS: 'NSP',
+                    active: false
                 },
             })
         );
@@ -227,7 +229,8 @@ export const accetSolicitudClass = async (req: Request, res: Response) => {
         await prisma.solicitud.update({
             where: { id: idSolicitud },
             data: {
-                estado: "APROBADA"
+                estado: "APROBADA",
+                teacherId: userId
             }
         });
 

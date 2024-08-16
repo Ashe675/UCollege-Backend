@@ -10,7 +10,7 @@ export const getRegionalCenterSection = async (id: number) => {
 
 export const getMatriculados = async (sectionId: number) => {
   const enrollments = await prisma.enrollment.findMany({
-    where: { sectionId: sectionId, waitingListId: null },
+    where: { sectionId: sectionId, waitingListId: null, active : true },
     select: {
       grade : true,
       OBS : true,
@@ -70,7 +70,7 @@ export const getMatriculados = async (sectionId: number) => {
 
 export const getEnListadeEspera = async (sectionId: number) => {
   const enrollments = await prisma.enrollment.findMany({
-    where: { sectionId: sectionId, waitingListId: { not: null } },
+    where: { sectionId: sectionId, waitingListId: { not: null }, active : true },
     select: {
       grade : true,
       OBS : true,
