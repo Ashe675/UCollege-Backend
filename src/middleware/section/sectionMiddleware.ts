@@ -20,6 +20,49 @@ export const checkClassExistsAndActive = async (req: Request, res: Response, nex
   }
 };
 
+
+export const checkIsAccessToSeccion = async (req: Request, res: Response, next: NextFunction) => {
+  const { id: userId } = req.user;
+  const sectionId = req.params.id;
+
+
+  if (isNaN(+sectionId)) {
+    return res.status(401).json({ error: 'Sección inválida' });
+  }
+
+  try {
+    const section = await prisma.section.findUnique({
+      where: {
+        id: Number(sectionId), active: true,
+        OR: [
+          {
+            enrollments: {
+              some: {
+                active : true,
+                waitingListId : null,
+                student: {
+                  userId: userId
+                }
+              }
+            }
+          },
+          {
+            teacherId: userId
+          }
+        ]
+      },
+    });
+
+    if (!section) {
+      return res.status(400).json({ error: 'No tiene acceso a esta sección' });
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const checkCorrectHour = async (req: Request, res: Response, next: NextFunction) => {
 
 };
@@ -737,7 +780,8 @@ export const validateCapacityChange = async (req: Request, res: Response, next: 
     const matriculados = await prisma.enrollment.count({
       where: {
         sectionId: section.id,
-        waitingListId: null
+        waitingListId: null,
+        active: true
       }
     })
 

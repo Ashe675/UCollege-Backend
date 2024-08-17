@@ -1,9 +1,9 @@
-import { Request,Response,NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../config/db";
 
-export const checkEnrollStudent = async (req: Request, res: Response, next: NextFunction)=>{
-    const {id:idUser} = req.user;
-    const {identificationCode, sectionId, grade, obs} = req.body;
+export const checkEnrollStudent = async (req: Request, res: Response, next: NextFunction) => {
+    const { id: idUser } = req.user;
+    const { identificationCode, sectionId, grade, obs } = req.body;
 
     try {
         //Obtener seccion
@@ -11,32 +11,39 @@ export const checkEnrollStudent = async (req: Request, res: Response, next: Next
             where: {
                 id: sectionId,
                 active: true,
-            }, include:{
-                enrollments:true
+            }, include: {
+                enrollments: true
             }
         })
 
-        if(!section){
+        if (!section) {
             return res.status(404).json({ error: 'Seccion no activa o no existe esta seccion con el docente actual o no existe' });
         }
 
         //obtener estudiante
         const student = await prisma.user.findFirst({
-            where:{
+            where: {
                 identificationCode: identificationCode,
-                role:{name: 'STUDENT'}
+                role: { name: 'STUDENT' }
             },
-            include:{
-                student:{
-                    include:{enrollments:true}
+            include: {
+                student: {
+                    include: {
+                        enrollments: {
+                            where: {
+                                waitingListId: null,
+                                active: true,
+                            }
+                        }
+                    }
                 }
             }
         });
 
-        if(!student){
+        if (!student) {
             return res.status(400).json({ error: 'El codigo de identificacion no es de un estudiante o el estudinte no existe' });
         }
-        
+
         // Verificar si el estudiante está matriculado en la sección
         const isEnrolled = student.student.enrollments.some(enrollment => enrollment.sectionId === sectionId);
 

@@ -497,6 +497,7 @@ model Enrollment {
   sectionId        Int
   date             DateTime     @default(now()) @db.Date
   grade            Float?
+  active           Boolean      @default(true)
   TeacherGrade     Float? // Campo opcional para la evaluación del docente
   message          String?      @db.VarChar(45)
   student          Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)

@@ -1,61 +1,110 @@
- import { Request, Response } from "express"
- import { prisma } from "../../config/db";
- 
- export const submitGradesController = async (req: Request, res: Response)=>{
-    const {id:idUser} = req.user;
-    const {identificationCode, sectionId, grade, obs} = req.body;
+import { Request, Response } from "express";
+import { prisma } from "../../config/db";
 
+export const submitGradesController = async (req: Request, res: Response) => {
+    const { id: idUser } = req.user;
+    const { identificationCode, sectionId, grade, obs } = req.body;
 
     try {
-        //Obtener la seccion del docente
+        // Obtener la sección del docente
         const section = await prisma.section.findFirst({
             where: {
-            id: sectionId,
-            teacherId: idUser,
-            active: true,
+                id: sectionId,
+                teacherId: idUser,
+                active: true,
             },
             include: {
                 teacher: true,
                 class: true,
-                enrollments:true,
+                enrollments: true,
             }
         });
 
-        const studentId = (await prisma.user.findUnique({where:{identificationCode: identificationCode}, include: {student:true}})).student.id;
-
-        if(!section){
+        if (!section) {
             return res.status(404).json({ error: 'La sección no existe' });
         }
 
-        if(grade >= 65 && (obs !== 'APR')){
+        // Obtener el ID del estudiante usando su identificationCode
+        const user = await prisma.user.findUnique({
+            where: { identificationCode: identificationCode },
+            include: { student: true }
+        });
+
+        if (!user || !user.student) {
+            return res.status(404).json({ error: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = user.student.id;
+
+        // Validar la observación en función de la nota
+        if (grade >= 65 && obs !== 'APR') {
             return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
         }
 
-        if(grade > 0 && grade < 65 && obs !== 'REP' && obs !== 'ABD'){
+        if (grade > 0 && grade < 65 && obs !== 'REP' && obs !== 'ABD') {
             return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
         }
 
-        if(grade === 0 && (obs !== 'NSP')){
+        if (grade === 0 && obs !== 'NSP') {
             return res.status(409).json({ error: 'La observación no corresponde a la nota indicada.' });
         }
 
-
+        // Actualizar la calificación y la observación del estudiante
         await prisma.enrollment.update({
-            where:{
+            where: {
                 sectionId_studentId: {
                     sectionId: section.id,
                     studentId: studentId
                 }
             },
-            data:{
+            data: {
                 grade: grade,
                 OBS: obs
             }
         });
 
-        return res.status(200).send( 'Calificación actualizada exitosamente.' );
+        // Calcular el nuevo índice global del estudiante
+        const studentClasses = await prisma.enrollment.findMany({
+            where: {
+                studentId: studentId, grade: { not: null }, waitingListId: null,
+                active: true,
+            },
+            include: {
+                section: { include: { class: true } }
+            }
+        });
+
+        // Si el estudiante no tiene más clases, no calcular el índice global
+        if (studentClasses.length > 0) {
+            let totalUV = 0;
+            let total = 0;
+
+            studentClasses.forEach(clase => {
+                if (clase.grade !== 0 && clase.grade !== null) { // Solo considerar las clases donde tiene una calificación
+                    totalUV += clase.section.class.UV;
+                    total += clase.grade * clase.section.class.UV;
+                }
+            });
+
+            if (totalUV > 0) {
+                const globalGrade = Math.round(total / totalUV);
+
+                // Actualizar el índice global del estudiante
+                await prisma.student.update({
+                    where: {
+                        id: studentId
+                    },
+                    data: {
+                        globalAverage: globalGrade
+                    }
+                });
+            }
+
+        }
+
+        return res.status(200).send('Calificación actualizada exitosamente.');
     } catch (error) {
         console.error('Error al enviar las calificaciones:', error);
         return res.status(500).json({ error: 'Error interno del servidor.' });
     }
- }
+};

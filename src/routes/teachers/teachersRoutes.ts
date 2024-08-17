@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getTeachers } from '../../controllers/teachers/getTeachers';
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
-import { updateSectionController } from "../../controllers/teachers/teacherController";
+import { updateSectionInfoController } from "../../controllers/teachers/teacherController";
 import { authorizeTeacherMiddleware } from "../../middleware/teacher/teacherMiddleware";
 import { RoleEnum } from '@prisma/client';
 import { checkActiveProcessByTypeIdMiddleware, checkActiveProcessesByTypeIdMiddlewareOR } from '../../middleware/checkActiveProcessGeneric';
@@ -16,6 +16,7 @@ import { validateSectionIdData } from '../../middleware/teacher/validateSectionI
 import { getSectionsByTeacherId } from '../../services/sections/sectionService';
 import { getSectionController } from '../../controllers/teachers/getSectionController';
 import { sendEmailStudentController } from '../../controllers/teachers/sendEmailStudentsController';
+import { checkIsAccessToSeccion } from '../../middleware/section/sectionMiddleware';
 const router = Router();
 
 router.get('/', authenticate, authorizeRole(['DEPARTMENT_HEAD']) ,getTeachers);
@@ -48,6 +49,12 @@ router.get('/sections',
     getSectionController,
 )
 
+router.put('/section-info/:id',
+    authenticate,
+    authorizeRole(['DEPARTMENT_HEAD', 'TEACHER', 'COORDINATOR']),
+    checkIsAccessToSeccion,
+    updateSectionInfoController
+)
 
 router.post('/complete-grade-entry',
     authenticate, 

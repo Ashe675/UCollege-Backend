@@ -14,6 +14,8 @@ export const getAprobadosPorClase = async (sectionId: number) => {
     const cantidadAprobados = await prisma.enrollment.count({
       where: {
         sectionId: sectionId,
+        waitingListId : null,
+        active : true,
         grade: {
           gte: 65,
         },
@@ -78,12 +80,16 @@ export const getAprobadosPorClase = async (sectionId: number) => {
 
         const totalEnrollments = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
             },
         });
 
         const totalAprobados = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
                 grade: {
                     gte: 65,
@@ -93,6 +99,8 @@ export const getAprobadosPorClase = async (sectionId: number) => {
 
         const totalReprobados = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
                 grade: {
                     lt: 65,
@@ -102,6 +110,8 @@ export const getAprobadosPorClase = async (sectionId: number) => {
 
         const promedioNotas = await prisma.enrollment.aggregate({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
             },
             _avg: {
@@ -184,12 +194,16 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
 
         const totalEnrollments = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
             },
         });
 
         const totalAprobados = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
                 grade: {
                     gte: 65,
@@ -199,6 +213,8 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
 
         const totalReprobados = await prisma.enrollment.count({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
                 grade: {
                     lt: 65,
@@ -208,6 +224,8 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
 
         const promedioNotas = await prisma.enrollment.aggregate({
             where: {
+                waitingListId: null,
+                active: true,
                 sectionId: { in: sectionIds },
             },
             _avg: {
@@ -329,6 +347,8 @@ export const getReprobadosPorClase= async(sectionId: number) => {
     const cantidadReprobados = await prisma.enrollment.count({
       where: {
         sectionId: sectionId,
+        waitingListId : null,
+        active : true,
         grade: {
           lt: 65,
         },
@@ -341,6 +361,8 @@ export const getPorcentajeAprobados = async (sectionId: number) => {
     // Total de estudiantes inscritos en la clase
     const totalEnrollments = await prisma.enrollment.count({
       where: {
+        waitingListId : null,
+        active : true,
         sectionId: sectionId,
       },
     });
@@ -348,6 +370,8 @@ export const getPorcentajeAprobados = async (sectionId: number) => {
     // Total de estudiantes aprobados en la clase
     const cantidadAprobados = await prisma.enrollment.count({
       where: {
+        waitingListId : null,
+        active : true,
         sectionId: sectionId,
         grade: {
           gte: 65,
@@ -364,6 +388,8 @@ export const getPorcentajeReprobados = async (sectionId: number) => {
     // Total de estudiantes inscritos en la clase
     const totalEnrollments = await prisma.enrollment.count({
       where: {
+        waitingListId : null,
+        active : true,
         sectionId: sectionId,
       },
     });
@@ -371,6 +397,8 @@ export const getPorcentajeReprobados = async (sectionId: number) => {
     // Total de estudiantes aprobados en la clase
     const cantidadReprobados = await prisma.enrollment.count({
       where: {
+        waitingListId : null,
+        active : true,
         sectionId: sectionId,
         grade: {
           lt: 65,
