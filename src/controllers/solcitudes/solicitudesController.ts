@@ -1,4 +1,4 @@
-import { createSolicitudCambiodeCarrera, createSolicitudCambiodeCentro, createSolicitudCancelacionExcepcional, createSolicitudPagoReposicion, getSolicitudesCambioCarrera, getSolicitudesCambioCentro, getSolicitudesCancelacion, getSolicitudesPagoReposicion } from "../../services/solicitudes/solcitudesService";
+import { createSolicitudCambiodeCarrera, createSolicitudCambiodeCentro, createSolicitudCancelacionExcepcional, createSolicitudPagoReposicion, getSolicitudesCambioCarrera, getSolicitudesCambioCarreraStudent, getSolicitudesCambioCentro, getSolicitudesCancelacion, getSolicitudesCancelacionStudent, getSolicitudesPagoReposicion } from "../../services/solicitudes/solcitudesService";
 import { prisma } from "../../config/db";
 import { Request, Response } from 'express';
 
@@ -23,11 +23,52 @@ export const getSolicitudesCancelacionController = async (req: Request, res: Res
     }
 };
 
+export const getSolicitudesCancelacionStudentController = async (req: Request, res: Response) => {
+    const userId = req.user.id;
+try {
+    const student = await prisma.student.findFirst({
+        where: { userId: userId },
+        select: { id: true },
+    });
+
+    if (!student) {
+        return res.status(400).json({ message: 'Estudiante no encontrado.' });
+    }
+
+    const studentId = student.id;
+    // Llamar al servicio para obtener las solicitudes de cancelación
+   
+    const solicitudes = await getSolicitudesCancelacionStudent(studentId);
+    
+    // Devolver la respuesta en formato JSON
+    return res.status(200).json({
+        data: solicitudes
+    });
+} catch (error) {
+    // Manejar errores
+    console.error('Error al obtener solicitudes de cancelación:', error);
+    return res.status(500).json({
+        success: false,
+        error: 'Error al obtener solicitudes de cancelación'
+    });
+}
+};
+
 export const getSolicitudesCambioCentroController = async (req: Request, res: Response) => {
-    const teacherId = req.user.id;
+    const userId = req.user.id;
     try {
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = student.id;
         // Llamar al servicio para obtener las solicitudes de cancelación
-        const solicitudes = await getSolicitudesCambioCentro();
+        const solicitudes = await getSolicitudesCambioCentro(studentId);
 
         // Devolver la respuesta en formato JSON
         return res.status(200).json({
@@ -65,10 +106,51 @@ export const getSolicitudesCambioCarreraController = async (req: Request, res: R
     }
 };
 
-export const getSolicitudesPagoReposicionController = async (req: Request, res: Response) => {
+export const getSolicitudesCambioCarreraStudentController = async (req: Request, res: Response) => {
+    const userId = req.user.id;
     try {
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+    
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+    
+        const studentId = student.id;
         // Llamar al servicio para obtener las solicitudes de cancelación
-        const solicitudes = await getSolicitudesPagoReposicion();
+        const solicitudes = await getSolicitudesCambioCarreraStudent(studentId);
+
+        // Devolver la respuesta en formato JSON
+        return res.status(200).json({
+            data: solicitudes
+        });
+    } catch (error) {
+        // Manejar errores
+        console.error('Error al obtener solicitudes de cancelación:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error al obtener solicitudes de cancelación'
+        });
+    }
+};
+
+export const getSolicitudesPagoReposicionController = async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    try {
+        const student = await prisma.student.findFirst({
+            where: { userId: userId },
+            select: { id: true },
+        });
+
+        if (!student) {
+            return res.status(400).json({ message: 'Estudiante no encontrado.' });
+        }
+
+        const studentId = student.id;
+        // Llamar al servicio para obtener las solicitudes de cancelación
+        const solicitudes = await getSolicitudesPagoReposicion(studentId);
 
         // Devolver la respuesta en formato JSON
         return res.status(200).json({

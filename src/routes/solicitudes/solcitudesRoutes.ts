@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createSolicitudCambiodeCarreraController, createSolicitudCambiodeCentroController, createSolicitudCancelacionExcepcionalController, createSolicitudPagoReposicionController, getSolicitudesCambioCarreraController, getSolicitudesCambioCentroController, getSolicitudesCancelacionController } from '../../controllers/solcitudes/solicitudesController';
+import { createSolicitudCambiodeCarreraController, createSolicitudCambiodeCentroController, createSolicitudCancelacionExcepcionalController, createSolicitudPagoReposicionController, getSolicitudesCambioCarreraController, getSolicitudesCambioCarreraStudentController, getSolicitudesCambioCentroController, getSolicitudesCancelacionController, getSolicitudesCancelacionStudentController, getSolicitudesPagoReposicionController } from '../../controllers/solcitudes/solicitudesController';
 import { checkSolicitudPendCambioCarrera, checkSolicitudPendCancelacion, checkSolicitudReposicion, checkSolicitudCambioCentro, validateFilesPresence, validateEnrollments } from "../../middleware/solicitudes/solicitudesMiddleware";
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
 import { checkActiveProcessByTypeId2 } from "../../middleware/checkActiveProcessGeneric";
@@ -9,9 +9,15 @@ import multer from 'multer';
 const upload = multer();
 const router = Router();
 
-//OBTENER SOLICITUDES
+//OBTENER SOLICITUDES COORDINADOR
 router.get('/cancelaciones',authenticate, authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCancelacionController);
 router.get('/carreras' ,authenticate,authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCambioCarreraController);
+
+//ESTUDIANTE
+router.get('/cambio-centro' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCambioCentroController);
+router.get('/pago-reposicion' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesPagoReposicionController);
+router.get('/cancelaciones' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCancelacionStudentController);
+router.get('/cancelaciones' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCambioCarreraStudentController);
 
 //CREAR SOLICITUDES
 router.post('/cancelaciones',authenticate, authorizeRole([RoleEnum.STUDENT]), upload.array('files'),validateSolicitudCancelacion,checkActiveProcessByTypeId2(7), validateFilesPresence, checkSolicitudPendCancelacion, validateEnrollments ,createSolicitudCancelacionExcepcionalController);

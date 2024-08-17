@@ -88,17 +88,100 @@ export const getSolicitudesCancelacion = async (teacherId: number) => {
     return formattedResponse;
 };
 
-
-
-export const getSolicitudesCambioCentro = async () => {
+export const getSolicitudesCancelacionStudent = async (studentId: number) => {
     const solicitudes = await prisma.solicitud.findMany({
-        where: { tipoSolicitud: "CAMBIO_DE_CENTRO" },
+        where: {tipoSolicitud: "CANCELACION_EXCEPCIONAL", studentId: studentId},  
+        select: {
+            date: true,
+            id: true,
+            estado: true,
+            justificacion: true,
+            student: {
+                select: {
+                    id: true,
+                    user: {
+                        select: {
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            }, archivos: { select: { url: true } },
+            enrollments: {
+                select: {
+                    section: {
+                        select: {
+                            IH: true,
+                            FH: true,
+                            code: true,
+                            class: {
+                                select: {
+                                    code: true,
+                                    name: true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
+    const formattedResponse = solicitudes.map(solicitud => {
+        const studentInfo = solicitud.student.user.person;
+        const studentName = `${studentInfo.firstName} ${studentInfo.middleName || ''} ${studentInfo.lastName} ${studentInfo.secondLastName || ''}`.trim();
+        const studentId = solicitud.student.id;
+        const identificationCode = solicitud.student.user.identificationCode;
+        const institutionalEmail = solicitud.student.user.institutionalEmail;
+        const archivos = solicitud.archivos.map(archivo => {
+            return archivo.url;
+        });
+        // Formatear las secciones de las solicitudes
+        const classesToCancel = solicitud.enrollments.map(enrollment => {
+            const section = enrollment.section;
+            return {
+                IH: section.IH,
+                FH: section.FH,
+                code: section.code,
+                classCode: section.class.code,
+                className: section.class.name
+            };
+        });
+
+        return {
+            id: solicitud.id,
+            date: solicitud.date,
+            justificacion: solicitud.justificacion,
+            estado: solicitud.estado,
+            studentName,
+            studentId,
+            identificationCode,
+            institutionalEmail,
+            archivos,
+            classesToCancel
+        };
+    });
+
+    return formattedResponse;
+};
+
+export const getSolicitudesCambioCentro = async (studenId : number) => {
+    const solicitudes = await prisma.solicitud.findMany({
+        where: { tipoSolicitud: "CAMBIO_DE_CENTRO" , studentId: studenId},
         select: {
             date: true,
             id: true,
             estado: true,
             justificacion: true,
             regionalCenter: { select: { id: true, name: true, town: { select: { name: true, countryDepartment: { select: { name: true } } } } } },
+            regionalCenterFacultyCareer:{select:{regionalCenter_Faculty:{select:{regionalCenter:{select:{name: true, town: { select: { name: true, countryDepartment: { select: { name: true } } } }}}}}}},
             student: {
                 select: {
                     id: true,
@@ -123,39 +206,12 @@ export const getSolicitudesCambioCentro = async () => {
     });
     const formattedResponse = await Promise.all(
         solicitudes.map(async (solicitud) => {
-            const CentroRegional = await prisma.regionalCenter_Faculty_Career_User.findFirst({
-                where: { userId: solicitud.student.user.id },
-                select: {
-                    regionalCenter_Faculty_Career: {
-                        select: {
-                            regionalCenter_Faculty: {
-                                select: {
-                                    regionalCenter: {
-                                        select: {
-                                            id: true,
-                                            name: true,
-                                            town: {
-                                                select: {
-                                                    name: true,
-                                                    countryDepartment: {
-                                                        select: { name: true }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            });
             const studentInfo = solicitud.student.user.person;
             const studentName = `${studentInfo.firstName} ${studentInfo.middleName || ''} ${studentInfo.lastName} ${studentInfo.secondLastName || ''}`.trim();
             const studentId = solicitud.student.id;
             const identificationCode = solicitud.student.user.identificationCode;
-            const CentroActual = CentroRegional.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter;
-            const CentroSolicitado = solicitud.regionalCenter;
+            const CentroOrigen = solicitud.regionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter;
+            const CentroDestino = solicitud.regionalCenter;
             const institutionalEmail = solicitud.student.user.institutionalEmail;
 
 
@@ -168,8 +224,8 @@ export const getSolicitudesCambioCentro = async () => {
                 studentId,
                 identificationCode,
                 institutionalEmail,
-                CentroActual,
-                CentroSolicitado,
+                CentroOrigen,
+                CentroDestino,
             };
         })
     );
@@ -251,9 +307,70 @@ export const getSolicitudesCambioCarrera = async (teacherId: number) => {
     return formattedResponse;
 };
 
-export const getSolicitudesPagoReposicion = async () => {
+export const getSolicitudesCambioCarreraStudent = async (studentId: number) => {
     const solicitudes = await prisma.solicitud.findMany({
-        where: { tipoSolicitud: "CANCELACION_EXCEPCIONAL" },
+        where: {tipoSolicitud: "CAMBIO_DE_CARRERA", studentId: studentId},
+        select: {
+            date: true,
+            id: true,
+            estado: true,
+            justificacion: true,
+            archivos: { select: { url: true } },
+            career: { select: { id: true, code: true, name: true } },
+            student: {
+                select: {
+                    id: true,
+                    user: {
+                        select: {
+                            id: true,
+                            identificationCode: true,
+                            institutionalEmail: true
+                            , person: {
+                                select: {
+                                    firstName: true,
+                                    middleName: true,
+                                    lastName: true,
+                                    secondLastName: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    });
+    const formattedResponse = await Promise.all(
+        solicitudes.map(async (solicitud) => {
+            const studentInfo = solicitud.student.user.person;
+            const studentName = `${studentInfo.firstName} ${studentInfo.middleName || ''} ${studentInfo.lastName} ${studentInfo.secondLastName || ''}`.trim();
+            const studentId = solicitud.student.id;
+            const identificationCode = solicitud.student.user.identificationCode;
+            const CarreraSolicitada = solicitud.career;
+            const institutionalEmail = solicitud.student.user.institutionalEmail;
+            const archivos = solicitud.archivos.map(archivo => {
+                return archivo.url;
+            });
+            return {
+                id: solicitud.id,
+                date: solicitud.date,
+                justificacion: solicitud.justificacion,
+                estado: solicitud.estado,
+                studentName,
+                studentId,
+                identificationCode,
+                institutionalEmail,
+                CarreraSolicitada,
+                archivos
+            };
+        })
+    );
+
+    return formattedResponse;
+};
+
+export const getSolicitudesPagoReposicion = async (studentId : number) => {
+    const solicitudes = await prisma.solicitud.findMany({
+        where: { tipoSolicitud: "PAGO_REPOSICION", studentId: studentId},
         select: {
             date: true,
             id: true,
@@ -643,7 +760,8 @@ export const createSolicitudCambiodeCentro = async (data: {
                 tipoSolicitud: 'CAMBIO_DE_CENTRO',
                 estado: 'PENDIENTE',
                 studentId: data.studentId,
-                regionalCenterFacultyCareerId: regionalCenter_Faculty_Career_DestinoId,
+                regionalCenterFacultyCareerId: regionalCenter_Faculty_Career_User_Id,
+                regionalCenterId: data.regionalCenterId,
             },
             include: {
                 student: {
