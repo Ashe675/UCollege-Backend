@@ -40,6 +40,46 @@ export const checkActiveProcessByTypeId = async (processTypeId: number) => {
   })
 }
 
+export const checkActiveProcessByTypeId2 = (processTypeId: number) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const tipoProceso = await prisma.processType.findFirst({
+      where:{id: processTypeId},
+      select:{name:true}
+    })
+    try {
+      const activeProcess = await prisma.process.findFirst({
+        where: { 
+          processTypeId, 
+          active: true, 
+          finalDate: { gte: new Date() }, 
+          startDate: { lte: new Date() } 
+        },
+        include: { 
+          processType: true, 
+          academicPeriod: true, 
+          inscriptions: true, 
+          parentProcess: true, 
+          results: true, 
+          subprocesses: true, 
+          daysEnrolls: true, 
+          planning: true 
+        }
+      });
+
+      if (!activeProcess) {
+        return res.status(404).json({ error: `No hay un proceso de ${tipoProceso.name} activo` });
+      }
+
+      // Si el proceso activo existe, pasamos al siguiente middleware o ruta
+      next();
+    } catch (error) {
+      // Manejo de errores
+      console.error('Error checking active process:', error);
+      res.status(500).json({ error: 'An error occurred while checking the active process.' });
+    }
+  };
+};
+
 export const checkActiveProcessByTypeIdMiddleware = (processTypeId: number) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
