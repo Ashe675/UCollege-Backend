@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getTeachers } from '../../controllers/teachers/getTeachers';
 import { authenticate, authorizeRole } from '../../middleware/auth/auth';
+
 import { updateSectionInfoController } from "../../controllers/teachers/teacherController";
 import { authorizeTeacherMiddleware } from "../../middleware/teacher/teacherMiddleware";
 import { RoleEnum } from '@prisma/client';
