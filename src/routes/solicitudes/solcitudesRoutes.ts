@@ -10,14 +10,14 @@ const upload = multer();
 const router = Router();
 
 //OBTENER SOLICITUDES COORDINADOR
-router.get('/cancelaciones',authenticate, authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCancelacionController);
-router.get('/carreras' ,authenticate,authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCambioCarreraController);
+router.get('/cancelaciones-coordinator',authenticate, authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCancelacionController);
+router.get('/carreras-coodinator' ,authenticate,authorizeRole([RoleEnum.COORDINATOR]),getSolicitudesCambioCarreraController);
 
 //ESTUDIANTE
 router.get('/cambio-centro' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCambioCentroController);
 router.get('/pago-reposicion' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesPagoReposicionController);
 router.get('/cancelaciones' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCancelacionStudentController);
-router.get('/cancelaciones' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCambioCarreraStudentController);
+router.get('/carreras' ,authenticate,authorizeRole([RoleEnum.STUDENT]),getSolicitudesCambioCarreraStudentController);
 
 //CREAR SOLICITUDES
 router.post('/cancelaciones',authenticate, authorizeRole([RoleEnum.STUDENT]), upload.array('files'),validateSolicitudCancelacion,checkActiveProcessByTypeId2(7), validateFilesPresence, checkSolicitudPendCancelacion, validateEnrollments ,createSolicitudCancelacionExcepcionalController);
