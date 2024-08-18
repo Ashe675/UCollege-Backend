@@ -14,7 +14,7 @@ export async function uploadImageAdmission(filePath : string, folder : string, i
         allowed_formats : ['png', 'webp', 'jpg'],
         folder : folder,
         transformation: isSquare ? [{ width: 600, height: 600, crop: 'fill' }] : []
-    })
+    });
 }
 
 export async function deleteImageFromCloud(publicId : string) {

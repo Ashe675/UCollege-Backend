@@ -29,6 +29,8 @@ import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
 import coordinatorRoutes from './routes/coordinator/coordinatorRoutes'
 
+import studentRoute from './routes/student/studentRoutes'
+
 import { corsConfig } from './config/cors';
 
 
@@ -69,6 +71,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/enroll-student', enrollStudentRoutes);
 app.use('/api/user', userRoutes);
 
-app.use('/api/coordinator', coordinatorRoutes)
+app.use('/api/coordinator', coordinatorRoutes);
+
+app.use('/api/student', studentRoute);
+
 
 export default app

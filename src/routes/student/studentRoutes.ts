@@ -10,7 +10,9 @@ import { setGradeTeacher } from '../../controllers/student/valueTeacherControlle
 import { checkActiveProcessByTypeIdMiddleware } from '../../middleware/checkActiveProcessGeneric';
 import { checkIsAccessToSeccion } from '../../middleware/section/sectionMiddleware';
 import { validateSectionId } from '../../validators/sections/sectionValidator';
-import { getAllGradeStudent, getGradeStudent } from '../../controllers/student/studentController';
+import { deleteAvatarStudent, deleteImageStudent, getAllGradeStudent, getGradeStudent, getStudentImages, uploadImageStudent } from '../../controllers/student/studentController';
+import { upload } from '../../middleware/student/multerStudent';
+import { validateImageFile } from '../../middleware/validateIsImage';
 
 const route =  Router();
 
@@ -20,7 +22,7 @@ const route =  Router();
     sectionId: number
  }
  */
-route.post('value-teacher/',
+route.post('/value-teacher/',
     authenticate,
     authorizeRole([RoleEnum.STUDENT]),
     checkActiveProcessByTypeIdMiddleware(4),
@@ -31,7 +33,7 @@ route.post('value-teacher/',
 );
 
 
-route.get('getGrade/:idSection',
+route.get('/getGrade/:sectionId',
     authenticate,
     authorizeRole([RoleEnum.STUDENT]),
     checkActiveProcessByTypeIdMiddleware(4),
@@ -40,12 +42,52 @@ route.get('getGrade/:idSection',
     getGradeStudent,
 );
 
-route.get('getAllGrade',
+route.get('/getAllGrade',
     authenticate,
     authorizeRole([RoleEnum.STUDENT]),
     checkActiveProcessByTypeIdMiddleware(4),
     checkActiveProcessByTypeIdMiddleware(5),
     getAllGradeStudent,
 );
+/**
+{
+    avatar: true || false
+    urlImage: file path
+}
+ */
+route.post('/upload/image',
+    authenticate,
+    authorizeRole([RoleEnum.STUDENT]),
+    validateImageFile,
+    upload.single('image'),
+    uploadImageStudent,
+)
+
+// route.post('/upload/profile-image',
+//     authenticate,
+//     authorizeRole([RoleEnum.STUDENT]),
+//     upload.single('image'),
+//     uploadImageStudent,
+// )
+
+route.delete('/delete/image/:imageId',
+    authenticate,
+    authorizeRole([RoleEnum.STUDENT]),
+    deleteImageStudent,
+);
+
+route.delete('/delete/avatar',
+    authenticate,
+    authorizeRole([RoleEnum.STUDENT]),
+    deleteAvatarStudent,
+);
+
+route.get('/getAllImage',
+    authenticate,
+    authorizeRole([RoleEnum.STUDENT]),
+    getStudentImages
+);
+
+
 
 export default route;
