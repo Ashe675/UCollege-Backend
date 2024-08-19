@@ -252,7 +252,7 @@ export const createSection = async (data: CreateSectionInput, req: Request) => {
         top: 0,
       }
     });
-    
+
     return {
       message: 'Sección creada correctamente',
       section: newSection
@@ -349,7 +349,7 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
       where: {
         sectionId: section.id,
         waitingListId: null,
-        active : true
+        active: true
       }
     });
     const availableSlots = newCapacity - matriculados;
@@ -387,9 +387,6 @@ export const updateSectionCapacity = async (id: number, increment: number) => {
     throw new Error(error.message);
   }
 };
-
-
-
 const getCareerIdByDepartmentId = async (departmentId: number) => {
   const departmentData = await prisma.departament.findUnique({
     where: { id: departmentId },
@@ -513,7 +510,6 @@ export const getSectionByDepartment = async (req: Request) => {
 
   return { departmentname, sectionsWithDetails };
 };
-
 export const getSectionByDepartmentActual = async (req: Request) => {
   const userid = req.user?.id;
   const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
@@ -587,7 +583,6 @@ export const getSectionByDepartmentActual = async (req: Request) => {
 
   return { departmentname, sectionsWithDetails };
 };
-
 export const getSectionByDepartmentActualNext = async (req: Request) => {
   const userid = req.user?.id;
   const user = await prisma.regionalCenter_Faculty_Career_Department_Teacher.findFirst({
@@ -654,7 +649,6 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
 
   return { departmentname, sectionsWithDetails };
 };
-
 export const deleteSection = async (id: number, justification: string) => {
   const now = new Date();
 
@@ -731,7 +725,6 @@ export const sectionExists = async (id: number) => {
   });
   return !!section;
 };
-
 export const getSectionsByStudentId = async (req: Request) => {
   const userid = req.user?.id;
 
@@ -762,7 +755,7 @@ export const getSectionsByStudentId = async (req: Request) => {
         some: {
           studentId: student.id,
           waitingListId: null,
-          active : true
+          active: true
         }
       }, academicPeriodId: idPeriodo, active: true
     },
@@ -825,7 +818,6 @@ export const getSectionsByStudentId = async (req: Request) => {
 
   return sectionsWithDetails;
 };
-
 export const getSectionByUsertId = async (req: Request) => {
   const userid = req.user?.id;
   const sectionId = req.params.id
@@ -852,7 +844,7 @@ export const getSectionByUsertId = async (req: Request) => {
       }, {
         enrollments: {
           some: {
-            active : true,
+            active: true,
             student: {
               userId: userid
             }
@@ -935,7 +927,7 @@ export const getSectionByUsertId = async (req: Request) => {
 
   const allNotesUpload = matriculados.every(mat => mat.grade !== null)
   const allNotesNotificated = matriculados.every(mat => mat.gradeNofificated === true)
- 
+
 
   return {
     ...section,
@@ -943,13 +935,12 @@ export const getSectionByUsertId = async (req: Request) => {
     isSubmitGradeActive: isSubmitGradeActive ? true : false,
     waitingListStudents,
     teacher: section.teacher,
-    allNotesNotificated : allNotesNotificated,
+    allNotesNotificated: allNotesNotificated,
     allNotesUpload,
     quotasAvailability: section.capacity - matriculados.length,
     factulty: section.class.departament.regionalCenterFacultyCareer[0].RegionalCenterFacultyCareer.regionalCenter_Faculty.faculty
   };;
 }
-
 export const getSectionsByTeacherId = async (req: Request) => {
   const userid = req.user?.id;
   const periodoActual = await prisma.academicPeriod.findFirst({
@@ -1198,7 +1189,6 @@ export const getTeachersByDepartmentPagination = async (req: Request) => {
 
   return { departmentname, teachers, page, totalPages };
 };
-
 export const getWaitingListById = async (sectionId: number) => {
   // Primero, obtenemos la sección para conseguir la lista de espera
   const section = await prisma.section.findUnique({
@@ -1227,8 +1217,8 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
   const notas = await prisma.enrollment.findMany({
     where: {
       sectionId: sectionId,
-      waitingList : null,
-      active : true,
+      waitingList: null,
+      active: true,
       section: { academicPeriodId: academicPeriodId }
     },
     select: {
@@ -1297,7 +1287,10 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
   // Si no se encuentran notas, se retorna un error
   if (notas.length === 0) {
     throw new Error('No se encontraron notas para esta sección.');
-  }
+  };
+
+  const totalGrades = notas.reduce((sum, nota) => sum + (nota.grade || 0), 0);
+  const averageGrade = totalGrades / notas.length;
 
   // Obtener la información de la sección, el maestro y la clase
   const { section } = notas[0];
@@ -1341,7 +1334,9 @@ export const getGradesBySectionId = async (sectionId: number, req: Request) => {
     sectionId,
     className,
     teacher: teacherInfo,
+    averageGrade: averageGrade,
     grades
+
   };
 };
 export const getEnrollmentsActual = async (req: Request) => {
@@ -1374,7 +1369,7 @@ export const getEnrollmentsActual = async (req: Request) => {
   const enrollments = await prisma.enrollment.findMany({
     where: {
       waitingListId: null,
-      active : true,
+      active: true,
       section: {
         academicPeriodId: academicPeriodId,
         regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
@@ -1442,8 +1437,8 @@ export const getEnrollmentsActual = async (req: Request) => {
   // Contar el total de inscripciones para la paginación
   const totalEnrollments = await prisma.enrollment.count({
     where: {
-      active : true,
-      waitingListId : null,
+      active: true,
+      waitingListId: null,
       section: {
         academicPeriodId: academicPeriodId,
         regionalCenter_Faculty_CareerId: regionalCenter_FacultyCareerId,
@@ -1469,7 +1464,7 @@ export const downloadSectionEnrollmentsExcel = async (sectionId: number, res: Re
     include: { class: true }
   });
   const matriculados = await prisma.enrollment.findMany({
-    where: { sectionId, waitingListId: null, active : true },
+    where: { sectionId, waitingListId: null, active: true },
     include: {
       student: {
         select: {
@@ -1524,6 +1519,131 @@ export const downloadSectionEnrollmentsExcel = async (sectionId: number, res: Re
 
   await workbook.xlsx.write(res);
   res.end();
+};
+export const getGradesTeacherBySectionId = async (sectionId: number, req: Request) => {
+  const userId = req.user.id;
+  const academicPeriodId = await getPeriodoActual();
+
+  // Validar que el usuario tenga acceso a la sección
+  await validateUserAndSection(userId, sectionId);
+
+  // Obtener las notas junto con la información de la sección, el maestro y la clase
+  const notas = await prisma.enrollment.findMany({
+    where: {
+      sectionId: sectionId,
+      waitingList: null,
+      active: true,
+      section: { academicPeriodId: academicPeriodId },
+    },
+    select: {
+      studentId: true,
+      grade: true,
+      TeacherGrade: true,
+      section: {
+        select: {
+          teacher: {
+            select: {
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true,
+                }
+              },
+              identificationCode: true,
+              institutionalEmail: true,
+              id: true,
+              images: {
+                select: {
+                  url: true,
+                  avatar: true,
+                }
+              }
+            }
+          },
+          class: {
+            select: {
+              name: true
+            }
+          }
+        }
+      },
+      student: {
+        select: {
+          user: {
+            select: {
+              person: {
+                select: {
+                  dni: true,
+                  firstName: true,
+                  middleName: true,
+                  lastName: true,
+                  secondLastName: true,
+                }
+              },
+              institutionalEmail: true,
+              identificationCode: true,
+              id: true,
+              images: {
+                select: {
+                  url: true,
+                  avatar: true,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Si no se encuentran notas, se retorna un error
+  if (notas.length === 0) {
+    throw new Error('No se encontraron notas para esta sección.');
+  }
+
+  const totalGrades = notas.reduce((sum, nota) => sum + (nota.TeacherGrade || 0), 0);
+  const averageGrade = totalGrades / notas.length;
+
+  // Obtener la información de la sección, el maestro y la clase
+  const { section } = notas[0];
+  const className = section.class.name;
+  const teacher = section.teacher;
+
+  // Filtrar imágenes para obtener solo el avatar activo
+  const getAvatar = (images: { url: string; avatar: boolean }[]) =>
+    images.find(image => image.avatar)?.url || null;
+
+  // Información del maestro
+  const teacherInfo = {
+    teacherId: teacher.id,
+    dni: teacher.person.dni,
+    firstName: teacher.person.firstName,
+    middleName: teacher.person.middleName,
+    lastName: teacher.person.lastName,
+    secondLastName: teacher.person.secondLastName,
+    institutionalEmail: teacher.institutionalEmail,
+    identificationCode: teacher.identificationCode,
+    avatar: getAvatar(teacher.images),
+  };
+
+  // Mapear las notas con la información de los estudiantes y sus avatares
+  const TeacherGrades = notas
+    .filter(nota => nota.TeacherGrade !== null) // Filtra las notas donde TeacherGrade no es null
+    .map(nota => ({
+      teacherGrade: nota.TeacherGrade,
+    }));
+
+  // Retornar la información solicitada
+  return {
+    sectionId,
+    className,
+    teacher: teacherInfo,
+    averageTeacherGrade: averageGrade,
+    TeacherGrades
+  };
 };
 
 

@@ -31,6 +31,7 @@ import {
   getSectionsByStudentIdController,
   getSectionByUserIdController,
   getGradesBySectionIdController,
+  getTeachersGradesBySectionIdController,
 } from '../../controllers/sections/sectionController';
 
 import { 
@@ -234,6 +235,12 @@ authenticate,
 authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
 getGradesBySectionIdController); 
 
+//OBTENER NOTAS MAESTRO DE UNA SECCION
+router.get('/teacherGrades/:id', 
+  authenticate, 
+  authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
+  getTeachersGradesBySectionIdController); 
+
 // Define la ruta para obtener la lista de espera de estudiantes de una sección
 router.get('/waiting-list/:sectionId', getWaitingListController);
 
@@ -252,6 +259,7 @@ router.delete('/resources/:id',
   authorizeRole([RoleEnum.DEPARTMENT_HEAD, RoleEnum.COORDINATOR, RoleEnum.TEACHER]),
   authorizeTeacherMiddlewareDelete,
   deleteFileController);
+
 
 export default router;
 

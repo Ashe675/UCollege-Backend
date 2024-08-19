@@ -22,6 +22,7 @@ import {
   downloadSectionEnrollmentsExcel,
   getSectionsByStudentId,
   getSectionByUsertId,
+  getGradesTeacherBySectionId
 } from '../../services/sections/sectionService';
 import { getRegionalCenterTeacher } from "../../utils/teacher/getTeacherCenter";
 import { getRegionalCenterSection, } from "../../utils/section/sectionUtils";
@@ -276,6 +277,26 @@ export const getGradesBySectionIdController = async (req: Request, res: Response
   }
 };
 
+export const getTeachersGradesBySectionIdController = async (req: Request, res: Response) => {
+  try {
+    // Obtén el ID de la sección del parámetro de la solicitud
+    const sectionId = parseInt(req.params.id, 10);
+    
+    if (isNaN(sectionId)) {
+      return res.status(400).json({ message: 'ID de sección inválido' });
+    }
+
+    // Obtén las notas utilizando el servicio
+    const grades = await getGradesTeacherBySectionId(sectionId, req);
+
+    // Devuelve las notas en la respuesta
+    return res.status(200).json(grades);
+  } catch (error) {
+    // Maneja los errores y devuelve una respuesta de error
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const getSectionEnrollmentsExcel = async (req: Request, res: Response) => {
   const sectionId = parseInt(req.params.id, 10);
   const userId = req.user.id;
@@ -305,4 +326,5 @@ export const getSectionEnrollmentsExcel = async (req: Request, res: Response) =>
     res.status(500).json({ error: 'Error interno del servidor: ' + error.message });
   }
 };
+
 
