@@ -38,18 +38,35 @@ export const getProfile = async (req: Request, res: Response) => {
     const userData = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        role : true,
+        role: true,
         person: true,
         images: true,
-        teacherDepartments:{include:{regionalCenterFacultyCareerDepartment:{include:{ Departament: true ,RegionalCenterFacultyCareer:{include:{regionalCenter_Faculty:{include:{regionalCenter:true}}}}}}}},
+        teacherDepartments: {
+          include: {
+            regionalCenterFacultyCareerDepartment: {
+              include: {
+                Departament: true,
+                RegionalCenterFacultyCareer: {
+                  include: {
+                    regionalCenter_Faculty: {
+                      include: { regionalCenter: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         carrers: {
-          include:{
-            regionalCenter_Faculty_Career:{
-              include:{
-                career:true,
-                regionalCenter_Faculty:{include:{regionalCenter:true}}
-              }
-            }
+          include: {
+            regionalCenter_Faculty_Career: {
+              include: {
+                career: true,
+                regionalCenter_Faculty: {
+                  include: { regionalCenter: true },
+                },
+              },
+            },
           },
         },
       },
@@ -60,26 +77,24 @@ export const getProfile = async (req: Request, res: Response) => {
     }
 
     const avatarUrl = userData.images.find(image => image.avatar)?.url || null;
+    
     let regionalCenterName = userData.carrers.find(career => 
       career.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
     )?.regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name;
 
-    let depto = ""
-    
+    let depto = "";
+
     if (!regionalCenterName) {
       regionalCenterName = userData.teacherDepartments.find(item => 
         item.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name
       )?.regionalCenterFacultyCareerDepartment.RegionalCenterFacultyCareer.regionalCenter_Faculty.regionalCenter.name;
 
-      depto = userData.teacherDepartments.find(career => career.regionalCenterFacultyCareerDepartment.Departament.name).regionalCenterFacultyCareerDepartment.Departament.name
-
-
-      
+      depto = userData.teacherDepartments.find(item => 
+        item.regionalCenterFacultyCareerDepartment.Departament.name
+      )?.regionalCenterFacultyCareerDepartment.Departament.name || "";
     }
-    
 
     const simplifiedData = {
-      
       userId: userData.id,
       dni: userData.person.dni,
       firstName: userData.person.firstName,
@@ -93,8 +108,8 @@ export const getProfile = async (req: Request, res: Response) => {
       regionalCenter: regionalCenterName,
       avatar: avatarUrl,
       active: userData.active,
-      role : userData.role.name,
-      depto : depto ? depto : null,
+      role: userData.role.name,
+      depto: depto || null,
       carrers: userData.carrers.map(career => ({
         id: career.regionalCenter_Faculty_Career.career.id,
         name: career.regionalCenter_Faculty_Career.career.name,
@@ -106,7 +121,6 @@ export const getProfile = async (req: Request, res: Response) => {
           url: image.url,
         })),
     };
-    
 
     res.status(200).json(simplifiedData);
   } catch (error) {
@@ -114,3 +128,4 @@ export const getProfile = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 };
+
