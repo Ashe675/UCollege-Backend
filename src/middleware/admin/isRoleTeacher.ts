@@ -69,7 +69,7 @@ export const isRoleTeacher = async (req: Request, res: Response, next: NextFunct
         where: {
           active: true,
           regionalCenter_Faculty_Career_Department_Departament_id: departmentIdInt,
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: facultyCareerIdInt,
+          RegionalCenter_Faculty_Career_id: facultyCareerIdInt,
           teacher: {
             role: {
               name: roleSpecial.name

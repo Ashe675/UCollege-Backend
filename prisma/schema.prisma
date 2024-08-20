@@ -210,17 +210,103 @@ model Process {
   @@index([processTypeId], name: "fk_Process_ProcessType1_idx")
 }
 
-model User {
-  id                 Int     @id @default(autoincrement())
-  identificationCode String  @unique @db.VarChar(15)
-  personId           Int     @unique
-  active             Boolean @default(true)
-  institutionalEmail String  @unique @db.VarChar(100)
-  password           String  @db.VarChar(100)
-  verified           Boolean @default(false)
+enum TypeConversation {
+  DIRECT_MESSAGE
+  GROUP
+}
 
-  description String? @db.VarChar(200)
-  roleId      Int
+model Message {
+  id             String        @id @unique @default(uuid())
+  body           String?       @db.Text
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         Member        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  fileId         String?
+  fileUrl        String?
+  fileName       String?
+  fileType       ResourceType?
+}
+
+model Conversation {
+  id         String            @id @unique @default(uuid())
+  isGroup    Boolean?          @default(false)
+  groupTitle String?           @db.Text
+  members    Member[]
+  messages   Message[]
+  type       TypeConversation?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+}
+
+enum RoleMember {
+  ADMIN
+  MEMBER
+}
+
+model Member {
+  id             String       @id @unique @default(uuid())
+  messages       Message[]
+  joinedAt       DateTime     @default(now())
+  role           RoleMember   @default(MEMBER)
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "fk_Member_User1_idx")
+}
+
+model FriendRequest {
+  id         Int                 @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+
+  sender   User @relation("contactsSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("contactsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId, id]) // Para evitar solicitudes duplicadas
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  contactId Int
+  createdAt DateTime @default(now())
+
+  user    User @relation("user", fields: [userId], references: [id], onDelete: Cascade)
+  contact User @relation("contacts", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactId]) // Para evitar contactos duplicados
+}
+
+model User {
+  id                 Int             @id @default(autoincrement())
+  identificationCode String          @unique @db.VarChar(15)
+  personId           Int             @unique
+  active             Boolean         @default(true)
+  institutionalEmail String          @unique @db.VarChar(100)
+  password           String          @db.VarChar(100)
+  verified           Boolean         @default(false)
+  members            Member[]
+  description        String?         @db.VarChar(200)
+  roleId             Int
+  contactsSent       FriendRequest[] @relation("contactsSent")
+  contactsReceived   FriendRequest[] @relation("contactsReceived")
+  isContact          Contact[]       @relation("contacts")
+  contacts           Contact[]       @relation("user")
+  isOnline           Boolean         @default(false)
+  lastOnline         DateTime?
 
   images  Image[]
   token   UserToken?
@@ -293,24 +379,24 @@ enum estadoSolicitud {
 }
 
 model Solicitud {
-  id               Int                @id @default(autoincrement())
-  date             DateTime           @default(now()) // Campo para la fecha de la solicitud
-  tipoSolicitud    TipoSolicitud
-  justificacion    String             @db.VarChar(500)
-  respuesta        String?            @db.VarChar(500)
-  estado           estadoSolicitud
-  teacherId        Int?
-  studentId        Int
-  archivos         ArchivoSolicitud[]
-  enrollments      Enrollment[]
-  teacher          User?               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  student          Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  careerId         Int? // Campo opcional para relacionar con Career
-  regionalCenterId Int? // Campo opcional para relacionar con RegionalCenter
+  id                            Int                           @id @default(autoincrement())
+  date                          DateTime                      @default(now()) // Campo para la fecha de la solicitud
+  tipoSolicitud                 TipoSolicitud
+  justificacion                 String                        @db.VarChar(500)
+  respuesta                     String?                       @db.VarChar(500)
+  estado                        estadoSolicitud
+  teacherId                     Int?
+  studentId                     Int
+  archivos                      ArchivoSolicitud[]
+  enrollments                   Enrollment[]
+  teacher                       User?                         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student                       Student                       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  careerId                      Int? // Campo opcional para relacionar con Career
+  regionalCenterId              Int? // Campo opcional para relacionar con RegionalCenter
   regionalCenterFacultyCareerId Int // Campo opcional para relacionar con RegionalCenterCareer
-  regionalCenterFacultyCareer   RegionalCenter_Faculty_Career   @relation(fields: [regionalCenterFacultyCareerId], references: [id], onDelete: Cascade)
-  career           Career?            @relation(fields: [careerId], references: [id], onDelete: Cascade)
-  regionalCenter   RegionalCenter?    @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
+  regionalCenterFacultyCareer   RegionalCenter_Faculty_Career @relation(fields: [regionalCenterFacultyCareerId], references: [id], onDelete: Cascade)
+  career                        Career?                       @relation(fields: [careerId], references: [id], onDelete: Cascade)
+  regionalCenter                RegionalCenter?               @relation(fields: [regionalCenterId], references: [id], onDelete: Cascade)
 
   @@index([teacherId])
   @@index([studentId])
@@ -318,6 +404,7 @@ model Solicitud {
   @@index([regionalCenterId])
   @@index([regionalCenterFacultyCareerId])
 }
+
 model ArchivoSolicitud {
   id          Int         @id @default(autoincrement())
   url         String      @db.VarChar(255)
@@ -378,6 +465,7 @@ model RegionalCenter_Faculty_Career {
   departments                             RegionalCenter_Faculty_Career_Department[]
   Solicitudes                             Solicitud[]
 }
+
 model Departament {
   id                          Int                                        @id @default(autoincrement())
   name                        String                                     @db.VarChar(80)
@@ -621,13 +709,14 @@ model RegionalCenter_Faculty_Career_Department {
 }
 
 model RegionalCenter_Faculty_Career_Department_Teacher {
-  teacherId                                                                 Int
-  regionalCenter_Faculty_Career_Department_Departament_id                   Int
-  regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id Int
-  active                                                                    Boolean @default(true)
+  teacherId                                               Int
+  regionalCenter_Faculty_Career_Department_Departament_id Int
+  RegionalCenter_Faculty_Career_id                        Int
+
+  active Boolean @default(true)
 
   teacher                               User                                     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId], onDelete: Cascade)
+  regionalCenterFacultyCareerDepartment RegionalCenter_Faculty_Career_Department @relation(fields: [regionalCenter_Faculty_Career_Department_Departament_id, RegionalCenter_Faculty_Career_id], references: [departmentId, regionalCenter_Faculty_CareerId], onDelete: Cascade)
 
-  @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id])
+  @@id([teacherId, regionalCenter_Faculty_Career_Department_Departament_id, RegionalCenter_Faculty_Career_id])
 }
