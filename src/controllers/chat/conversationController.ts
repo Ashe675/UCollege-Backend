@@ -171,7 +171,11 @@ export default class ConversationController {
                 include: {
                     members: {
                         include: {
-                            user: true
+                            user: {
+                                include : {
+                                    person : true
+                                }
+                            }
                         }
                     }
                 }

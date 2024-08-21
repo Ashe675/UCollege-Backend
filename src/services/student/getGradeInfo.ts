@@ -17,6 +17,7 @@ export const getStudentGradeInfo = async (sectionId: number, userId: number) => 
         // Obtener la nota del estudiante usando la tabla enrollment
         const enrollmentStudent = await prisma.enrollment.findUnique({
             where: {
+                active : true,
                 sectionId_studentId: {
                     sectionId: sectionId,
                     studentId: idStudent,

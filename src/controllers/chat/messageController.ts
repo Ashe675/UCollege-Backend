@@ -134,7 +134,13 @@ export default class MessageController {
                                         }
                                     },
                                     institutionalEmail: true,
-                                    identificationCode: true
+                                    identificationCode: true,
+                                    person : {
+                                        select : {
+                                            firstName : true,
+                                            lastName : true
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -143,7 +149,17 @@ export default class MessageController {
                         include : {
                             members : {
                                 select : {
-                                    userId : true
+                                    userId : true,
+                                    user : {
+                                        select : {
+                                            person : {
+                                                select : {
+                                                    firstName : true,
+                                                    lastName : true
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

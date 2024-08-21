@@ -1,7 +1,7 @@
 import { prisma } from "../../config/db"
 import { Request, Response } from "express"
 import { getStudentGradeInfo } from "../../services/student/getGradeInfo";
-import { deleteImageStudentService, uploadImageStudentService } from "../../services/Resources/resourceStudentServices";
+import { deleteAvatarStudentService, deleteImageStudentService, uploadImageStudentService } from "../../services/Resources/resourceStudentServices";
 import { error } from "console";
 
 export const getGradeStudent = async (req: Request, res: Response) => {
@@ -38,6 +38,7 @@ export const getAllGradeStudent = async (req: Request, res: Response) => {
         // Obtener todas las inscripciones del estudiante (enrollments)
         const enrollments = await prisma.enrollment.findMany({
             where: { studentId: studentId,
+              active : true,
                 section:{
                     academicPeriod:{
                         process:{
@@ -55,7 +56,7 @@ export const getAllGradeStudent = async (req: Request, res: Response) => {
             });
         }
 
-        console.log(enrollments)
+        // console.log(enrollments)
 
         // Recorrer todas las inscripciones y obtener la información de cada una
         const gradesInfo = await Promise.all(
@@ -117,16 +118,23 @@ export const uploadImageStudent = async (req: Request, res: Response) => {
           // Eliminar el archivo subido si ya tiene avatar
           await unlink(file.path);
           return res.status(400).json({
-            error: "El estudiante ya tiene una imagen avatar, no se puede agregar otra.",
+            error: "Ya tiene una imagen de perfil, no se puede agregar otra.",
           });
         }
       }
-  
-      if (images.length >= 3) {
+      
+      const imagesNotAvatar = await prisma.image.findMany({
+        where: {
+          userId: userStudentId,
+          avatar : false
+        },
+      });
+
+      if (!avatar && imagesNotAvatar.length >= 3) {
         // Eliminar el archivo si se excede el límite de imágenes
         await unlink(file.path);
         return res.status(400).json({
-          error: "El estudiante ya tiene 3 imágenes, favor eliminar una para subir una nueva.",
+          error: "Ya tiene 3 imágenes, favor eliminar una para subir una nueva.",
         });
       }
   
@@ -189,7 +197,7 @@ export const deleteAvatarStudent = async (req: Request, res: Response) => {
 
     try {
         // Eliminar la imagen
-        const result = await deleteImageStudentService(imageId, userStudentId);
+        const result = await deleteAvatarStudentService(userStudentId);
 
         if (result) {
         return res.status(200).json({

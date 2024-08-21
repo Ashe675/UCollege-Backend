@@ -23,12 +23,12 @@ export const uploadImageStudentService = async (
   
     try {
       // Transformación para foto de perfil (cuadrada)
-      const transformation = [{ width: 600, height: 600, crop: 'fill' }];
+      const transformation = avatar ? [{ width: 600, height: 600, crop: 'fill' }] : []
   
       // Subir la imagen a Cloudinary
       const uploadResult = await cloudinary.uploader.upload(filePath, {
         resource_type: 'image',
-        folder: 'STUDENT_PROFILE_PICS',
+        folder: 'PROFILE_PICS',
         transformation: transformation,
       });
   
@@ -93,7 +93,8 @@ export const deleteImageStudentService = async (imageId: number, userId: number)
       // Buscar la imagen en la base de datos
       const image = await prisma.image.findFirst({
         where: {
-          avatar: true
+          avatar: true,
+          userId
         }
       });
   
