@@ -27,7 +27,29 @@ export class AuthController {
 
             const jwtoken = generateJWT({ id: userFound.id, role: userFound.role.name })
 
+            await prisma.user.update({
+                where: { id: userFound.id },
+                data: { isOnline: true, lastOnline : null },
+              });
+
             res.json({ jwtoken, user: { verified: userFound.verified, id: userFound.id } })
+        } catch (error) {
+            res.status(500).json({ error: error.message })
+        }
+    }
+
+    // Marcar como offline cuando el usuario se desconecta
+    static logout = async (req: Request, res: Response) => {
+        const userId = req.user.id
+        try {
+            await prisma.user.update({
+                where: { id: userId },
+                data: { 
+                    isOnline: false,
+                    lastOnline : new Date() 
+                },
+            });
+            res.send('Sesión Cerrada')
         } catch (error) {
             res.status(500).json({ error: error.message })
         }
@@ -207,7 +229,7 @@ export class AuthController {
 
     static async optionsStudent(req: Request, res: Response) {
         try {
-            const options = await prisma.optionCareer.findMany({ where: { userId: req.user.id }, select: { id: true , regionalCenter_Faculty_Career: { select: { id: true, career: { select: { name: true } }, regionalCenter_Faculty : { select : {regionalCenter : { select : {name : true} }}} } } }, orderBy : { id : "asc" } })
+            const options = await prisma.optionCareer.findMany({ where: { userId: req.user.id }, select: { id: true, regionalCenter_Faculty_Career: { select: { id: true, career: { select: { name: true } }, regionalCenter_Faculty: { select: { regionalCenter: { select: { name: true } } } } } } }, orderBy: { id: "asc" } })
 
             if (!options.length) {
                 const error = new Error('No tienes opciones para elegir')
@@ -216,7 +238,7 @@ export class AuthController {
 
             const regionalCenter = options[0].regionalCenter_Faculty_Career.regionalCenter_Faculty.regionalCenter.name
 
-            return res.json({options, regionalCenter})
+            return res.json({ options, regionalCenter })
         } catch (error) {
             res.status(500).json({ error: 'An error occurred' })
         }
