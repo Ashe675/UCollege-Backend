@@ -32,11 +32,8 @@ import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
 import coordinatorRoutes from './routes/coordinator/coordinatorRoutes'
 
-<<<<<<< HEAD
 import studentRoute from './routes/student/studentRoutes'
-=======
 import chatRoutes from './routes/chat/chatRoutes'
->>>>>>> branch-jose
 
 import { corsConfig } from './config/cors';
 import { authenticateSocket } from './middleware/auth/auth';
