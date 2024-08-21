@@ -41,7 +41,9 @@ export default class MessageController {
                                             firstName : true,
                                             lastName : true
                                         }
-                                    }
+                                    },
+                                    lastOnline : true,
+                                    isOnline : true
                                 }
                             }
                         }

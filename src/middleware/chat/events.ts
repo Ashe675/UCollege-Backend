@@ -31,7 +31,7 @@ export const handleEvents = (socket: Socket) => {
         })
 
         // Emitir a todos los sockets que el usuario está en línea
-        socket.broadcast.emit("userStatusChanged", { userId, isOnline: true });
+        socket.broadcast.emit("userStatusChanged", { userId, isOnline: true,  lastOnline: null });
 
         joinRoom(socket, userId)
     })
