@@ -205,9 +205,7 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
                 waitingListId: null,
                 active: true,
                 sectionId: { in: sectionIds },
-                grade: {
-                    gte: 65,
-                },
+                OBS: 'ABD'
             },
         });
 
@@ -216,11 +214,27 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
                 waitingListId: null,
                 active: true,
                 sectionId: { in: sectionIds },
-                grade: {
-                    lt: 65,
-                },
+                OBS: 'REP'
             },
         });
+
+        const totalAbandonos = await prisma.enrollment.count({
+            where:{
+                waitingListId: null,
+                active: true,
+                sectionId:{in: sectionIds},
+                OBS: 'ABD',
+            }
+        });
+
+        const totalNsp = await prisma.enrollment.count({
+            where:{
+                waitingListId: null,
+                active: true,
+                sectionId:{in: sectionIds},
+                OBS: 'NSP',
+            }
+        })
 
         const promedioNotas = await prisma.enrollment.aggregate({
             where: {
@@ -235,6 +249,8 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
 
         const porcentajeAprobados = totalEnrollments === 0 ? 0 : (totalAprobados / totalEnrollments) * 100;
         const porcentajeReprobados = totalEnrollments === 0 ? 0 : (totalReprobados / totalEnrollments) * 100;
+        const porcentajeAbandono = totalEnrollments === 0 ? 0 :(totalAbandonos/totalEnrollments) * 100;
+        const porcentajeNsp = totalEnrollments === 0 ? 0 : (totalNsp/totalEnrollments) * 100;
 
         return {
             className,
@@ -242,14 +258,19 @@ export const getEstadisticasDepartmentUltimoPeriodo = async (req: Request) => {
             totalEnrollments,
             totalAprobados,
             totalReprobados,
+            totalAbandonos,
+            totalNsp,
             porcentajeAprobados: parseFloat(porcentajeAprobados.toFixed(2)),
             porcentajeReprobados: parseFloat(porcentajeReprobados.toFixed(2)),
+            porcentajeAbandonos: parseFloat(porcentajeAbandono.toFixed(2)),
+            porcentajeNsps: parseFloat(porcentajeNsp.toFixed(2)),
             promedioNotas: promedioNotas._avg.grade ? parseFloat(promedioNotas._avg.grade.toFixed(2)) : 0,
         };
     }));
 
     return statistics;
 };
+
 
 
 // export const getEstadisticasDepartmentActual = async (req: Request) => {
