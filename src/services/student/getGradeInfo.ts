@@ -44,6 +44,8 @@ export const getStudentGradeInfo = async (sectionId: number, userId: number) => 
         // Retornar el resultado como un objeto
         return {
             sectionCode,
+            section : enrollmentStudent.section,
+            teacherGrade : enrollmentStudent.TeacherGrade ,
             className,
             nota,
             obs: enrollmentStudent.OBS

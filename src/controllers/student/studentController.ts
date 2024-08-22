@@ -12,6 +12,11 @@ export const getGradeStudent = async (req: Request, res: Response) => {
     try {
         // Devolver la respuesta con la información
         const result = await getStudentGradeInfo( sectionId, userStudentId)
+
+        if(!result.teacherGrade){
+          return res.json({error : 'Para ver las notas es necesario evaluar al docente.'})
+        }
+
         return res.status(200).json(result);
 
     } catch (error) {
