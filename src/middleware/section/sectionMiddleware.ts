@@ -23,7 +23,11 @@ export const checkClassExistsAndActive = async (req: Request, res: Response, nex
 
 export const checkIsAccessToSeccion = async (req: Request, res: Response, next: NextFunction) => {
   const { id: userId } = req.user;
-  const sectionId = req.params.id;
+  let sectionId = parseInt(req.params.id);
+
+  if (sectionId === undefined) {
+    sectionId = req.body.sectionId;
+  }
 
 
   if (isNaN(+sectionId)) {

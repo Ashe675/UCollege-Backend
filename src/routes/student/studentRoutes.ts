@@ -13,6 +13,7 @@ import { validateSectionId } from '../../validators/sections/sectionValidator';
 import { deleteAvatarStudent, deleteImageStudent, getAllGradeStudent, getGradeStudent, getStudentImages, uploadImageStudent } from '../../controllers/student/studentController';
 import { upload } from '../../middleware/student/multerStudent';
 import { validateImageFile } from '../../middleware/validateIsImage';
+import { downloadStudentCertificatePdf } from '../../controllers/student/studentCertificate';
 
 const route =  Router();
 
@@ -88,6 +89,10 @@ route.get('/getAllImage',
     getStudentImages
 );
 
-
+route.get('/certificate',
+        authenticate,
+        authorizeRole([RoleEnum.STUDENT]),
+        downloadStudentCertificatePdf
+)
 
 export default route;
