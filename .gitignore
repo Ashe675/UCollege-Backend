@@ -6,7 +6,5 @@ dist/
 seed.ts
 cleanTables.ts
 results.csv
-*.png
-*.jpg
-*.jpeg
+uploads/
 migrations/
