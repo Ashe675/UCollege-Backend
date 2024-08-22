@@ -5,18 +5,26 @@ import { promisify } from 'util';
 import { ResourceType } from '@prisma/client';
 const unlink = promisify(fs.unlink);
 
-export const uploadFileService = async (
-  filePath: string,
-  fileType: string,
-  sectionId: number,
-  fileName: string, // Nombre descriptivo para la base de datos
-  frontSection: boolean = false // Parámetro opcional para indicar si es frontSection
+export const uploadFileService = async ({ filePath, fileType, fileName, frontSection, sectionId, isMessage }:
+  {
+    filePath: string,
+    fileType: string,
+    fileName: string, // Nombre descriptivo para la base de datos
+    frontSection?: boolean, // Parámetro opcional para indicar si es frontSection
+    sectionId?: number,
+    isMessage?: boolean
+  }
 ) => {
   // Validar el tipo de archivo
   const allowedFileTypes = [
-    'image/jpg', 'image/jpeg', 'image/png','image/webp',
+    'image/jpg', 'image/jpeg', 'image/png', 'image/webp',
     'video/mp4', 'video/mkv', 'video/webm', // Añade otros formatos de video permitidos
     'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // Permitir PDF, DOC y DOCX
+    , "text/csv",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   ];
 
   if (!allowedFileTypes.includes(fileType)) {
@@ -42,7 +50,7 @@ export const uploadFileService = async (
       cloudinary.uploader.upload_large(filePath,
         {
           resource_type: 'video',
-          folder: 'SECTION_RESOURCES',
+          folder: isMessage ? 'messages_files' : 'SECTION_RESOURCES',
         },
         (error, result) => {
           if (error) {
@@ -60,13 +68,13 @@ export const uploadFileService = async (
 
     uploadResult = await cloudinary.uploader.upload(filePath, {
       resource_type: 'image',
-      folder: 'SECTION_RESOURCES',
+      folder: isMessage ? 'messages_files' : 'SECTION_RESOURCES',
       transformation: transformation
     });
   } else if (resourceType === 'DOCUMENT') {
     uploadResult = await cloudinary.uploader.upload(filePath, {
       resource_type: 'raw',
-      folder: 'SECTION_RESOURCES',
+      folder: isMessage ? 'messages_files' : 'SECTION_RESOURCES',
     });
   } else {
     throw new Error('Tipo de recurso no soportado.');
@@ -77,6 +85,11 @@ export const uploadFileService = async (
 
   if (!fileUrl || !publicId) {
     throw new Error('La subida a Cloudinary falló, no se obtuvo un URL o publicId válido.');
+  }
+
+  if (isMessage) {
+    await unlink(filePath);
+    return { fileUrl , publicId, resourceType }
   }
 
   // Guardar en la base de datos usando Prisma
@@ -125,7 +138,7 @@ export const deleteFileService = async (resourceId: number) => {
 
   // Eliminar el archivo de Cloudinary
   await new Promise<void>((resolve, reject) => {
-    cloudinary.uploader.destroy(resource.publicId,{ resource_type: resourceType }, (error) => {
+    cloudinary.uploader.destroy(resource.publicId, { resource_type: resourceType }, (error) => {
       if (error) {
         return reject(new Error(`Error eliminando de Cloudinary: ${error.message}`));
       }

@@ -47,7 +47,7 @@ export const createTeacher = async (req: Request, res: Response) => {
         where: {
           active: true,
           regionalCenter_Faculty_Career_Department_Departament_id: parseInt(req.body.departamentId),
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
+          RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
           teacher: {
             role: {
               name: roleSpecial.name
@@ -189,7 +189,7 @@ export const getTeachers = async (req: Request, res: Response) => {
 
       const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
         ? await prisma.regionalCenter_Faculty_Career.findUnique({
-          where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id },
+          where: { id: RegionalCenter_Faculty_Career_Department_Teacher.RegionalCenter_Faculty_Career_id },
           include: {
             regionalCenter_Faculty: {
               include: {
@@ -256,7 +256,7 @@ export const getTeacherById = async (req: Request, res: Response) => {
 
     const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
       ? await prisma.regionalCenter.findUnique({
-        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.RegionalCenter_Faculty_Career_id }
       })
       : null;
 
@@ -339,7 +339,7 @@ export const getTeachersPagination = async (req: Request, res: Response) => {
           ? await prisma.regionalCenter_Faculty_Career.findUnique({
               where: {
                 id: RegionalCenter_Faculty_Career_Department_Teacher
-                  .regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
+                  .RegionalCenter_Faculty_Career_id,
               },
               include: {
                 regionalCenter_Faculty: {
@@ -436,7 +436,7 @@ export const getTeacherByDni = async (req: Request, res: Response) => {
 
     const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
       ? await prisma.regionalCenter.findUnique({
-        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id }
+        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.RegionalCenter_Faculty_Career_id }
       })
       : null;
 
@@ -494,7 +494,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
 
     const regionalCenter = RegionalCenter_Faculty_Career_Department_Teacher
       ? await prisma.regionalCenter_Faculty_Career.findUnique({
-        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id },
+        where: { id: RegionalCenter_Faculty_Career_Department_Teacher.RegionalCenter_Faculty_Career_id },
         include: {
           regionalCenter_Faculty: {
             include: {
@@ -521,7 +521,7 @@ export const getTeacherByIdentificationCode = async (req: Request, res: Response
       lastName: teacher.person.lastName,
       secondLastName: teacher.person.secondLastName,
       regionalCenterFacultyCareer: {
-        id: RegionalCenter_Faculty_Career_Department_Teacher.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id,
+        id: RegionalCenter_Faculty_Career_Department_Teacher.RegionalCenter_Faculty_Career_id,
         name: regionalCenter.regionalCenter_Faculty.regionalCenter.name
       },
       regionalCenter: {
@@ -830,7 +830,7 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
         where: {
           active: true,
           regionalCenter_Faculty_Career_Department_Departament_id: parseInt(req.body.departamentId),
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
+          RegionalCenter_Faculty_Career_id: parseInt(req.body.RegionalCenter_Faculty_Career_id),
           teacher: {
             id: { not: teacher.id },
             role: {
@@ -854,7 +854,7 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
         where: {
           teacherId: teacher.id,
           regionalCenter_Faculty_Career_Department_Departament_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_Departament_id,
-          regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: teacher.teacherDepartments[0]?.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+          RegionalCenter_Faculty_Career_id: teacher.teacherDepartments[0]?.RegionalCenter_Faculty_Career_id
         }
       });
 
@@ -862,15 +862,15 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
         // Actualizar la relación existente
         await transaction.regionalCenter_Faculty_Career_Department_Teacher.update({
           where: {
-            teacherId_regionalCenter_Faculty_Career_Department_Departament_id_regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: {
+            teacherId_regionalCenter_Faculty_Career_Department_Departament_id_RegionalCenter_Faculty_Career_id: {
               teacherId: teacher.id,
               regionalCenter_Faculty_Career_Department_Departament_id: existingRelation.regionalCenter_Faculty_Career_Department_Departament_id,
-              regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: existingRelation.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+              RegionalCenter_Faculty_Career_id: existingRelation.RegionalCenter_Faculty_Career_id
             }
           },
           data: {
             regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
-            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+            RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
           }
         });
         await transaction.user.update({
@@ -891,7 +891,7 @@ export const updateTeacherCenters = async (req: Request, res: Response) => {
           data: {
             teacherId: teacher.id,
             regionalCenter_Faculty_Career_Department_Departament_id: departamentId,
-            regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
+            RegionalCenter_Faculty_Career_id: RegionalCenter_Faculty_Career_id
           }
         });
 

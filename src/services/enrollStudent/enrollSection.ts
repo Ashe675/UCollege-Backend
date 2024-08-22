@@ -129,7 +129,8 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
   });
 
   const process = await checkActiveProcessByTypeId(3);
-
+  const processAcademic = await checkActiveProcessByTypeId(5);
+ 
   const currentDate = new Date();
 
   // Convertir currentDate a UTC
@@ -244,6 +245,7 @@ export const getAvailableSectionsForStudent = async (studentId: number) => {
   const allSections = await prisma.section.findMany({
     where: {
       active : true,
+      academicPeriodId : processAcademic.academicPeriod.id,
       classroom: {
         building: {
           regionalCenterId: centroEstudiante

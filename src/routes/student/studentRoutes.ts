@@ -58,9 +58,9 @@ route.get('/getAllGrade',
  */
 route.post('/upload/image',
     authenticate,
-    authorizeRole([RoleEnum.STUDENT]),
-    validateImageFile,
+    // authorizeRole([RoleEnum.STUDENT]),
     upload.single('image'),
+    validateImageFile,
     uploadImageStudent,
 )
 
