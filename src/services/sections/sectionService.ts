@@ -478,13 +478,13 @@ export const getSectionByDepartment = async (req: Request) => {
     where: { teacherId: userid },
     select: {
       regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } },
-      regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: true
+      RegionalCenter_Faculty_Career_id: true
     }
   });
 
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
-  const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+  const regionalCenterFacultyUser = user.RegionalCenter_Faculty_Career_id
 
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
@@ -516,7 +516,7 @@ export const getSectionByDepartmentActual = async (req: Request) => {
     where: { teacherId: userid },
     select: {
       regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } },
-      regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: true
+      RegionalCenter_Faculty_Career_id: true
     }
   });
 
@@ -537,7 +537,7 @@ export const getSectionByDepartmentActual = async (req: Request) => {
   const idPeriodo = periodoActual.id;
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
-  const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+  const regionalCenterFacultyUser = user.RegionalCenter_Faculty_Career_id
 
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },
@@ -589,7 +589,7 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
     where: { teacherId: userid },
     select: {
       regionalCenterFacultyCareerDepartment: { select: { departmentId: true, Departament: { select: { name: true } } } },
-      regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id: true
+      RegionalCenter_Faculty_Career_id: true
     }
   });
 
@@ -603,7 +603,7 @@ export const getSectionByDepartmentActualNext = async (req: Request) => {
 
   const departmentname = user.regionalCenterFacultyCareerDepartment.Departament.name;
   const userdepartmentid = user.regionalCenterFacultyCareerDepartment.departmentId;
-  const regionalCenterFacultyUser = user.regionalCenter_Faculty_Career_Department_RegionalCenter_Faculty_Career_id
+  const regionalCenterFacultyUser = user.RegionalCenter_Faculty_Career_id
 
   const sections = await prisma.section.findMany({
     where: { class: { departamentId: userdepartmentid }, academicPeriodId: idPeriodo, active: true, regionalCenter_Faculty_CareerId: regionalCenterFacultyUser },

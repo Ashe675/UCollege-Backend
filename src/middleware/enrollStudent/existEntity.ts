@@ -9,9 +9,11 @@ export const existSection = async (req: Request, res: Response, next: NextFuncti
   let { sectionId } = req.body;
 
 
+
   if (sectionId === undefined) {
     sectionId = parseInt(req.params.sectionId);
   }
+  
 
   try {
     const section = await prisma.section.findUnique({

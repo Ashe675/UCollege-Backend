@@ -1,6 +1,5 @@
 import { prisma } from "../../config/db"
 import { Request, Response } from "express"
-import { estadoSolicitud, RoleEnum } from "@prisma/client";
 
 export const accetSolicitudCarrer = async (req: Request, res: Response) => {
     const { id: userId } = req.user;

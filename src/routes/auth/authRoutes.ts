@@ -23,6 +23,11 @@ router.get('/user',
     AuthController.user
 )
 
+router.post('/logout',
+    authenticate,
+    AuthController.logout
+)
+
 router.get('/student/options-careers',
     authenticateVerifiedLess,
     authorizeRole([RoleEnum.STUDENT]),

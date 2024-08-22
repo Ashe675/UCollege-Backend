@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
+import { Server } from 'socket.io'
+import { createServer } from 'node:http'
+
 import { startCronJobs } from './utils/auth/cronToken';
 import { scheduleProcessVerification } from './utils/jobs/desactiveProcess'
 
@@ -29,7 +32,12 @@ import enrollStudentRoutes from './routes/enrollStudent/enrollStudentRoutes'
 
 import coordinatorRoutes from './routes/coordinator/coordinatorRoutes'
 
+import studentRoute from './routes/student/studentRoutes'
+import chatRoutes from './routes/chat/chatRoutes'
+
 import { corsConfig } from './config/cors';
+import { authenticateSocket } from './middleware/auth/auth';
+import { handleEvents } from './middleware/chat/events';
 
 
 dotenv.config()
@@ -38,6 +46,23 @@ startCronJobs()
 scheduleProcessVerification()
 
 const app = express()
+
+const server = createServer(app)
+
+export const io: Server = new Server(server, {
+    cors: {
+        origin: [process.env.FRONTEND_URL],
+        methods: ['GET', 'POST']
+    }
+})
+
+io.use(authenticateSocket);
+
+io.on('connection', (socket) => {
+    console.log("New socket connection:", socket.id);
+    console.log("Authenticated user:", socket.data.user);
+    handleEvents(socket)
+})
 
 // Habilitando el cors
 app.use(cors(corsConfig))
@@ -69,6 +94,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/enroll-student', enrollStudentRoutes);
 app.use('/api/user', userRoutes);
 
-app.use('/api/coordinator', coordinatorRoutes)
+app.use('/api/coordinator', coordinatorRoutes);
 
-export default app
+app.use('/api/student', studentRoute);
+
+
+app.use('/api/chat', chatRoutes)
+
+export { server }
