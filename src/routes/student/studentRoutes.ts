@@ -28,7 +28,7 @@ route.post('/value-teacher/',
     checkActiveProcessByTypeIdMiddleware(4),
     validateGradeData,
     existSection,
-    checkIsAccessToSeccion,
+    // checkIsAccessToSeccion,
     setGradeTeacher,
 );
 

@@ -40,7 +40,7 @@ export const setGradeTeacher = async(req: Request, res: Response) => {
         });
 
         return res.status(200).json({
-            message: "Teacher grade updated successfully",
+            message: "Nota actualizada con éxito.",
             enrollment: updatedEnrollment
         });
 
