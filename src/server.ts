@@ -59,8 +59,8 @@ export const io: Server = new Server(server, {
 io.use(authenticateSocket);
 
 io.on('connection', (socket) => {
-    console.log("New socket connection:", socket.id);
-    console.log("Authenticated user:", socket.data.user);
+    // console.log("New socket connection:", socket.id);
+    // console.log("Authenticated user:", socket.data.user);
     handleEvents(socket)
 })
 

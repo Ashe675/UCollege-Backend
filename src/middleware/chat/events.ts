@@ -6,13 +6,13 @@ import { io } from "../../server";
 
 export const handleEvents = (socket: Socket) => {
     socket.on("joinConversation", (conversationId: string) => {
-        console.log("Se unió un usuario a ", conversationId, socket.data.user)
+        // console.log("Se unió un usuario a ", conversationId, socket.data.user)
         joinRoom(socket, conversationId)
 
     })
 
     socket.on("leaveConversation", (conversationId: string) => {
-        console.log("Se desconectó un usuario de ", conversationId, socket.data.user)
+        // console.log("Se desconectó un usuario de ", conversationId, socket.data.user)
         leaveRoom(socket, conversationId)
         joinRoom(socket, conversationId)
 
@@ -55,7 +55,7 @@ export const handleEvents = (socket: Socket) => {
     })
 
     socket.on('disconnect', async () => {
-        console.log("New socket disconnect", socket.id, socket.data.user)
+        // console.log("New socket disconnect", socket.id, socket.data.user)
 
         const userId = socket.data.user?.id;
         if (userId) {

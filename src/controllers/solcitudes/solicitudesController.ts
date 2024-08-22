@@ -213,7 +213,7 @@ export const createSolicitudCancelacionExcepcionalController = async (req: Reque
         });
 
         if (result.success) {
-            return res.status(201).json(result);
+            return res.status(201).json({result,  message: 'Solicitud enviada correctamente!',});
         } else {
             return res.status(400).json({
                 success: false,
