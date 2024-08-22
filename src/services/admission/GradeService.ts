@@ -232,6 +232,8 @@ export class GradeService {
             }
         })
 
+        console.log(results)
+
         if(!results.length){
             throw Error('No hay calificaciones para enviar')
         }

@@ -52,10 +52,12 @@ export const downloadStudentCertificatePdf = async (req: Request, res: Response)
         },
       },
     });
-
+    console.log(enrollments.length)
     if (enrollments.length === 0) {
-      return res.status(404).json({ error: 'No se encontraron inscripciones para este estudiante' });
+      return res.status(400).json({ error: 'No se encontraron inscripciones para este estudiante' });
     }
+
+    console.log('ssss')
 
     // Ruta del PDF original
     const pdfPath = path.resolve('assets/templatespdf/certificacion.pdf');
