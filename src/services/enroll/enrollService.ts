@@ -72,8 +72,8 @@ export class EnrollService {
                 username = makeUserMethodSingle(randomParts);
             }
 
-            username.replace(/[ñÑ]/g, 'n')
-            username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            username = username.replace(/[ñÑ]/g, 'n')
+            username = username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
             // Check if the username already exists
             const userExists = await prisma.user.findUnique({ where: { institutionalEmail: username + domain } });
@@ -83,7 +83,7 @@ export class EnrollService {
             }
         }
 
-        username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        username = username.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         return username.replace(/[ñÑ]/g, 'n').toLowerCase() + domain;
     }
